@@ -6,8 +6,8 @@ HueBerry: DimmerDial
 ### Summary: Updated 8/6/2016
 You can build a dedicated device with a Raspberry Pi to QUICKLY change between scenes and control your lights!!! 
 
-###### Program is currently in pre-alpha
-###### No instructions at the moment. 
+##### Program is currently in pre-alpha
+##### No instructions at the moment. 
 
 ### Bonus:
 
@@ -15,7 +15,7 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 >  * It works! 
 
 
-**Instructions as of 6/23/16**  
+**Instructions as of 8/6/16**  
 **Requirements:**
 
   * Raspberry Pi (I used a Zero)
