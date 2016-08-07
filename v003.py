@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 """
-v002 update
+v003 update
 starting on the project for real 
-deleting the other functions and just putting in the the hue things... 
+wanted to submenu test 
+wanted to adding night and morning scenes
+
+ended up adding night only scenes
+finished and tested hue group and light functions
+converted a few commands over to those functions for ease of reading 
 
 """
 import time
@@ -61,6 +66,7 @@ def display_time():
     # Draw the image buffer
     disp.image(image)
     disp.display()
+    time.sleep(1)
 
 def display_social():
     # Collect social media subscribers/followers/... by parsing webpages
@@ -249,10 +255,19 @@ def run_lightsoff():
     #plot.savefig('hanning' + str(num) + '.pdf')
     twitter = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"sat\":117,\"xy\":[0.4423,0.4059],\"transitiontime\":10}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/lights/9/state").read()
     
-def hue_lights(lnum,lon,lbri,lsat,lx,ly,ltt):
+def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt):
     #send command to OS to turn off all lights
     #plot.savefig('hanning' + str(num) + '.pdf')
-    result = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + "}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/lights/" + str(lnum) + "/state").read()
+    result = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/lights/" + str(lnum) + "/state").read()
+    print(result)
+    return result
+
+def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt):
+    #send command to OS to turn off all lights
+    #plot.savefig('hanning' + str(num) + '.pdf')
+    result = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/" + str(lnum) + "/action").read()
+    print(result)
+    return result
     
 
 def display_custom(text):
@@ -282,39 +297,33 @@ def string_width(fontType,string):
 		string_width += char_width
 
 	return string_width
-
+#--------------------------------------------------
 # Set up GPIO with internal pull-up
 GPIO.setmode(GPIO.BCM)	
 GPIO.setup(16, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	
 # 128x64 display with hardware I2C
 disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
-
 # Initialize library
 disp.begin()
-
 # Get display width and height
 width = disp.width
 height = disp.height
-
 # Clear display
 disp.clear()
 disp.display()
-
 # Create image buffer with mode '1' for 1-bit color
 image = Image.new('1', (width, height))
-
 # Load default font
 font = ImageFont.load_default()
-
 # Create drawing object
 draw = ImageDraw.Draw(image)
-
+#--------------------------------------------------
 prev_millis = 0
 prev_social = 0
 display = 0
 time_format = True
 
+#Clear Draw buffer
 draw.rectangle((0,0,width,height), outline=0, fill=0)
 
 # Set font type and size
@@ -325,13 +334,13 @@ splash = "hue"
 x_pos = (disp.width/2)-(string_width(font,splash)/2)
 y_pos = 2 + (disp.height-4-8)/2 - (35/2)
     
-# Draw time
+# Draw splash
 draw.text((x_pos, y_pos), splash, font=font, fill=255)
 #disp.dim(True)
 #disp.set_contrast(0)
 disp.image(image)
 disp.display()
-time.sleep(1)
+time.sleep(.5)
 
 #----------------- set variables---------------
 global pos  
@@ -352,8 +361,8 @@ while True:
     if((millis - prev_millis) > 250):
         # Cycle through different displays
         #if(not GPIO.input(20)):
-        if(pos > 4):
-            pos = 4
+        if(pos > 7):
+            pos = 7
         elif(pos < 0):
             pos = 0
         display = pos
@@ -371,7 +380,7 @@ while True:
                 #run_lightsoff("reconnecting wifi ...")
                 #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
                 debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/0/action").read()
-                print(debug)
+                #print(debug)
                 time.sleep(10)
                 time.sleep(0.01)
             elif(display == 2):
@@ -381,22 +390,50 @@ while True:
                 debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/2/action").read()
                 debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/3/action").read()
                 # Turn off front door light 
-                print(debug)
+                #print(debug)
                 time.sleep(1)
                 time.sleep(0.01)
             elif(display == 3):
                 display_2lines("Turning all","lights on FULL",12)
-                debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":4}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/0/action").read()
-                print(debug)
-                time.sleep(1)
+                hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
                 time.sleep(0.01)
             elif(display == 4):
                 display_2lines("Turning all","lights OFF quickly",12)
-                debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":4}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/0/action").read()
-                print(debug)
-                time.sleep(1)
+                hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+                time.sleep(0.01)
+            elif(display == 5):
+                display_2lines("Turning lights:","After dinner",12)
+                debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":127,\"sat\":1,\"ct\":450,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/1/action").read()
+                debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":129,\"sat\":193,\"ct\":432,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/2/action").read()
+                debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/3/action").read()
+                debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/4/action").read()
+                debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups/5/action").read()
+                #print(debug)
+                time.sleep(0.01)
+            elif(display == 6):
+                display_2lines("Turning lights:","About to sleep bed",12)
+                hue_lights(lnum = "1",lon = "true",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "100", lct = "-1")
+                hue_lights(lnum = "2",lon = "false",lbri = "144",lsat = "256",lx = "-1",ly = "-1",ltt = "100", lct = "-1")
+                hue_lights(lnum = "5",lon = "true",lbri = "144",lsat = "200",lx = "0.5015",ly = "0.4153",ltt = "100", lct = "-1")
+                hue_lights(lnum = "6",lon = "true",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "100", lct = "-1")
+                hue_lights(lnum = "7",lon = "true",lbri = "127",lsat = "1",lx = "-1",ly = "-1",ltt = "100", lct = "450")
+                hue_lights(lnum = "8",lon = "true",lbri = "127",lsat = "1",lx = "-1",ly = "-1",ltt = "100", lct = "450")
+                hue_lights(lnum = "9",lon = "true",lbri = "144",lsat = "199",lx = "-1",ly = "-1",ltt = "100", lct = "443")
+                hue_lights(lnum = "10",lon = "false",lbri = "144",lsat = "199",lx = "-1",ly = "-1",ltt = "100", lct = "443")
+                hue_lights(lnum = "11",lon = "false",lbri = "1",lsat = "199",lx = "-1",ly = "-1",ltt = "100", lct = "-1")
+                hue_lights(lnum = "12",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "100", lct = "-1")
+                time.sleep(0.01)
+            elif(display == 7):
+                display_2lines("Turning lights:","Everything dim",12)
+                hue_groups(lnum = "1",lon = "true",lbri = "1",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "381")
+                hue_groups(lnum = "2",lon = "false",lbri = "1",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "439")
+                hue_groups(lnum = "3",lon = "true",lbri = "1",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "-1")
+                hue_groups(lnum = "4",lon = "true",lbri = "2",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "-1")
+                hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "-1")
                 time.sleep(0.01)
             prev_millis = int(round(time.time() * 1000))
+            pos = 0
+        
         
 
     if(display == 0):
@@ -413,6 +450,15 @@ while True:
         prev_social = 0
     elif(display == 4):
         display_2lines("4. Turn OFF","all lights quickly",17)
+        prev_social = 0
+    elif(display == 5):
+        display_2lines("5. After","Dinner",17)
+        prev_social = 0
+    elif(display == 6):
+        display_2lines("6. Going","to bed",17)
+        prev_social = 0
+    elif(display == 7):
+        display_2lines("7. In bed", "already",17)
         prev_social = 0
 
     time.sleep(0.1)
