@@ -318,7 +318,7 @@ draw.text((x_pos, y_pos), splash, font=font, fill=255)
 #disp.set_contrast(0)
 disp.image(image)
 disp.display()
-time.sleep(.5)
+#time.sleep(.5)
 
 #----------------- set variables---------------
 global pos  
@@ -345,7 +345,7 @@ while True:
     if(display == 0):
         display_time()
         #Sleep to conserve CPU Cycles
-        time.sleep(1)
+        #time.sleep(0.5)
     elif(display == 1):
         display_2lines("1. Turn OFF","all lights slowly",17)
     elif(display == 2):
