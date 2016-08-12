@@ -33,19 +33,20 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 **Wishlist:**
 
   * Gotta clean up repo and get rid of my "training" files
-  * Better menu system
+  * More refined menu system programming
   * Ability to control individual lights and their brightness, hue, sat, CT, etc...
   * Ability to control groups of lights and their brightness, hue, sat, CT, etc... 
   * INI based configuration 
   * Auto hub detection
   * Hub Pairing (Store API key in INI?) 
   * Timeout to clock
-  * Disable clock via INI
+  * Disable clock via settings
   * PIR integration
   * Lower power consumption (stop refreshing display so often and polling button)
   * Battery state support and icon (low power indicator and graceful shutdown too)
   * C rewrite to make use of faster display interface
-  * Python SSD1306 driver optimization to try and speed things up
+  * Wifi detection and selection as well as password selection and clear settings
+  
 	
 	
 **License:** 

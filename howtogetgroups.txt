@@ -1,0 +1,4 @@
+curl -H "Accept: application/json" -X GET  http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups
+
+curl -H "Accept: application/json" -X GET  http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups | grep -P -o '"name":".*?"' | grep -o ':".*"'
+this is how you can parse the shit
