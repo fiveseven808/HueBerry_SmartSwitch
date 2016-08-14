@@ -7,7 +7,6 @@ if os.path.isfile('./auth.json') == False:
     ip = authenticate.search_for_bridge()
     authenticate.authenticate('testapp',ip)
 else:
-    authenticate.load_username()
+    authenticate.load_creds()
     print(authenticate.api_key)
     print(authenticate.bridge_ip)
-
