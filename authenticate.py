@@ -40,14 +40,14 @@ def authenticate(app_name, bridge_host, client_name=None):
         print('ERROR:',data[0]['error']['description'])
     else:
         print('NO ERROR')
-        save_username(data[0]['success']['username'],bridge_host)
+        save_creds(data[0]['success']['username'],bridge_host)
 
 
-def save_username(username,ip):
+def save_creds(username,ip):
     with open(os.path.expanduser(USERNAME_SAVE_PATH), 'w') as f:
         f.write(json.dumps({
             'philips-hue': {
-                'username': username,
+                'api_key': username,
                 'ip':ip,
             }
         }))
@@ -62,7 +62,7 @@ def search_for_bridge(timeout=3):
     else:
         return None
 
-def load_username():
+def load_creds():
     try:
         with open(os.path.expanduser(USERNAME_SAVE_PATH), 'r') as f:
             contents = f.read()
@@ -71,6 +71,6 @@ def load_username():
     global api_key
     global bridge_ip
     data = json.loads(contents)
-    api_key = data['philips-hue']['username']
+    api_key = data['philips-hue']['api_key']
     bridge_ip = data['philips-hue']['ip']
     print(api_key,bridge_ip)
