@@ -18,6 +18,9 @@ import pigpio
 import rotary_encoder
 #import huepi
 #figure out how to export this to huepi
+
+#set working directory to script directory
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 #--------------------------------------------------------------------------
 def get_group_names():
     os.popen("curl -H \"Accept: application/json\" -X GET  http://192.168.1.144/api/0DEuqTaGHB5J2V72IzV1K-r3mwpf9ddjDkDDIRdzr/groups  > lights")
@@ -75,7 +78,7 @@ def g_light_control():
             display_2lines("Back","One Level",17)
             
         # Poll button press and trigger action based on current display
-        if(not GPIO.input(16)):
+        if(not GPIO.input(21)):
             if(display <= total):
                 g_control(display)
                 time.sleep(0.01)
@@ -106,7 +109,7 @@ def l_light_control():
             display_2lines("Back","One Level",17)
             
         # Poll button press and trigger action based on current display
-        if(not GPIO.input(16)):
+        if(not GPIO.input(21)):
             if(display <= total):
                 print(num_lights[display-1])
                 l_control(num_lights[display-1])
@@ -151,7 +154,7 @@ def g_control(group):
             bri_pre = rot_bri
             time.sleep(.25)
             
-        if(not GPIO.input(16)):
+        if(not GPIO.input(21)):
             time.sleep(0.25)
             exitvar = True
             time.sleep(0.01)
@@ -190,7 +193,7 @@ def l_control(light):
             bri_pre = rot_bri
             time.sleep(.25)
             
-        if(not GPIO.input(16)):
+        if(not GPIO.input(21)):
             time.sleep(0.25)
             exitvar = True
             time.sleep(0.01)
@@ -342,7 +345,9 @@ def string_width(fontType,string):
 #--------------------------------------------------
 # Set up GPIO with internal pull-up
 GPIO.setmode(GPIO.BCM)	
-GPIO.setup(16, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#GPIO.setup(4, GPIO.OUT)
+#GPIO.output(4,1)
 # 128x64 display with hardware I2C
 disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
 # Initialize library
@@ -393,7 +398,7 @@ def callback(way):
         #print("pos={}".format(pos))
         
 pi = pigpio.pi()
-decoder = rotary_encoder.decoder(pi, 21, 20, callback)
+decoder = rotary_encoder.decoder(pi, 16, 20, callback)
     
 while True:
 
@@ -429,7 +434,7 @@ while True:
         display_2lines("9. Light Control", "Menu",13)
      
     # Poll button press and trigger action based on current display
-    if(not GPIO.input(16)):
+    if(not GPIO.input(21)):
         if(display == 0):
             # Toggle between 12/24h format
             time_format =  not time_format
