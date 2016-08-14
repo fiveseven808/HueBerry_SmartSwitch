@@ -1,16 +1,13 @@
-# created by @innocuoussoul (https://github.com/innocuoussoul/)
+import authenticate
+import os
 
-from authenticate import *
-
-raw_input("Press the Link Button on your Bridge then Press Enter to continue...")
-# fix this so you can accept a button push from your dimmer instead.
-
-# this searches for the bridge on the network 
-ip = search_for_bridge()
-
-# this creates the api key
-authenticate('testapp',ip)
-
-# this creates your auth.json, set the path in authenticate.py
-save_username()
+if os.path.isfile('./auth.json') == False:
+    raw_input("Press the Link Button on your Bridge then Press Enter to continue...")
+    # fix this so you can accept a button push from your dimmer instead.
+    ip = authenticate.search_for_bridge()
+    authenticate.authenticate('testapp',ip)
+else:
+    authenticate.load_username()
+    print(authenticate.api_key)
+    print(authenticate.bridge_ip)
 
