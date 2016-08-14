@@ -5,9 +5,9 @@ import json
 import os
 import requests
 
-
 USERNAME_SAVE_PATH = 'auth.json'
-
+api_key = ""
+bridge_ip = ""
 def parse_response(response):
     json = response.json()
     error = None
@@ -68,4 +68,9 @@ def load_username():
             contents = f.read()
     except IOError:
         return None
-    return json.loads(contents)['philips-hue']['username']
+    global api_key
+    global bridge_ip
+    data = json.loads(contents)
+    api_key = data['philips-hue']['username']
+    bridge_ip = data['philips-hue']['ip']
+    print(api_key,bridge_ip)
