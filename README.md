@@ -2,6 +2,7 @@ HueBerry: DimmerDial
 =============
 ## Smart dial for the Philips Hue lighting system 
 
+[![Learn About the hueBerry!](http://i.imgur.com/zl9XxJq.jpg)](https://youtu.be/YTvbsL82ZcM "hueBerry is awesome!")
 
 ### Summary: Updated 8/13/2016
 You can build a dedicated device with a Raspberry Pi to QUICKLY change between scenes and control your lights!!! 
