@@ -469,15 +469,15 @@ while True:
             # Turn off all lights
             display_2lines("Turning all","lights OFF slowly",12)
             #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}'" + api_url + "/groups/0/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
             #print(debug)
             time.sleep(10)
         elif(display == 2):
             # Turn on NIGHT lights dim (groups 1,2,3)
             display_2lines("Turning specific","lights on DIM",12)
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}'" + api_url + "/groups/1/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}'" + api_url + "/groups/2/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}'" + api_url + "/groups/3/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/1/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/2/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/3/action").read()
             # Turn off front door light
             #print(debug)
             time.sleep(1)
@@ -491,11 +491,11 @@ while True:
             hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
         elif(display == 5):
             display_2lines("Turning lights:","After dinner",12)
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":127,\"sat\":1,\"ct\":450,\"transitiontime\":100}'" + api_url + "/groups/1/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":129,\"sat\":193,\"ct\":432,\"transitiontime\":100}'" + api_url + "/groups/2/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":100}'" + api_url + "/groups/3/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}'" + api_url + "/groups/4/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}'" + api_url + "/groups/5/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":127,\"sat\":1,\"ct\":450,\"transitiontime\":100}' " + api_url + "/groups/1/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":129,\"sat\":193,\"ct\":432,\"transitiontime\":100}' " + api_url + "/groups/2/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":100}' " + api_url + "/groups/3/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/4/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/5/action").read()
             #print(debug)
         elif(display == 6):
             display_2lines("Turning lights:","About to sleep bed",12)
