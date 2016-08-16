@@ -4,11 +4,14 @@ HueBerry: DimmerDial
 
 [![Learn About the hueBerry!](http://i.imgur.com/zl9XxJq.jpg)](https://youtu.be/YTvbsL82ZcM?t=1m3s "hueBerry is awesome!")
 
-### Summary: Updated 8/13/2016
-You can build a dedicated device with a Raspberry Pi to QUICKLY change between scenes and control your lights!!! 
+###### Video updated 8/13/2016 *(Outdated)* 
 
-##### Program is currently in pre-alpha
-##### No instructions at the moment. 
+
+## Summary: Updated 8/15/2016
+You can build a dedicated device with a Raspberry Pi to QUICKLY change between scenes (Whole house scenes supported) and control all of your lights!!! No fumbling with a phone or table or PC, just spin and click like "back in da hanabada days"! 
+
+##### Program is currently in beta as of v012
+#### No real instructions at the moment... But feel free to ask questions! 
 
 ### Bonus:
 
@@ -16,9 +19,11 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 >  * It works! 
 >  * Groups and individual Lights work now! 
 >  * Pulls information from the hub!
+>  * Automatic Hub detection and pairing initiation (if not done before
+>  * Storage of API key and bridge IP in JSON
 
 
-**Instructions as of 8/6/16**  
+### Instructions as of 8/15/16  
 **Requirements:**
 
   * Raspberry Pi (I used a Zero)
@@ -31,18 +36,20 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 **Instructions:**
 
   1. None at the moment... 
-  2. Whatever the latest v00*.py probably works.
-  3. You're gonna have to dig into the code and replacce with your bridge IP and API key. (If you have to ask what this is, the project isn't ready for you yet). 
+  2. Run pigpiod via "sudo pigpiod"
+  3. Run whatever the latest v00*.py is. Should work.
+  4. Follow instructions on the screen to pair your hueBerry and bridge
+  5. ???
+  6. Profit!!!
 		
 		  	 
 **Wishlist:**
 
   * Gotta clean up repo and get rid of my "training" files
   * More refined menu system programming
+    * 8/15 update: getting there slowly... 
   * Ability to control things other than just brightness, hue, sat, CT, etc...
   * INI based configuration 
-  * Auto hub detection
-  * Hub Pairing (Store API key in INI?) 
   * Timeout to clock
   * Disable clock via settings
   * PIR integration?
