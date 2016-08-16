@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 """
-v011 update
-alredy started fucking it up LOL oops 
-performing json check on startup 
+v012 update
+This is going to be my workspace for today. 
+Running splash screen so that you dont have to wait as long before something shows up on the screen. 
+edit: it does fucking nothing
 
+added a settings screen
+added device info screen (ip's and shit)
+put the repair device there, delets the auth.json upon running. no verification if you want to continue though LOL 
 
+reworked the main menu numbers, so it's a bit easier to shuffle things around. 
+reworked the order of the menu. 
+most used functions in the front and back. i..e turn off all lights slowly is on the front, and group control is on the back. group > individual ights. and turn off all > turn on all 
+the 6 scenes are the only things that aren't very generic. the rest of the code is pretty generic and should work on anyone's system. 
 """
 import os
 #set working directory to script directory
@@ -84,6 +92,7 @@ def g_light_control():
         if(not GPIO.input(21)):
             if(display <= total):
                 g_control(display)
+                name_array,total,lstate_a = get_group_names()
                 time.sleep(0.01)
             else:
                 time.sleep(0.25)
@@ -116,6 +125,7 @@ def l_light_control():
             if(display <= total):
                 print(num_lights[display-1])
                 l_control(num_lights[display-1])
+                name_array,num_lights,lstate_a,total = get_light_names()
                 time.sleep(0.01)
             else:
                 time.sleep(0.25)
@@ -123,6 +133,8 @@ def l_light_control():
             time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
     return
+    
+
 
 def g_control(group):
     display_custom("loading brightness...")
@@ -202,6 +214,76 @@ def l_control(light):
             time.sleep(0.01)
             pos = light
 #-------------------------------------------------------------------
+#---------------Settings Menu and stuff-----------------------------
+#-------------------------------------------------------------------
+def pair_hue_bridge():
+    pos = 0
+    if os.path.isfile('./auth.json') == False:
+        while True:
+            display_3lines("Attempting Link","Push Bridge button" ,"Then push this button",11,offset = 15)
+            if(not GPIO.input(21)):
+                break
+        display_custom("doing a thing...") 
+        ip = authenticate.search_for_bridge()
+        authenticate.authenticate('hueBerry',ip)
+        authenticate.load_creds()
+        api_key = authenticate.api_key
+        bridge_ip = authenticate.bridge_ip
+        display_2lines("Link Successful",bridge_ip,12)
+        time.sleep(1)
+    else:
+        authenticate.load_creds()
+        api_key = authenticate.api_key
+        bridge_ip = authenticate.bridge_ip
+        api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
+        display_2lines("Already Paired!",bridge_ip,12)
+        time.sleep(1)
+        
+def devinfo_screen():
+    ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+    ssid = os.popen("iwconfig wlan0 | grep 'ESSID' | awk '{print $4}' | awk -F\\\" '{print $2}'").read()
+    while True:
+        display_3lines("hueBerry IP: " + str(ipaddress),"Bridge IP: " + str(bridge_ip) ,"WLAN SSID: " + str(ssid),9,offset = 15)
+        if(not GPIO.input(21)):
+            break
+        
+def settings_menu():
+    time.sleep(.25)
+    global pos
+    pos = 0
+    exitvar = False
+    menudepth = 3
+    while exitvar == False:
+        if(pos > menudepth):
+            pos = menudepth
+        elif(pos < 1):
+            pos = 1
+        display = pos
+
+         #Display Selected Menu
+        if(display == 1):
+            display_2lines(str(display) + ". Device","Info",17)
+        elif(display == 2):
+            display_2lines(str(display) + ". Re-Pair","Hue Bridge",17)
+        else:
+            display_2lines("Back","One Level",17)
+
+
+        # Poll button press and trigger action based on current display
+        if(not GPIO.input(21)):
+            if(display == 1):
+                devinfo_screen()
+            elif(display == 2):
+                os.popen("rm auth.json")
+                pair_hue_bridge()
+            else:
+                time.sleep(0.25)
+                exitvar = True
+            time.sleep(0.01)
+                #prev_millis = int(round(time.time() * 1000))
+    return
+        
+#----------------------------------------------------------------------------
 
 def display_time():
     # Collect current time and date
@@ -357,8 +439,8 @@ disp.begin()
 width = disp.width
 height = disp.height
 # Clear display
-disp.clear()
-disp.display()
+#disp.clear()
+#disp.display()
 # Create image buffer with mode '1' for 1-bit color
 image = Image.new('1', (width, height))
 # Load default font
@@ -370,24 +452,6 @@ prev_millis = 0
 display = 0
 time_format = True
 
-#Clear Draw buffer
-draw.rectangle((0,0,width,height), outline=0, fill=0)
-
-# Set font type and size
-font = ImageFont.truetype('BMW_naa.ttf', 50)
-#font = ImageFont.load_default()
-# Set and Position splash
-splash = "hue"
-x_pos = (disp.width/2)-(string_width(font,splash)/2)
-y_pos = 2 + (disp.height-4-8)/2 - (35/2)
-
-# Draw splash
-draw.text((x_pos, y_pos), splash, font=font, fill=255)
-#disp.dim(True)
-#disp.set_contrast(0)
-disp.image(image)
-disp.display()
-#time.sleep(.5)
 #--------------------------------------------------
 #Search to see if an api key exists, if not, get it. 
 if os.path.isfile('./auth.json') == False:
@@ -440,25 +504,25 @@ while True:
         #Sleep to conserve CPU Cycles
         #time.sleep(0.5)
     elif(display == 1):
-        display_2lines("1. Turn OFF","all lights slowly",17)
+        display_2lines(str(display) + ". Turn OFF","all lights slowly",17)
     elif(display == 2):
-        display_2lines("2. DIM ON","Night lights",17)
+        display_2lines(str(display) + ". DIM ON","Night lights",17)
     elif(display == 3):
-        display_2lines("3. FULL ON","all lights",17)
+        display_2lines(str(display) + ". FULL ON","all lights",17)
     elif(display == 4):
-        display_2lines("4. Turn OFF","all lights quickly",17)
+        display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
     elif(display == 5):
-        display_2lines("5. After","Dinner",17)
+        display_2lines(str(display) + ". After","Dinner",17)
     elif(display == 6):
-        display_2lines("6. Going","to bed",17)
+        display_2lines(str(display) + ". Going","to bed",17)
     elif(display == 7):
-        display_2lines("7. In bed", "already",17)
+        display_2lines(str(display) + ". In bed", "already",17)
     elif(display == 8):
-        display_2lines("8. Group Control", "Menu",13)
+        display_2lines(str(display) + ". Settings", "Menu",13)
     elif(display == 9):
-        display_2lines("9. Light Control", "Menu",13)
+        display_2lines(str(display) + ". Light Control", "Menu",13)
     elif(display == 10):
-        display_2lines("10. Link Bridge","run link process",17)
+        display_2lines(str(display) + ". Group Control", "Menu",13)
 
 
     # Poll button press and trigger action based on current display
@@ -520,34 +584,18 @@ while True:
             hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "-1")
         elif(display == 8):
             pos = 0
-            g_light_control()
+            settings_menu()
         elif(display == 9):
             pos = 0
             l_light_control()
         elif(display == 10):
             pos = 0
-            if os.path.isfile('./auth.json') == False:
-                while True:
-                    display_3lines("Attempting Link","Push Bridge button" ,"Then push this button",11,offset = 15)
-                    if(not GPIO.input(21)):
-                        break
-                display_custom("doing a thing...") 
-                ip = authenticate.search_for_bridge()
-                authenticate.authenticate('hueBerry',ip)
-                authenticate.load_creds()
-                api_key = authenticate.api_key
-                bridge_ip = authenticate.bridge_ip
-                display_2lines("Link Successful",bridge_ip,12)
-                time.sleep(1)
-            else:
-                authenticate.load_creds()
-                api_key = authenticate.api_key
-                bridge_ip = authenticate.bridge_ip
-                api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
-                display_2lines("Already Paired!",bridge_ip,12)
-                time.sleep(1)
+            g_light_control()
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
         pos = 0
 
     #time.sleep(0.1)
+
+    
+

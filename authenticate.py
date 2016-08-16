@@ -73,4 +73,4 @@ def load_creds():
     data = json.loads(contents)
     api_key = data['philips-hue']['api_key']
     bridge_ip = data['philips-hue']['ip']
-    print(api_key,bridge_ip)
+    #print(api_key,bridge_ip)
