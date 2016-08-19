@@ -13,14 +13,17 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 ##### Program is currently in beta as of v012
 #### No real instructions at the moment... But feel free to ask questions! 
 
-### Bonus:
+### Bonus: Updated 8/18/2016
 
 >  * Clock! Dims (ish) during night time
->  * It works! 
->  * Groups and individual Lights work now! 
->  * Pulls information from the hub!
->  * Automatic Hub detection and pairing initiation (if not done before
+>  * Main menu times out to clock after 30 seconds (customizable in script)
+>  * Control Groups and individual Lights! 
+>  * Pulls information from the bridge!
+>  * Automatic Bridge detection and pairing initiation (if not done before)
 >  * Storage of API key and bridge IP in JSON
+>  * Flashlight mode because why the hell not
+>  * Scan and Connect to WiFi via WPS! 
+
 
 
 ### Instructions as of 8/15/16  
