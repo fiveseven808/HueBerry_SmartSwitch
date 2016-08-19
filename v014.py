@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 """
-v013 update
+v014 update
 
-adding a shutdown button for the settings thing, so i can properly turn the damn thing off LOL 
-turn off the pi when the screen goes dark (so long as power is connected to the TXD pin)
+Added the ability to choose and connect to any WPS network
+also added the ability to cancel while waiting, just in case you accidentally selected the wrong one or dont wanna wait anymore... 
 
-added a flashlight for the lulz :P might be overdriving the pin i've connected the display to though LOL 
-
-switched up the splash screen
-added a low idle variable to kill all the cpu eating when in clock mode
-
+Added a display timeout (go back to clock) for the main top level menu. 
+coudln't figure out how to write it into a function yet... need too many persistent variables 
 
 """
 import os
@@ -28,7 +25,8 @@ import authenticate
 #import huepi
 #figure out how to export this to huepi
 
-lowidle = 1
+lowidle = 0
+menu_timeout = 30 #seconds
 
 
 
@@ -84,7 +82,7 @@ def g_light_control():
 
         #Display Selected Menu
         if(display <= total):
-            display_3lines(str(display) + " " + str(name_array[display-1]),"Control","ON: " + str(lstate_a[display-1]),11,offset = 15)
+            display_3lines(str(display) + ". " + str(name_array[display-1]),"Control","ON: " + str(lstate_a[display-1]),11,offset = 15)
         else:
             display_2lines("Back","One Level",17)
 
@@ -116,7 +114,7 @@ def l_light_control():
 
         #Display Selected Menu
         if(display <= total):
-            display_3lines(str(display) + " " + str(name_array[display-1]),"Control","ON: " + str(lstate_a[display-1]),11,offset = 15)
+            display_3lines(str(display) + ". " + str(name_array[display-1]),"Control","ON: " + str(lstate_a[display-1]),11,offset = 15)
         else:
             display_2lines("Back","One Level",17)
 
@@ -264,13 +262,88 @@ def flashlight_mode():
         if(not GPIO.input(21)):
             break
         time.sleep(0.1)
+
+def wifi_settings():
+    display_custom("scanning for wifi...")
+    global pos
+    pos = 0
+    timeout = 0 
+    os.popen("wpa_cli scan")
+    os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
+    ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
+    powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
+    macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
+    ssid_array = ssids.split('\n')
+    mac_array = macs.split('\n')
+    p_array = powers.split('\n')
+    total = len(ssid_array) - 1
+    menudepth = total + 1
+    while True:
+        if(pos > menudepth):
+            pos = menudepth
+        elif(pos < 0):
+            pos = 0
+        display = pos
+
+        #Display Selected Menu
+        if(display == 0):
+            display_3lines("Scroll to see","Avaliable [WPS]" ,"SSIDs",11,offset = 15)
+        elif(display <= total):
+            display_3lines(str(display) + ". " + str(ssid_array[display-1]),"Signal: " + str(p_array[display-1]),"Connect ?",11,offset = 15)
+        else:
+            display_2lines("Back","One Level",17)
+
+        # Poll button press and trigger action based on current display
+        if(not GPIO.input(21)):
+            if(display <= total and display > 0):
+                timeout = 0
+                display_3lines("Connecting To:",str(ssid_array[display-1]) ,"Push WPS button then click ",9,offset = 15)
+                while True:
+                    if(GPIO.input(21)):
+                        break
+                while True:
+                    display_3lines("Connecting To:",str(ssid_array[display-1]) ,"Push WPS button then click ",9,offset = 15)
+                    if(not GPIO.input(21)):
+                        time.sleep(0.01)
+                        break
+                display_2lines("Pairing","Please Wait...",15)
+                os.popen("wpa_cli wps_pbc " + str(mac_array[display-1]))
+                # display_custom("something")
+                time.sleep(2)
+                while(timeout <= 60):
+                    ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+                    addr_len = len(ipaddress)
+                    display_3lines("Waiting for an IP",".","IP: " + str(ipaddress),11,offset = 15)
+                    if(addr_len > 4 ):
+                        print("i have an ip address!!! at " + str(ipaddress))
+                        break
+                    timeout += 1
+                    time.sleep(.25)
+                    display_3lines("Waiting for an IP",". .","IP: " + str(ipaddress),11,offset = 15)
+                    time.sleep(.25)
+                    display_3lines("Waiting for an IP",". . .","IP: " + str(ipaddress),11,offset = 15)
+                    time.sleep(.5)
+                    if(not GPIO.input(21)):
+                        break
+                if(timeout >= 300):
+                    display_2lines("Connection failed...","Try again",15)
+                elif(addr_len < 4):
+                    display_2lines("Connection canceled...","Try again",15)
+                else:
+                    display_2lines("Success!!!","IP: " + str(ipaddress),13)
+                time.sleep(5)
+            else:
+                time.sleep(0.25)
+                break
+            time.sleep(0.01)
+    
         
 def settings_menu():
     time.sleep(.25)
     global pos
     pos = 0
     exitvar = False
-    menudepth = 5
+    menudepth = 6
     while exitvar == False:
         if(pos > menudepth):
             pos = menudepth
@@ -287,6 +360,8 @@ def settings_menu():
             display_2lines(str(display) + ". Shutdown","hueBerry",17)
         elif(display == 4):
             display_2lines(str(display) + ". Flashlight","Function",17)
+        elif(display == 5):
+            display_2lines(str(display) + ". Connect to","WiFi",17)
         else:
             display_2lines("Back","One Level",17)
 
@@ -302,6 +377,8 @@ def settings_menu():
                 shutdown_hueberry()
             elif(display == 4):
                 flashlight_mode()
+            elif(display == 5):
+                wifi_settings()
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -506,6 +583,9 @@ else:
 #----------------- set variables---------------
 global pos
 pos = 0
+timeout = 0 
+displaytemp = 0 
+prev_secs = 0
 
 def callback(way):
         global pos
@@ -523,10 +603,10 @@ while True:
     elif(pos < 0):
         pos = 0
     display = pos
-
     #Display Selected Menu
     if(display == 0):
         display_time()
+        timeout = 0
         #Sleep to conserve CPU Cycles
         if lowidle == 1:
             time.sleep(1)
@@ -550,8 +630,18 @@ while True:
         display_2lines(str(display) + ". Light Control", "Menu",13)
     elif(display == 10):
         display_2lines(str(display) + ". Group Control", "Menu",13)
-
-
+    
+    secs = int(round(time.time())) 
+    timeout_secs = secs - prev_secs 
+    if(display != 0 and displaytemp != display): 
+        prev_secs = secs
+        displaytemp = display    
+    elif(display != 0 and timeout_secs >= menu_timeout):
+        pos = 0
+        display_temp = 0 
+    #if(display != 0):
+    #    print timeout_secs
+    
     # Poll button press and trigger action based on current display
     if(not GPIO.input(21)):
         if(display == 0):
@@ -568,9 +658,12 @@ while True:
         elif(display == 2):
             # Turn on NIGHT lights dim (groups 1,2,3)
             display_2lines("Turning specific","lights on DIM",12)
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/1/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/2/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/3/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/1/action").read()
+            hue_lights(lnum = "8",lon = "true",lbri = "1",lsat = "1",lx = "-1",ly = "-1",ltt = "4", lct = "400")
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/2/action").read()
+            hue_lights(lnum = "5",lon = "true",lbri = "1",lsat = "200",lx = "0.5015",ly = "0.4153",ltt = "4", lct = "-1")
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/3/action").read()
+            hue_groups(lnum = "6",lon = "true",lbri = "1",lsat = "200",lx = "-1",ly = "-1",ltt = "4",lct = "400")
             # Turn off front door light
             #print(debug)
             time.sleep(1)
@@ -611,7 +704,7 @@ while True:
             hue_groups(lnum = "3",lon = "true",lbri = "1",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "-1")
             hue_groups(lnum = "4",lon = "true",lbri = "2",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "-1")
             hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "-1",lx = "-1",ly = "-1",ltt = "100",lct = "-1")
-            hue_groups(lnum = "6",lon = "true",lbri = "64",lsat = "200",lx = "-1",ly = "-1",ltt = "100",lct = "443")
+            hue_groups(lnum = "6",lon = "true",lbri = "1",lsat = "200",lx = "-1",ly = "-1",ltt = "100",lct = "443")
         elif(display == 8):
             pos = 0
             settings_menu()
