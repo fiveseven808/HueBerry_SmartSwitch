@@ -671,6 +671,8 @@ while True:
     elif(display != 0 and timeout_secs >= menu_timeout):
         pos = 0
         display_temp = 0 
+    elif(display == 0):
+        displaytemp = display 
     #if(display != 0):
     #    print timeout_secs
     
