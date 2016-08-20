@@ -8,6 +8,9 @@ also added the ability to cancel while waiting, just in case you accidentally se
 Added a display timeout (go back to clock) for the main top level menu. 
 coudln't figure out how to write it into a function yet... need too many persistent variables 
 
+ideas for a signal strengh indicator?
+http://www.cyberciti.biz/tips/linux-find-out-wireless-network-speed-signal-strength.html
+
 """
 import os
 #set working directory to script directory
@@ -25,7 +28,7 @@ import authenticate
 #import huepi
 #figure out how to export this to huepi
 
-lowidle = 0
+lowidle = 1
 menu_timeout = 30 #seconds
 
 
