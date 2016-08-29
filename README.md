@@ -13,7 +13,7 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 ##### Program is currently in beta as of v012
 #### No real instructions at the moment... But feel free to ask questions! 
 
-### Bonus: Updated 8/25/2016
+### Bonus: Updated 8/29/2016
 
 >  * Clock! Dims (ish) during night time
 >  * Main menu times out to clock after 30 seconds (customizable in script)
@@ -24,6 +24,7 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 >  * Flashlight mode because why the hell not
 >  * Scan and Connect to WiFi via WPS! 
 >  * Change the color temperature of a group by holding down the button on the light! 
+>  * Change Hue and Saturation of the light or groups of lights!
 
 
 
@@ -51,18 +52,20 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 
   * Gotta clean up repo and get rid of my "training" files
   * More refined menu system programming
-    * 8/15 update: getting there slowly... 
-  * Ability to control things other than just brightness; hue, sat, CT, etc...
-  * INI based configuration 
+    * 8/15 update: getting there slowly...
+	* 8/29 update: 
+  * INI based configuration?
   * Timeout to clock
+	* 8/29 works only for main menu at the moment
   * Disable clock via settings
   * PIR integration?
   * Lower power consumption (stop refreshing display so often and polling button)
-    * Can't do much regarding this though... 0.7w is about as low as it goes... unless you power it off... 
+    * Can't do much regarding this though... 0.7w is about as low as it goes... unless you power it off...
+	* 8/29 update: reworked menu system now lowers power consumption... but pi still sucks power... 
   * Battery state support and icon (low power indicator and graceful shutdown too)
     * Coming soon  
-  * Wifi detection and selection as well as password selection and clear settings
-    * Gonna try a WPS implementation 
+  * Bugs to squash:
+	* Currently need to re-pair with bridge if bridge IP changes... 
 	
 	
 **License:** 
