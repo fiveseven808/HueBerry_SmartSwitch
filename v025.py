@@ -1,5 +1,30 @@
 #!/usr/bin/env python
 """
+v025
+
+
+v024 
+20161226 1917
+looks like the automatic wifi addition works fine!!!
+    - now reboots after adding file. 
+made the auto wifi addition script into a function 
+
+
+v024
+20161226 0138
+going to try to add automatic wifi addition via file in /boot etc. /boot/add_wifi.txt 
+looks like it goes through the motions and adds it... just gotta test it
+    - need to ask yes or no
+    - need to ask yes or no on delete
+added reboot to settings menu
+fixed device info resource hog. now consumes next to nothing when looking at IP address
+    - added second screen for eth0 and eth1 ip stuff
+
+
+v023 update
+20161224
+removing bathroom from a few scene adjustments
+
 v021 update
 slowed update time to .5s instead of .25s for g and L control
 easier to use...
@@ -27,6 +52,7 @@ check for response?
 nothing found? 
 """
 import os
+import os.path
 #set working directory to script directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.popen("python splashscreen.py &")
@@ -43,6 +69,7 @@ import authenticate
 #import subprocess
 #import huepi
 #figure out how to export this to huepi
+
 
 menu_timeout = 30 #seconds
 
@@ -580,8 +607,15 @@ def pair_hue_bridge():
 def devinfo_screen():
     ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
     ssid = os.popen("iwconfig wlan0 | grep 'ESSID' | awk '{print $4}' | awk -F\\\" '{print $2}'").read()
+    display_3lines("hueBerry IP: " + str(ipaddress),"Bridge IP: " + str(bridge_ip) ,"WLAN SSID: " + str(ssid),9,offset = 15)
     while True:
-        display_3lines("hueBerry IP: " + str(ipaddress),"Bridge IP: " + str(bridge_ip) ,"WLAN SSID: " + str(ssid),9,offset = 15)
+        time.sleep(0.01)
+        if(not GPIO.input(21)):
+            break
+    ipaddress_0 = os.popen("ifconfig eth0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+    ipaddress_1 = os.popen("ifconfig eth1 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+    display_3lines("eth0 IP: " + str(ipaddress_0),"eth1 IP: " + str(ipaddress_1) ,"blah",9,offset = 15)
+    while True:
         time.sleep(0.01)
         if(not GPIO.input(21)):
             break
@@ -591,8 +625,8 @@ def devinfo_screen():
     display_custom("loading lights...")
     name_array,num_lights,lstate_a,total = get_light_names()
     maxlightid = num_lights[total-1]
+    display_3lines("Max Light ID: " + str(maxlightid),"Max Group ID: " + str(maxgroupid) ,"something something",9,offset = 15)
     while True:
-        display_3lines("Max Light ID: " + str(maxlightid),"Max Group ID: " + str(maxgroupid) ,"something something",9,offset = 15)
         time.sleep(0.01)
         if(not GPIO.input(21)):
             break
@@ -600,6 +634,12 @@ def devinfo_screen():
 def shutdown_hueberry():
     display_3lines("Shutting down now...","Don't remove power" ,"Until Display is off",11,offset = 15)
     os.popen("sudo shutdown now")
+    while True:
+        time.sleep(1)
+        
+def restart_hueberry():
+    display_3lines("Restarting now...","Don't remove power" ,"Please Wait",11,offset = 15)
+    os.popen("sudo shutdown -r now")
     while True:
         time.sleep(1)
         
@@ -696,7 +736,7 @@ def settings_menu():
     pos = 0
     old_display = 0
     exitvar = False
-    menudepth = 6
+    menudepth = 7
     refresh = 1 
     while exitvar == False:
         if(pos > menudepth):
@@ -714,8 +754,10 @@ def settings_menu():
             elif(display == 3):
                 display_2lines(str(display) + ". Shutdown","hueBerry",17)
             elif(display == 4):
-                display_2lines(str(display) + ". Flashlight","Function",17)
+                display_2lines(str(display) + ". Restart","hueBerry",17)
             elif(display == 5):
+                display_2lines(str(display) + ". Flashlight","Function",17)
+            elif(display == 6):
                 display_2lines(str(display) + ". Connect to","WiFi",17)
             else:
                 display_2lines("Back to","Main Menu",17)
@@ -734,8 +776,10 @@ def settings_menu():
             elif(display == 3):
                 shutdown_hueberry()
             elif(display == 4):
-                flashlight_mode()
+                restart_hueberry()
             elif(display == 5):
+                flashlight_mode()
+            elif(display == 6):
                 wifi_settings()
             else:
                 time.sleep(0.25)
@@ -900,7 +944,32 @@ def long_press(message,pin):
         elif(millsdiff >= 500):
             ctmode = 1
             break
-#--------------------------------------------------
+
+def check_wifi_file():
+    ADDWIFIPATH ='/boot/add_wifi.txt'
+    if os.path.exists(ADDWIFIPATH):
+        display_3lines("Wifi Creds Detected","Loading File...","Click to continue",13,16)
+        while True:
+            time.sleep(0.01)
+            if(not GPIO.input(21)):
+                break
+        ssids = os.popen("cat /boot/add_wifi.txt | awk '{print $1}'").read()
+        ssid_array = ssids.split('\n')
+        display_3lines("SSID: " + str(ssid_array[0]),"PSK: " + str(ssid_array[1]),"Continue?",11,offset = 15)
+        while True:
+            time.sleep(0.01)
+            if(not GPIO.input(21)):
+                break
+        with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as myfile:
+            myfile.write("\nnetwork={\n\tssid=\"" + str(ssid_array[0]) + "\"\n\tpsk=\"" + str(ssid_array[1]) + "\"\n}\n")
+        os.rename(ADDWIFIPATH,ADDWIFIPATH + ".added")
+        display_3lines("Added to database!","Rebooting... ","Please Wait",13,16)
+        os.popen("sudo shutdown -r now")
+        while True:
+            time.sleep(1)
+
+#------------------------------------------------------------------------------------------------------------------------------
+# Main Loop I think
 # Set up GPIO with internal pull-up
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -926,6 +995,11 @@ draw = ImageDraw.Draw(image)
 prev_millis = 0
 display = 0
 time_format = True
+
+#--------------------------------------------------
+#Search to see if an Add Wifi file exists, if so, add it then delete it. 
+check_wifi_file()
+
 
 #--------------------------------------------------
 #Search to see if an api key exists, if not, get it. 
@@ -1067,7 +1141,8 @@ while True:
             display_2lines("Turning lights:","After dinner",12)
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":127,\"sat\":1,\"ct\":450,\"transitiontime\":100}' " + api_url + "/groups/1/action").read()
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":129,\"sat\":193,\"ct\":432,\"transitiontime\":100}' " + api_url + "/groups/2/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":100}' " + api_url + "/groups/3/action").read()
+            #Disable bathroom light change. 
+            #debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":100}' " + api_url + "/groups/3/action").read()
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/4/action").read()
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/5/action").read()
             hue_groups(lnum = "6",lon = "true",lbri = "127",lsat = "200",lx = "-1",ly = "-1",ltt = "100",lct = "443")

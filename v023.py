@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 """
+v023 update
+20161224
+removing bathroom from a few scene adjustments
+
 v021 update
 slowed update time to .5s instead of .25s for g and L control
 easier to use...
@@ -1067,7 +1071,8 @@ while True:
             display_2lines("Turning lights:","After dinner",12)
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":127,\"sat\":1,\"ct\":450,\"transitiontime\":100}' " + api_url + "/groups/1/action").read()
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":129,\"sat\":193,\"ct\":432,\"transitiontime\":100}' " + api_url + "/groups/2/action").read()
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":100}' " + api_url + "/groups/3/action").read()
+            #Disable bathroom light change. 
+            #debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":254,\"transitiontime\":100}' " + api_url + "/groups/3/action").read()
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":true,\"bri\":1,\"transitiontime\":100}' " + api_url + "/groups/4/action").read()
             debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/5/action").read()
             hue_groups(lnum = "6",lon = "true",lbri = "127",lsat = "200",lx = "-1",ly = "-1",ltt = "100",lct = "443")
