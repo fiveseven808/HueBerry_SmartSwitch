@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 """
+v026
+20170103 1117
+adding error handlig to the light functions so they dont crash when viewing a group that has no bulbs or a nonexistant group 
+
 v025
 20161227 1119
 changed the dev info screen to scroll instead of button push. made the hue info screen it's own seperate thing to help curb freezing
@@ -296,6 +300,13 @@ def g_control(group):
     os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(group) + " > brite")
     brite = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
+    #else: 
+    #    print "guess it was brite"
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
@@ -355,6 +366,11 @@ def ct_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
     brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
     bri_length = len(brite)
     print bri_length
     if (bri_length > 0):
@@ -422,6 +438,11 @@ def hue_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
     brite = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
     bri_length = len(brite)
     print bri_length
     if (bri_length > 0):
@@ -485,6 +506,11 @@ def sat_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
     brite = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
     bri_length = len(brite)
     print bri_length
     if (bri_length > 0):
@@ -543,6 +569,11 @@ def l_control(light):
     os.popen("curl -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(light) + " > brite")
     brite = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10

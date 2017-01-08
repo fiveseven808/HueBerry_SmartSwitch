@@ -1,5 +1,21 @@
 #!/usr/bin/env python
 """
+v028
+20170108
+removing group 5 from turn on all lights
+added debug function and trying to figure out calvins problem
+added error handling for hue lights and hue groups function in case calvins thing freaks out 
+added proper failed return values so it fails gracefully
+
+
+v027
+20170106 1025
+changing display dimish time to 9pm on both date and time
+
+v026
+20170103 1117
+adding error handlig to the light functions so they dont crash when viewing a group that has no bulbs or a nonexistant group 
+
 v025
 20161227 1119
 changed the dev info screen to scroll instead of button push. made the hue info screen it's own seperate thing to help curb freezing
@@ -74,6 +90,8 @@ import authenticate
 #import huepi
 #figure out how to export this to huepi
 
+global logfile
+logfile = "/home/pi/hueberry.log"
 
 menu_timeout = 30 #seconds
 
@@ -81,9 +99,22 @@ menu_timeout = 30 #seconds
 
 #--------------------------------------------------------------------------
 def get_group_names():
+    #display_2lines("starting","group names",17)
+    #debugmsg("starting curl")
     os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups  > lights")
+    #debugmsg("finished curl")
+    #display_2lines("finished","curl",17)
     cmdout = os.popen("cat lights").read()
+    #debugmsg(cmdout)
+    if not cmdout:
+        #print "not brite"
+        display_2lines("An error in ","get_group_names",15)
+        debugmsg("error in get_group_names probably lost connection to hub")
+        time.sleep(2)
+        return 0,0,0
+    #debugmsg("passed ifstatement")
     print cmdout
+    #debugmsg("passed printcmd")
     group_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
     os.popen("rm lights")
@@ -95,6 +126,12 @@ def get_group_names():
 def get_light_names():
     os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
     light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+    if not light_names:
+        #print "not brite"
+        display_2lines("An error in ","get_light_names",15)
+        debugmsg("error in get_light_names probably lost connection to hub")
+        time.sleep(2)
+        return 0,0,0,0
     num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
     lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
     os.popen("rm lights")
@@ -109,15 +146,32 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
         result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
     else:
         result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+    if not result:
+        #print "not brite"
+        display_2lines("An error in ","hue_lights",17)
+        time.sleep(2)
+        return
     print(result)
     return result
 
 def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
+    debugmsg("entering hue groups")
     if ('hue' in options):
+        debugmsg("hue and before result")
         result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
+        debugmsg("hue and after result")
     else:
+        debugmsg("everything else and before result")
         result = os.popen("curl -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
+        debugmsg("everything else and after result")
+    debugmsg(result)
+    if not result:
+        #print "not brite"
+        display_2lines("An error in ","hue_groups",17)
+        time.sleep(2)
+        return
     print(result)
+    debugmsg("printed result")
     return result
 
 #------------------------------------------------------------------------------------  
@@ -296,6 +350,13 @@ def g_control(group):
     os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(group) + " > brite")
     brite = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
+    #else: 
+    #    print "guess it was brite"
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
@@ -355,6 +416,11 @@ def ct_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
     brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
     bri_length = len(brite)
     print bri_length
     if (bri_length > 0):
@@ -422,6 +488,11 @@ def hue_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
     brite = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
     bri_length = len(brite)
     print bri_length
     if (bri_length > 0):
@@ -485,6 +556,11 @@ def sat_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
     brite = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in group",17)
+        time.sleep(3)
+        return
     bri_length = len(brite)
     print bri_length
     if (bri_length > 0):
@@ -543,6 +619,11 @@ def l_control(light):
     os.popen("curl -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(light) + " > brite")
     brite = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        display_2lines("No devices","in lights",17)
+        time.sleep(3)
+        return
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
@@ -881,7 +962,7 @@ def display_time():
     y_pos = disp.height-10
 
     # Draw date during daytime hours
-    if H <= 21 and H > 6:
+    if H < 21 and H > 6:
         draw.text((x_pos, y_pos), current_date, font=font, fill=255)
 
     # Draw the image buffer
@@ -1027,6 +1108,12 @@ def check_upgrade_file():
         os.popen("python " + ADDWIFIPATH)
         while True:
             time.sleep(1)
+            
+def debugmsg(message):
+    global logfile
+    current_time = time.strftime("%m / %d / %Y %-H:%M")
+    with open(logfile, "a") as myfile:
+        myfile.write(current_time + " " + message + "\n")
 
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
@@ -1106,6 +1193,9 @@ def callback(way):
 
 pi = pigpio.pi()
 decoder = rotary_encoder.decoder(pi, 16, 20, callback)
+
+debugmsg("-----------------------------")
+debugmsg("Starting hueBerry program version " + __file__)
 
 while True:
 
@@ -1195,8 +1285,8 @@ while True:
         elif(display == 3):
             display_2lines("Turning all","lights on FULL",12)
             hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
-            #turn off front door light... we dont want that...
-            hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+            ##turn off front door light... we dont want that...
+            #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
         elif(display == 4):
             display_2lines("Turning all","lights OFF quickly",12)
             hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
