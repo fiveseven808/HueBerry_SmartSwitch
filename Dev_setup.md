@@ -34,21 +34,6 @@ Getting started with the hueBerry from a bare-metal pi is pretty simple. Here, I
   7. cd Adafruit_Python_SSD1306
   8. sudo python setup.py install
 4. [Install and run pigpiod via "sudo pigpiod"](http://abyz.co.uk/rpi/pigpio/download.html)
-  1. rm master.zip
-  2. sudo rm -rf pigpio-master
-  3. wget https://github.com/joan2937/pigpio/archive/master.zip
-  4. unzip master.zip
-  5. cd pigpio-master
-  6. make -j4
-  7. sudo make install
-  8. sudo pigpiod 
-    * You may want to add this to your startup file (I used /etc/rc.local)
-
-5. Run whatever the latest v00*.py is. Should work.
-6. Follow instructions on the screen to pair your hueBerry and bridge
-7. ???
-8. Profit!!!
-
 ```bash
 rm master.zip
 sudo rm -rf pigpio-master
@@ -59,6 +44,14 @@ make -j4
 sudo make install
 sudo pigpiod 
 ```
+  * You may want to add this to your startup file (I used /etc/rc.local)
+
+5. Run whatever the latest v00*.py is. Should work.
+6. Follow instructions on the screen to pair your hueBerry and bridge
+7. ???
+8. Profit!!!
+
+
 		  	 
 	
 	
