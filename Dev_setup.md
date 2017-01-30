@@ -22,18 +22,20 @@ Getting started with the hueBerry from a bare-metal pi is pretty simple. Here, I
 	
 **Instructions:**
 
-1. [Install the latest Raspbian distribution](https://www.raspberrypi.org/documentation/installation/installing-images/)
-2. Wire up the I2C display and rotary encoder (wiring diagrams coming soon)
-3. [Install the Adafruit_SSD1306 library](https://learn.adafruit.com/ssd1306-oled-displays-with-raspberry-pi-and-beaglebone-black/usage)
-  1. sudo apt-get update
-  2. sudo apt-get install build-essential python-dev python-pip
-  3. sudo pip install RPi.GPIO
-  4. sudo apt-get install python-imaging python-smbus
-  5. sudo apt-get install git
-  6. git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
-  7. cd Adafruit_Python_SSD1306
-  8. sudo python setup.py install
-4. [Install and run pigpiod via "sudo pigpiod"](http://abyz.co.uk/rpi/pigpio/download.html)
+* [Install the latest Raspbian distribution](https://www.raspberrypi.org/documentation/installation/installing-images/)
+* Wire up the I2C display and rotary encoder (wiring diagrams coming soon)
+* [Install the Adafruit_SSD1306 library](https://learn.adafruit.com/ssd1306-oled-displays-with-raspberry-pi-and-beaglebone-black/usage)
+```bash
+sudo apt-get update
+sudo apt-get install build-essential python-dev python-pip
+sudo pip install RPi.GPIO
+sudo apt-get install python-imaging python-smbus
+sudo apt-get install git
+git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git
+cd Adafruit_Python_SSD1306
+sudo python setup.py install
+```
+* [Install and run pigpiod](http://abyz.co.uk/rpi/pigpio/download.html)
 ```bash
 rm master.zip
 sudo rm -rf pigpio-master
@@ -44,14 +46,12 @@ make -j4
 sudo make install
 sudo pigpiod 
 ```
-  * You may want to add this to your startup file (I used /etc/rc.local)
+ * You may want to add 'sudo pigpiod' to your startup file (I used /etc/rc.local)
 
-5. Run whatever the latest v00*.py is. Should work.
-6. Follow instructions on the screen to pair your hueBerry and bridge
-7. ???
-8. Profit!!!
-
-
+* Run whatever the latest v00*.py is. Should work.
+* Follow instructions on the screen to pair your hueBerry and bridge
+* ???
+* Profit!!!
 		  	 
 	
 	
