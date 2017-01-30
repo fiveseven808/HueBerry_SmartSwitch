@@ -47,7 +47,7 @@ sudo make install
 sudo pigpiod 
 ```
 * You may want to add `sudo pigpiod` to your startup file (I used /etc/rc.local)
-* Modify your /boot/config.txt file to enable I2c and speed up the bus
+* Modify your `/boot/config.txt` file to enable I2c and speed up the bus
 ```
 # Uncomment some or all of these to enable the optional hardware interfaces
 dtparam=i2c_arm=on
