@@ -7,7 +7,7 @@ hueBerry: Setup instructions for Developers
 
 
 ## Getting Started: Updated 1/29/2017
-Getting started with the hueBerry from a bare-metal pi is pretty simple. Here, I will attempt to guide you from start to finish! 
+Getting started with the hueBerry from a bare-metal pi is fairly simple. Here, I will attempt to guide you from start to finish! 
 
 **Requirements:**
 
@@ -64,11 +64,12 @@ start_x=0
 ```
 dtparam=sd_overclock=100
 ```
-* Clone hueBerry git dev branch (git syntax and commands untested)
+* Clone hueBerry git dev branch (git syntax and commands untested) then run the main program
 ```
 cd ~
 git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git
 cd HueBerry_SmartSwitch
+
 sudo python hueberry.py
 ```
 * Follow instructions on the screen to pair your hueBerry and bridge
