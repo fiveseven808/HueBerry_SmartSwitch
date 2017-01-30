@@ -20,7 +20,7 @@ Getting started with the hueBerry from a bare-metal pi is pretty simple. Here, I
 
 **Do you meet the dev-kit minimum requirements?** Do you have a display, encoder, pi, and network connection? If so, you may continue! Otherwise, go back and get those components. 
 	
-## Instructions:
+## Bare-Metal Instructions:
 
 * [Install the latest Raspbian distribution](https://www.raspberrypi.org/documentation/installation/installing-images/)
 * Wire up the I2C display and rotary encoder (wiring diagrams coming soon)
@@ -46,7 +46,7 @@ make -j4
 sudo make install
 sudo pigpiod 
 ```
- * You may want to add 'sudo pigpiod' to your startup file (I used /etc/rc.local)
+* You may want to add `sudo pigpiod` to your startup file (I used /etc/rc.local)
 * Modify your /boot/config.txt file to enable I2c and speed up the bus
 ```
 # Uncomment some or all of these to enable the optional hardware interfaces
@@ -58,17 +58,27 @@ dtparam=spi=off
 * *Optional* Disable GUI (to speed up boot?) and lower GPU mem to 8mb
 ```
 gpu_mem=8
-enable_uart=1
 start_x=0
 ``` 
 * *Optional* Overclock your SD card bus to get faster boot speeds
-`dtparam=sd_overclock=100`
-* Run whatever the latest v00*.py is. Should work.
+```
+dtparam=sd_overclock=100
+```
+* Clone hueBerry git dev branch (git syntax and commands untested)
+```
+cd ~
+git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git
+cd HueBerry_SmartSwitch
+sudo python hueberry.py
+```
 * Follow instructions on the screen to pair your hueBerry and bridge
-* ???
-* Profit!!!
-		  	 
-	
+ 1. On first run, it should ask you to pair with your Philips hue Bridge.
+ 1. Follow the onscreen instructions
+ 1. 
+* Enjoy! 
+ * *If the above instructions do not work, please contact the maintainer to correct this accordingly*
+
+ 
 	
 **License:** 
 
