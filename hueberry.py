@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 v032
-2017 0127
+2017 0129
 looks like scene saving is working good. Goona go and rearrange my hard scenes to be at the end. 
 gonna make custom scenes configurable. make a transition time gathering thing. 
 remeoved scene by group since by light is so fast
@@ -1209,6 +1209,24 @@ def debugmsg(message):
     current_time = time.strftime("%m / %d / %Y %-H:%M")
     with open(logfile, "a") as myfile:
         myfile.write(current_time + " " + message + "\n")
+        
+def holding_button(holding_time_ms,display_before,display_after,button_pin):
+    #If this function is activated, then we're checking for the button being held
+    #ex: result = holding_button(500,"hold to activate","activating",21)
+    held_down = 0
+    prev_mills = int(round(time.time() * 1000))
+    while(not GPIO.input(pin)):
+        mills = int(round(time.time() * 1000))
+        millsdiff = mills - prev_mills
+        if(millsdiff < holding_time_ms):
+            display_custom(display_before)
+        elif(millsdiff >= holding_time_ms):
+            display_custom(display_after)
+            held_down = 1
+        time.sleep(0.01)
+    time.sleep(0.1)
+    successvar = held_down
+    return successvar
 
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
@@ -1390,6 +1408,11 @@ while True:
             hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
             debugmsg("turning all lights off quick")
         elif(display == 5):
+            display_2lines("Turning lights:","Scene 1",12)
+            os.popen("./1_scene.sh")
+            time.sleep(1)
+            debugmsg("turning lights scene1")
+            
             scenenumber = 1
             ltt = 100
             #result = get_house_scene_by_group(scenenumber,ltt)
