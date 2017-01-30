@@ -41,13 +41,7 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
 	
 **Instructions:**
 
-  1. Wire up the I2C display and rotary encoder (wiring diagrams coming soon)
-  2. Install the Adafruit_SSD1306 library
-  3. Run pigpiod via "sudo pigpiod"
-  4. Run whatever the latest v00*.py is. Should work.
-  5. Follow instructions on the screen to pair your hueBerry and bridge
-  6. ???
-  7. Profit!!!
+  * Detailed instructions for developers available [here!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/Dev_setup.md)
 		
 		  	 
 **Wishlist:**
