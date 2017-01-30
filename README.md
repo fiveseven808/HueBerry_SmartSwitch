@@ -9,9 +9,8 @@ HueBerry: DimmerDial
 
 ## Summary: Updated 1/29/2017
 The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY record and change between Whole house scene! It also easily enables you to control the color temperature and Hue and saturation of a group control all of your lights!!! No fumbling with a phone or table or PC, just spin and click and spin like "back in da hanabada days"! 
-
 ##### Program is currently in open beta
-#### No real instructions at the moment... But feel free to ask questions! 
+
 
 ### Features: Updated 1/29/2017
 
@@ -29,7 +28,7 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
 >   * Firmware upgrade possible via placing a special file in the /boot partition
 
 
-### Instructions as of 1/29/17  
+### Instructions as of 1/30/17  
 **Requirements:**
 
   * Raspberry Pi (I used a Zero)
