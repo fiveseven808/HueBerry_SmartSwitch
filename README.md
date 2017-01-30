@@ -28,7 +28,6 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
 >   * Firmware upgrade possible via placing a special file in the /boot partition
 
 
-### Instructions as of 1/30/17  
 **Requirements:**
 
   * Raspberry Pi (I used a Zero)
@@ -38,7 +37,7 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
   * Rotary encoder switch thing 
   * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hCld2env4vI/edit?usp=sharing)
 	
-**Instructions:**
+## Instructions as of 1/30/17
 
   * Detailed instructions for developers available [here!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/Dev_setup.md)
 		
