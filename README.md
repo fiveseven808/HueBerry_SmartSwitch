@@ -75,5 +75,4 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
 **License:** 
 
 [Creative Commons Attribution-NonCommercial 4.0 International ](https://creativecommons.org/licenses/by-nc/4.0/)  
-
 This is an open source beta program supplied with no guarantee.
