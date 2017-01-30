@@ -7,28 +7,29 @@ HueBerry: DimmerDial
 ###### Video updated 8/13/2016 *(Outdated)* 
 
 
-## Summary: Updated 8/15/2016
-You can build a dedicated device with a Raspberry Pi to QUICKLY change between scenes (Whole house scenes supported) and control all of your lights!!! No fumbling with a phone or table or PC, just spin and click like "back in da hanabada days"! 
+## Summary: Updated 1/29/2017
+The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY record and change between Whole house scene! It also easily enables you to control the color temperature and Hue and saturation of a group control all of your lights!!! No fumbling with a phone or table or PC, just spin and click and spin like "back in da hanabada days"! 
 
-##### Program is currently in beta as of v012
+##### Program is currently in open beta
 #### No real instructions at the moment... But feel free to ask questions! 
 
-### Bonus: Updated 8/29/2016
+### Features: Updated 1/29/2017
 
->  * Clock! Dims (ish) during night time
->  * Main menu times out to clock after 30 seconds (customizable in script)
+>  * Clock! Dims (ish) during night time (currently hard coded to 9pm) 
+>  * Main menu times out to clock after 30 seconds (customization coming soon)
 >  * Control Groups and individual Lights! 
->  * Pulls information from the bridge!
+>  * Control Color temperature and Hue and Saturation of lights OR groups! 
 >  * Automatic Bridge detection and pairing initiation (if not done before)
->  * Storage of API key and bridge IP in JSON
+>  * Settings menu allowing resets, shutdown, and Device and bridge info
 >  * Flashlight mode because why the hell not
 >  * Scan and Connect to WiFi via WPS! 
->  * Change the color temperature of a group by holding down the button on the light! 
->  * Change Hue and Saturation of the light or groups of lights!
+>  * Create then save whole house scenes with the push of a button! Replay them back just as easily!
+>  * **Undocumented features**
+>   * Non WPS WiFi APs added by a text file in the /boot partition
+>   * Firmware upgrade possible via placing a special file in the /boot partition
 
 
-
-### Instructions as of 8/15/16  
+### Instructions as of 1/29/17  
 **Requirements:**
 
   * Raspberry Pi (I used a Zero)
@@ -40,36 +41,39 @@ You can build a dedicated device with a Raspberry Pi to QUICKLY change between s
 	
 **Instructions:**
 
-  1. None at the moment... 
-  2. Run pigpiod via "sudo pigpiod"
-  3. Run whatever the latest v00*.py is. Should work.
-  4. Follow instructions on the screen to pair your hueBerry and bridge
-  5. ???
-  6. Profit!!!
+  1. Wire up the I2C display and rotary encoder (wiring diagrams coming soon)
+  2. Install the Adafruit_SSD1306 library
+  3. Run pigpiod via "sudo pigpiod"
+  4. Run whatever the latest v00*.py is. Should work.
+  5. Follow instructions on the screen to pair your hueBerry and bridge
+  6. ???
+  7. Profit!!!
 		
 		  	 
 **Wishlist:**
 
   * Gotta clean up repo and get rid of my "training" files
   * More refined menu system programming
-    * 8/15 update: getting there slowly...
-	* 8/29 update: 
-  * INI based configuration?
+    * 1/29 update: Should use the dynamic light or group menus to influence main menu code
   * Timeout to clock
-	* 8/29 works only for main menu at the moment
+    * 1/29/17 Needs to be configurable. Affect all menus? (not just main tree) 
   * Disable clock via settings
+  * Implement Guest mode
+    * Guest mode will lock the hueBerry to one group or light allowing for ease of use, without "accidentally" affecting the rest of the house
   * PIR integration?
-  * Lower power consumption (stop refreshing display so often and polling button)
-    * Can't do much regarding this though... 0.7w is about as low as it goes... unless you power it off...
-	* 8/29 update: reworked menu system now lowers power consumption... but pi still sucks power... 
+  * IR remote integration? 
+  * Lower power consumption
+    * Move to ESP8266 architecture?
   * Battery state support and icon (low power indicator and graceful shutdown too)
-    * Coming soon  
+    * Need to design
   * Bugs to squash:
-	* Currently need to re-pair with bridge if bridge IP changes... 
+    * Currently need to re-pair with bridge if bridge IP changes... 
+    * If API key doesn't work on boot, self troubleshoot and see if communication to bridge is bad or API key is bad? 
+  * Dynamically extend main menu with custom scenes 
 	
 	
 **License:** 
 
 [Creative Commons Attribution-NonCommercial 4.0 International ](https://creativecommons.org/licenses/by-nc/4.0/)  
 
-This is a pre-alpha program. Don't blame me for anything and you may not use this against me... although you probably could... 
+This is an open source beta program supplied with no guarantee.
