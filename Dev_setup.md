@@ -75,7 +75,6 @@ sudo python hueberry.py
 * Follow instructions on the screen to pair your hueBerry and bridge
  1. On first run, it should ask you to pair with your Philips hue Bridge.
  1. Follow the onscreen instructions
- 1. 
 * Enjoy! 
  * *If the above instructions do not work, please contact the maintainer to correct this accordingly*
 
