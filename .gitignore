@@ -4,6 +4,12 @@ stuffs/
 #for my HA suff
 HA/ 
 
+# Experiment stuff
+Experiment/
+Trash/
+#Archive/
+
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
