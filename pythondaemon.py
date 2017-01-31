@@ -1,5 +1,10 @@
 # process damon. 
 #run this from home path (~) not from this folder. have rc.local start it and run it in the background. 
+#
+
+oldver = "v030"
+newver = "v032"
+
 import os
 import os.path
 import time 
@@ -7,7 +12,7 @@ logfile = "/home/pi/pythondaemon.log"
 
 current_time = time.strftime("%m / %d / %Y %-H:%M")
 with open(logfile, "a") as myfile:
-    myfile.write(current_time + " pythondaemon is starting up\n")
+    myfile.write(current_time + " pythondaemon is starting up. " + newver + " should be running\n")
 #print "should've written by now"
 
 time.sleep(20)
@@ -22,10 +27,10 @@ while True:
         #print("num of procs is greater! ")
         #os.popen("sudo /etc/rc.local")
         #os.popen("sudo shutdown -r now")
-        os.popen("nice --10 python /home/pi/scripts/smartswitch/v028.py &")
+        os.popen("nice --10 python /home/pi/scripts/smartswitch/" + oldver + ".py &")
         current_time = time.strftime("%m / %d / %Y %-H:%M")
         with open(logfile, "a") as myfile:
-            myfile.write(current_time + " pythondaemon reset the program\n")
+            myfile.write(current_time + " pythondaemon saw that " + newver + " has died so is starting " + oldver + "\n")
 
     #else:
     #    print("num of procs is less! ")

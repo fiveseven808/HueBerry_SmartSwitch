@@ -1,0 +1,9 @@
+Raspberry pi -> Device
+GPIO 16 - D+: Rotary Encoder
+GPIO 20 - D-: Rotary Encoder
+GND - D GND: Rotary Encoder
+GND - Switch GND: Rotary Encoder
+
+GND - GND: I2C SSD1306 128x64 display 
+https://learn.adafruit.com/assets/17603
+RST - Not connected (Chinese displays don't have this unfortunately)

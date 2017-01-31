@@ -9,9 +9,8 @@ HueBerry: DimmerDial
 
 ## Summary: Updated 1/29/2017
 The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY record and change between Whole house scene! It also easily enables you to control the color temperature and Hue and saturation of a group control all of your lights!!! No fumbling with a phone or table or PC, just spin and click and spin like "back in da hanabada days"! 
-
 ##### Program is currently in open beta
-#### No real instructions at the moment... But feel free to ask questions! 
+
 
 ### Features: Updated 1/29/2017
 
@@ -29,7 +28,6 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
 >   * Firmware upgrade possible via placing a special file in the /boot partition
 
 
-### Instructions as of 1/29/17  
 **Requirements:**
 
   * Raspberry Pi (I used a Zero)
@@ -39,15 +37,9 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
   * Rotary encoder switch thing 
   * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hCld2env4vI/edit?usp=sharing)
 	
-**Instructions:**
+## Instructions as of 1/30/17
 
-  1. Wire up the I2C display and rotary encoder (wiring diagrams coming soon)
-  2. Install the Adafruit_SSD1306 library
-  3. Run pigpiod via "sudo pigpiod"
-  4. Run whatever the latest v00*.py is. Should work.
-  5. Follow instructions on the screen to pair your hueBerry and bridge
-  6. ???
-  7. Profit!!!
+  * Detailed instructions for developers available [here!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/Dev_setup.md)
 		
 		  	 
 **Wishlist:**
