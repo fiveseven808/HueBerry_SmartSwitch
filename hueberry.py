@@ -1215,7 +1215,7 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #ex: result = holding_button(500,"hold to activate","activating",21)
     held_down = 0
     prev_mills = int(round(time.time() * 1000))
-    while(not GPIO.input(pin)):
+    while(not GPIO.input(button_pin)):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         if(millsdiff < holding_time_ms):
