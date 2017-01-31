@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 """
+v033 
+2017 0130
+looks like the update worked with a little bit of changes.
+scene with holding the button work as they're supposed to. simple but working now
+gonna try and make dynamic menus
+
 v032
 2017 0129
 looks like scene saving is working good. Goona go and rearrange my hard scenes to be at the end. 
@@ -1228,6 +1234,15 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     successvar = held_down
     return successvar
 
+def get_scene_total(offset):
+    #search all of the scenes in the scenes directory
+    #count how many there are (maybe dump names into a dict then do a len()?) 
+    #add that number to the offset
+    total_scenes = 3
+    total_plus_offset = total_scenes + offset
+    allscenes_dict = ["Scene 1","Scene 2","Scene 3"]
+    return total_scenes,total_plus_offset,allscenes_dict
+
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
 # Set up GPIO with internal pull-up
@@ -1310,11 +1325,14 @@ decoder = rotary_encoder.decoder(pi, 16, 20, callback)
 debugmsg("-----------------------------")
 debugmsg("Starting hueBerry program version " + __file__)
 
+offset = 5 #clock (0) + 4 presets
+post_offset = 3 #settings, light, group menu after scenes)
 while True:
-
+    total_screens,total_plus_offset,allscenes_dict = get_scene_total(offset)
+    menudepth = total_plus_offset + post_offset - 1
     # Cycle through different displays
-    if(pos > 10):
-        pos = 10
+    if(pos > menudepth):
+        pos = menudepth
     elif(pos < 0):
         pos = 0
     display = pos
@@ -1328,7 +1346,7 @@ while True:
         timeout = 0
         #Sleep to conserve CPU Cycles
         time.sleep(0.01)
-    if(old_display != display):   
+    if (old_display != display):
         if(display == 1):
             display_2lines(str(display) + ". Turn OFF","all lights slowly",17)
         elif(display == 2):
@@ -1337,17 +1355,17 @@ while True:
             display_2lines(str(display) + ". FULL ON","all lights",17)
         elif(display == 4):
             display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
-        elif(display == 5):
-            display_2lines(str(display) + ". Whole House","Scene 1",13)
-        elif(display == 6):
-            display_2lines(str(display) + ". 5am","Wakeup",17)
-        elif(display == 7):
-            display_2lines(str(display) + ". Activate", "Scene 1",17)
-        elif(display == 8):
+        #begin scene selection
+        elif(display >= offset and display <= (total_plus_offset-1)): 
+            #print(display, offset, total_plus_offset, menudepth)
+            #print(allscenes_dict)
+            #print (display-offset)
+            display_2lines(str(display) + ". " + str(allscenes_dict[display-offset]),"Play?",15)
+        elif(display == (menudepth-2)):
             display_2lines(str(display) + ". Settings", "Menu",13)
-        elif(display == 9):
+        elif(display == (menudepth-1)):
             display_2lines(str(display) + ". Light Control", "Menu",13)
-        elif(display == 10):
+        elif(display == (menudepth-0)):
             display_2lines(str(display) + ". Group Control", "Menu",13)
         old_display = display
         old_min = 60
@@ -1407,39 +1425,32 @@ while True:
             display_2lines("Turning all","lights OFF quickly",12)
             hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
             debugmsg("turning all lights off quick")
-        elif(display == 5):
-            result = holding_button(5000,"Hold to edit S1","Will record S1",21)
+        elif(display >= offset and display < total_plus_offset):
+            #print display, offset
+            selected_scenenumber = display-offset+1
+            #print selected_scenenumber
+            result = holding_button(5000,"Hold to edit S" + str(selected_scenenumber),"Will record S" + str(selected_scenenumber),21)
             if result == 0:
-                display_2lines("Turning lights:","Scene 1",12)
-                os.popen("./1_scene.sh")
+                display_2lines("Turning lights:","Scene " + str(selected_scenenumber),12)
+                os.popen("./" + str(selected_scenenumber) + "_scene.sh")
                 time.sleep(1)
-                debugmsg("turning lights scene1")
+                debugmsg("turning lights scene" + str(selected_scenenumber))
             elif result == 1:
                 scenenumber = 1
                 ltt = 100
                 #result = get_house_scene_by_group(scenenumber,ltt)
-                result = get_house_scene_by_light(scenenumber,ltt)
+                result = get_house_scene_by_light(selected_scenenumber,ltt)
                 debugmsg("ran scene by group creation with result = " + result)
             else:
                 display_2lines("Something weird","Happened...",12)
                 time.sleep(5)
-        elif(display == 6):
-            display_2lines("Turning lights:","5am wakeup",12)
-            os.popen("./5amwakeup_scene.sh")
-            time.sleep(1)
-            debugmsg("turning lights 5am wakeup")
-        elif(display == 7):
-            display_2lines("Turning lights:","Scene 1",12)
-            os.popen("./1_scene.sh")
-            time.sleep(1)
-            debugmsg("turning lights scene1")
-        elif(display == 8):
+        elif(display == (menudepth-2)):
             pos = 0
             settings_menu()
-        elif(display == 9):
+        elif(display == (menudepth-1)):
             pos = 0
             light_control("l")
-        elif(display == 10):
+        elif(display == (menudepth)):
             pos = 0
             light_control("g")
         time.sleep(0.01)
