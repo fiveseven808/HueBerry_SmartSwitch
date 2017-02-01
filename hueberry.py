@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 """
+v034
+2017 0131
+for some reason when a hueberry first connects, the api key doesn't always seem to work... 
+well, not reliably at least. adding retrys when pulling information from the bridge so it doesn't crash 
+
+v033 
+2017 0130
+looks like the update worked with a little bit of changes.
+scene with holding the button work as they're supposed to. simple but working now
+gonna try and make dynamic menus
+
 v032
 2017 0129
 looks like scene saving is working good. Goona go and rearrange my hard scenes to be at the end. 
@@ -26,33 +37,6 @@ v030 UNTESTED
 2017 0118
 adding debug statements to each main menu item and light and group action so i can figure out what calvin is doing 
 
-v029 
-2017 0116
-added keyvalues array to the get_hue_groups function so now we know what the group IDs are specificaLLY 
-updated hue control to have full saturation to make it easier to figure out what color you want without having to adjust saturation first. 
-updated get_group_names to use the new json scheme 
-
-v028
-20170108
-removing group 5 from turn on all lights
-added debug function and trying to figure out calvins problem
-added error handling for hue lights and hue groups function in case calvins thing freaks out 
-added proper failed return values so it fails gracefully
-
-
-v027
-20170106 1025
-changing display dimish time to 9pm on both date and time
-
-v026
-20170103 1117
-adding error handlig to the light functions so they dont crash when viewing a group that has no bulbs or a nonexistant group 
-
-v025
-20161227 1119
-changed the dev info screen to scroll instead of button push. made the hue info screen it's own seperate thing to help curb freezing
-added provisions for future upgrades
-    - drop upgrade.py in the boot partition, and reboot. should detect and run as root (lol vulnerabilities)
 
 --------------------
 bug:
@@ -106,10 +90,18 @@ def get_group_names():
     #debugmsg(cmdout)
     if not cmdout:
         #print "not brite"
-        display_2lines("An error in ","get_group_names",15)
-        debugmsg("error in get_group_names probably lost connection to hub")
-        time.sleep(2)
-        return 0,0,0,0
+        retry = 1 
+        while not cmdout:
+            if retry >= 3:
+                display_2lines("An error in ","get_group_name",15)
+                debugmsg("error in get_group_names probably lost connection to hub")
+                time.sleep(2)
+                return 0,0,0,0
+                break
+            display_2lines("Bridge not responding","Retrying " + str(retry),15)
+            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            cmdout = os.popen("cat groups").read()
+            retry = retry + 1   
     #debugmsg("passed ifstatement")
     #print cmdout
     #os.popen("rm groups")
@@ -130,10 +122,18 @@ def get_light_names():
     light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     if not light_names:
         #print "not brite"
-        display_2lines("An error in ","get_light_names",15)
-        debugmsg("error in get_light_names probably lost connection to hub")
-        time.sleep(2)
-        return 0,0,0,0,0
+        retry = 1 
+        while not light_names:
+            if retry == 3:
+                display_2lines("An error in ","get_light_names",15)
+                debugmsg("error in get_light_names probably lost connection to hub")
+                time.sleep(2)
+                return 0,0,0,0
+                break
+            display_2lines("Bridge not responding","Retrying " + str(retry),15)
+            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+            retry = retry + 1
     num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
     lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
     #os.popen("rm lights")
@@ -147,7 +147,11 @@ def get_light_names():
 def get_house_scene_by_light(scenenumber,ltt):
     #Get a fresh groups json file
     display_2lines("Grabbing","Light States",15)
-    get_light_names() 
+    name_array,num_array,lstate_a,total = get_light_names() 
+    if name_array == 0:
+        display_3lines("Could not record","Scene","Please Try again",11,offset = 15)
+        time.sleep(2)
+        return "failed"
     #display_custom("ran get light names")
     cmdout = os.popen("cat lights").read()
     #os.popen("cat scene_template.py >> custom_scene" + scenenumber + ".py" )
@@ -1228,6 +1232,15 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     successvar = held_down
     return successvar
 
+def get_scene_total(offset):
+    #search all of the scenes in the scenes directory
+    #count how many there are (maybe dump names into a dict then do a len()?) 
+    #add that number to the offset
+    total_scenes = 3
+    total_plus_offset = total_scenes + offset
+    allscenes_dict = ["Scene 1","Scene 2","Scene 3"]
+    return total_scenes,total_plus_offset,allscenes_dict
+
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
 # Set up GPIO with internal pull-up
@@ -1310,11 +1323,14 @@ decoder = rotary_encoder.decoder(pi, 16, 20, callback)
 debugmsg("-----------------------------")
 debugmsg("Starting hueBerry program version " + __file__)
 
+offset = 5 #clock (0) + 4 presets
+post_offset = 3 #settings, light, group menu after scenes)
 while True:
-
+    total_screens,total_plus_offset,allscenes_dict = get_scene_total(offset)
+    menudepth = total_plus_offset + post_offset - 1
     # Cycle through different displays
-    if(pos > 10):
-        pos = 10
+    if(pos > menudepth):
+        pos = menudepth
     elif(pos < 0):
         pos = 0
     display = pos
@@ -1328,7 +1344,7 @@ while True:
         timeout = 0
         #Sleep to conserve CPU Cycles
         time.sleep(0.01)
-    if(old_display != display):   
+    if (old_display != display):
         if(display == 1):
             display_2lines(str(display) + ". Turn OFF","all lights slowly",17)
         elif(display == 2):
@@ -1337,17 +1353,17 @@ while True:
             display_2lines(str(display) + ". FULL ON","all lights",17)
         elif(display == 4):
             display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
-        elif(display == 5):
-            display_2lines(str(display) + ". Whole House","Scene 1",13)
-        elif(display == 6):
-            display_2lines(str(display) + ". 5am","Wakeup",17)
-        elif(display == 7):
-            display_2lines(str(display) + ". Activate", "Scene 1",17)
-        elif(display == 8):
+        #begin scene selection
+        elif(display >= offset and display <= (total_plus_offset-1)): 
+            #print(display, offset, total_plus_offset, menudepth)
+            #print(allscenes_dict)
+            #print (display-offset)
+            display_2lines(str(display) + ". " + str(allscenes_dict[display-offset]),"Play?",15)
+        elif(display == (menudepth-2)):
             display_2lines(str(display) + ". Settings", "Menu",13)
-        elif(display == 9):
+        elif(display == (menudepth-1)):
             display_2lines(str(display) + ". Light Control", "Menu",13)
-        elif(display == 10):
+        elif(display == (menudepth-0)):
             display_2lines(str(display) + ". Group Control", "Menu",13)
         old_display = display
         old_min = 60
@@ -1407,39 +1423,32 @@ while True:
             display_2lines("Turning all","lights OFF quickly",12)
             hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
             debugmsg("turning all lights off quick")
-        elif(display == 5):
-            result = holding_button(5000,"Hold to edit S1","Will record S1",21)
+        elif(display >= offset and display < total_plus_offset):
+            #print display, offset
+            selected_scenenumber = display-offset+1
+            #print selected_scenenumber
+            result = holding_button(5000,"Hold to edit S" + str(selected_scenenumber),"Will record S" + str(selected_scenenumber),21)
             if result == 0:
-                display_2lines("Turning lights:","Scene 1",12)
-                os.popen("./1_scene.sh")
+                display_2lines("Turning lights:","Scene " + str(selected_scenenumber),12)
+                os.popen("./" + str(selected_scenenumber) + "_scene.sh")
                 time.sleep(1)
-                debugmsg("turning lights scene1")
+                debugmsg("turning lights scene" + str(selected_scenenumber))
             elif result == 1:
                 scenenumber = 1
                 ltt = 100
                 #result = get_house_scene_by_group(scenenumber,ltt)
-                result = get_house_scene_by_light(scenenumber,ltt)
+                result = get_house_scene_by_light(selected_scenenumber,ltt)
                 debugmsg("ran scene by group creation with result = " + result)
             else:
                 display_2lines("Something weird","Happened...",12)
                 time.sleep(5)
-        elif(display == 6):
-            display_2lines("Turning lights:","5am wakeup",12)
-            os.popen("./5amwakeup_scene.sh")
-            time.sleep(1)
-            debugmsg("turning lights 5am wakeup")
-        elif(display == 7):
-            display_2lines("Turning lights:","Scene 1",12)
-            os.popen("./1_scene.sh")
-            time.sleep(1)
-            debugmsg("turning lights scene1")
-        elif(display == 8):
+        elif(display == (menudepth-2)):
             pos = 0
             settings_menu()
-        elif(display == 9):
+        elif(display == (menudepth-1)):
             pos = 0
             light_control("l")
-        elif(display == 10):
+        elif(display == (menudepth)):
             pos = 0
             light_control("g")
         time.sleep(0.01)

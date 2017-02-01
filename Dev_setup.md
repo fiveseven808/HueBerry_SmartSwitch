@@ -64,7 +64,7 @@ start_x=0
 ```
 dtparam=sd_overclock=100
 ```
-* Clone hueBerry git dev branch (git syntax and commands untested) then run the main program
+* Clone hueBerry git dev branch then run the main program
 ```
 cd ~
 git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git

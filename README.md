@@ -54,6 +54,7 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
     * Guest mode will lock the hueBerry to one group or light allowing for ease of use, without "accidentally" affecting the rest of the house
   * PIR integration?
   * IR remote integration? 
+    * Push buttons on a universal remote to change scenes!
   * Lower power consumption
     * Move to ESP8266 architecture?
   * Battery state support and icon (low power indicator and graceful shutdown too)
@@ -62,6 +63,8 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
     * Currently need to re-pair with bridge if bridge IP changes... 
     * If API key doesn't work on boot, self troubleshoot and see if communication to bridge is bad or API key is bad? 
   * Dynamically extend main menu with custom scenes 
+  * Multiple bridge support (looks like the N-UPnP discovery method supports it)
+    * Whole house scenes spanning multiple bridges (for those lucky enough to have that problem lol)	
 	
 	
 **License:** 
