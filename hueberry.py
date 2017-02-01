@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 """
+v034
+2017 0131
+for some reason when a hueberry first connects, the api key doesn't always seem to work... 
+well, not reliably at least. adding retrys when pulling information from the bridge so it doesn't crash 
+
 v033 
 2017 0130
 looks like the update worked with a little bit of changes.
@@ -32,33 +37,6 @@ v030 UNTESTED
 2017 0118
 adding debug statements to each main menu item and light and group action so i can figure out what calvin is doing 
 
-v029 
-2017 0116
-added keyvalues array to the get_hue_groups function so now we know what the group IDs are specificaLLY 
-updated hue control to have full saturation to make it easier to figure out what color you want without having to adjust saturation first. 
-updated get_group_names to use the new json scheme 
-
-v028
-20170108
-removing group 5 from turn on all lights
-added debug function and trying to figure out calvins problem
-added error handling for hue lights and hue groups function in case calvins thing freaks out 
-added proper failed return values so it fails gracefully
-
-
-v027
-20170106 1025
-changing display dimish time to 9pm on both date and time
-
-v026
-20170103 1117
-adding error handlig to the light functions so they dont crash when viewing a group that has no bulbs or a nonexistant group 
-
-v025
-20161227 1119
-changed the dev info screen to scroll instead of button push. made the hue info screen it's own seperate thing to help curb freezing
-added provisions for future upgrades
-    - drop upgrade.py in the boot partition, and reboot. should detect and run as root (lol vulnerabilities)
 
 --------------------
 bug:
@@ -112,10 +90,18 @@ def get_group_names():
     #debugmsg(cmdout)
     if not cmdout:
         #print "not brite"
-        display_2lines("An error in ","get_group_names",15)
-        debugmsg("error in get_group_names probably lost connection to hub")
-        time.sleep(2)
-        return 0,0,0,0
+        retry = 1 
+        while not cmdout:
+            if retry >= 3:
+                display_2lines("An error in ","get_group_name",15)
+                debugmsg("error in get_group_names probably lost connection to hub")
+                time.sleep(2)
+                return 0,0,0,0
+                break
+            display_2lines("Bridge not responding","Retrying " + str(retry),15)
+            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            cmdout = os.popen("cat groups").read()
+            retry = retry + 1   
     #debugmsg("passed ifstatement")
     #print cmdout
     #os.popen("rm groups")
@@ -136,10 +122,18 @@ def get_light_names():
     light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     if not light_names:
         #print "not brite"
-        display_2lines("An error in ","get_light_names",15)
-        debugmsg("error in get_light_names probably lost connection to hub")
-        time.sleep(2)
-        return 0,0,0,0,0
+        retry = 1 
+        while not light_names:
+            if retry == 3:
+                display_2lines("An error in ","get_light_names",15)
+                debugmsg("error in get_light_names probably lost connection to hub")
+                time.sleep(2)
+                return 0,0,0,0
+                break
+            display_2lines("Bridge not responding","Retrying " + str(retry),15)
+            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+            retry = retry + 1
     num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
     lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
     #os.popen("rm lights")
@@ -153,7 +147,11 @@ def get_light_names():
 def get_house_scene_by_light(scenenumber,ltt):
     #Get a fresh groups json file
     display_2lines("Grabbing","Light States",15)
-    get_light_names() 
+    name_array,num_array,lstate_a,total = get_light_names() 
+    if name_array == 0:
+        display_3lines("Could not record","Scene","Please Try again",11,offset = 15)
+        time.sleep(2)
+        return "failed"
     #display_custom("ran get light names")
     cmdout = os.popen("cat lights").read()
     #os.popen("cat scene_template.py >> custom_scene" + scenenumber + ".py" )
