@@ -1,5 +1,22 @@
 #!/usr/bin/env python
 """
+v035 
+2017 0202
+Tried to fix the 1g light strips and livingcolors bug where you can't control hue. 
+added fix in the CT and light_control functions 
+
+also tried to fix the CT group and adjusting 1g lightstrips and livingcolors bug, where you adjusting the CT of a group with one of the light strips or living colors in it will not update them. 
+new algorithm: wait until 0.5 second has passed since the knob was last touched. 
+*should* work but it's untested as of now 
+13:32
+
+22:20
+so.... the ct group thing doesn't work, but i'm saving it. it turns out that the time it takes for the bridge to convert a value to HSV or XY is too long and varies too much. 
+i'm keeping this for now becuase it's kind of nice to have, but it really shouldn't be merged into prod. 
+daniel brought up that hue + sat is actually HSV. python has a built in RGB to HSV conversion function. python kelvin to RGB module exists. 
+need to merge the two.... will probably worki on the CT+lightcontrol issue first. 
+ 
+
 v034
 2017 0131
 for some reason when a hueberry first connects, the api key doesn't always seem to work... 
@@ -66,7 +83,6 @@ import pigpio
 import rotary_encoder
 import authenticate
 import json
-#import subprocess
 #import huepi
 #figure out how to export this to huepi
 
@@ -401,16 +417,17 @@ def light_control(mode):
                             display_custom("returning...")
                            
                     elif(mode == "l"):
-                        ct_control(num_lights[display-1],"l") 
+                        huemode = ct_control(num_lights[display-1],"l") 
                         prev_mills = int(round(time.time() * 1000))
-                        while(not GPIO.input(21)):
-                            mills = int(round(time.time() * 1000))
-                            millsdiff = mills - prev_mills
-                            if(millsdiff < 500):
-                                display_custom("hold for hue...")
-                            elif(millsdiff >= 500):
-                                huemode = 1
-                                break
+                        if (huemode == 0):
+                            while(not GPIO.input(21)):
+                                mills = int(round(time.time() * 1000))
+                                millsdiff = mills - prev_mills
+                                if(millsdiff < 500):
+                                    display_custom("hold for hue...")
+                                elif(millsdiff >= 500):
+                                    huemode = 1
+                                    break
                         if (huemode == 1):
                             hue_control(num_lights[display-1],"l")
                             huemode = 0
@@ -513,8 +530,10 @@ def ct_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
     elif (mode == "l"):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
+    whole_json = os.popen("cat brite").read()
+    wat = json.loads(whole_json)
     brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    os.popen("rm brite")
+    #os.popen("rm brite")
     if not brite:
         #print "not brite"
         display_2lines("No devices","in group",17)
@@ -528,7 +547,15 @@ def ct_control(device,mode):
         brite = int(brite)      #convert the float down to int agian
     else:
         if (mode == "l"):
-            display_custom("Light " + str(device) + " isn't CT-able")
+            type = wat['type']
+            if (type == "Color light"):
+                display_custom("Light " + str(device) + " will Hue instead")
+                skip_to_hue = 1
+                time.sleep(.5)
+                return skip_to_hue
+            else:
+                debugmsg(type)
+                display_custom("Light " + str(device) + " isn't CT-able")
         elif (mode == "g"):
             display_custom("Group " + str(device) + " isn't CT-able")
         time.sleep(.5)
@@ -540,6 +567,8 @@ def ct_control(device,mode):
     bri_pre = ((25-pos) * 14) + 153
     refresh = 1
     prev_mills = 0 
+    prev_xy = 0
+    new_xy = 0
     while exitvar == False:
         if(pos > max_rot_val):
             pos = max_rot_val
@@ -547,7 +576,7 @@ def ct_control(device,mode):
             pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = ((25-pos) * 14) + 153
+        rot_bri = ((max_rot_val-pos) * 14) + 153
         if(bri_pre != rot_bri or refresh ==  1 ):
             tempcalc = ((-12.968*rot_bri)+8484)/100
             tempcalc = (round(tempcalc))*100
@@ -558,22 +587,40 @@ def ct_control(device,mode):
                 display_2lines("Light " + str(device),"CT: " + str(int(tempcalc)) + "K",17)
             refresh = 0
         if(rot_bri != bri_pre and millsdiff > 250):
+            #print("inside old group function " + str(mode) + " " + str(prev_xy))
             if(rot_bri > 500):
                 rotbri = 500
             if(mode == "g"):
                 #hue_groups(lnum = device,lon = "true",lbri = "-1",lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = rot_bri)
-                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':rot_bri})
+                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
                 huecmd.start()
             elif(mode == "l"):
                 #hue_lights(lnum = device,lon = "true",lbri = "-1",lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = rot_bri)
-                huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':rot_bri})
+                huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
                 huecmd.start()
             bri_pre = rot_bri
             print rot_bri
             prev_mills = mills
-        elif(millsdiff > 250): 
+            prev_xy = 1
+        if(mode == "g" and prev_xy != new_xy and millsdiff > 5000):
+            print("inside of the new groupxy function") 
+            display_custom("setting group via XY")
+            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
+            whole_json = os.popen("cat brite").read()
+            wat = json.loads(whole_json)
+            print wat
+            new_xy = wat['action']['xy']
+            print new_xy
+            lx = new_xy[0]
+            ly = new_xy[1]
+            #Mode is implicitly G 
+            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':lx,'ly':ly,'ltt':"4",'lct':"-1"})
+            huecmd.start()
+            prev_xy = new_xy
             prev_mills = mills
-            
+            refresh = 1
+        #elif(millsdiff > 250): 
+        #    prev_mills = mills
         if(not GPIO.input(21)):
             exitvar = True
         time.sleep(0.01)
@@ -1427,7 +1474,7 @@ while True:
             #print display, offset
             selected_scenenumber = display-offset+1
             #print selected_scenenumber
-            result = holding_button(5000,"Hold to edit S" + str(selected_scenenumber),"Will record S" + str(selected_scenenumber),21)
+            result = holding_button(5000,"Hold to record S" + str(selected_scenenumber),"Will record S" + str(selected_scenenumber),21)
             if result == 0:
                 display_2lines("Turning lights:","Scene " + str(selected_scenenumber),12)
                 os.popen("./" + str(selected_scenenumber) + "_scene.sh")
