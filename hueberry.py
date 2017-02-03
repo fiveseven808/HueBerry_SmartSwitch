@@ -1572,7 +1572,7 @@ while True:
                 debugmsg("turning lights scene" + str(selected_scenenumber))
             elif result == 1:
                 scenenumber = 1
-                ltt = 100
+                ltt = 4
                 #result = get_house_scene_by_group(scenenumber,ltt)
                 result = get_house_scene_by_light(selected_scenenumber,ltt)
                 debugmsg("ran scene by group creation with result = " + result)
