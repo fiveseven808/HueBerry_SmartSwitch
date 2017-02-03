@@ -15,6 +15,11 @@ so.... the ct group thing doesn't work, but i'm saving it. it turns out that the
 i'm keeping this for now becuase it's kind of nice to have, but it really shouldn't be merged into prod. 
 daniel brought up that hue + sat is actually HSV. python has a built in RGB to HSV conversion function. python kelvin to RGB module exists. 
 need to merge the two.... will probably worki on the CT+lightcontrol issue first. 
+
+2226
+gonna attempt to fix the individual CT bit where it should go straght to hue... 
+2243
+looks like i fixed the CT issue. i had quit the CT function too early in my last error handling. it shoul dbe a lot better now... i think there's an else statement somewhere in there that doesn't need to be... i put some markers just in case it gets called.... 
  
 
 v034
@@ -417,6 +422,7 @@ def light_control(mode):
                             display_custom("returning...")
                            
                     elif(mode == "l"):
+                        print("entering modified ct_control")
                         huemode = ct_control(num_lights[display-1],"l") 
                         prev_mills = int(round(time.time() * 1000))
                         if (huemode == 0):
@@ -534,26 +540,38 @@ def ct_control(device,mode):
     wat = json.loads(whole_json)
     brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     #os.popen("rm brite")
+    type = wat['type']
+    print type
+    if (type == "Color light"):
+        #print("color light")
+        display_custom("Light " + str(device) + " will Hue instead")
+        skip_to_hue = 1
+        time.sleep(.5)
+        return skip_to_hue
     if not brite:
         #print "not brite"
-        display_2lines("No devices","in group",17)
+        display_2lines("No capable","devices available",12)
         time.sleep(3)
         return
     bri_length = len(brite)
-    print bri_length
+    #print("bri_length: "+str(bri_length))
     if (bri_length > 0):
         brite = int(brite)      #make integer
         brite = 25-((brite - 153) / 14)
         brite = int(brite)      #convert the float down to int agian
     else:
+        debugmsg("CT_else statement. should never be called actually")
+        print("oshit, this should never be called")
         if (mode == "l"):
             type = wat['type']
             if (type == "Color light"):
+                print("color light")
                 display_custom("Light " + str(device) + " will Hue instead")
                 skip_to_hue = 1
                 time.sleep(.5)
                 return skip_to_hue
             else:
+                print("notcolorlight")
                 debugmsg(type)
                 display_custom("Light " + str(device) + " isn't CT-able")
         elif (mode == "g"):
@@ -614,8 +632,8 @@ def ct_control(device,mode):
             lx = new_xy[0]
             ly = new_xy[1]
             #Mode is implicitly G 
-            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':lx,'ly':ly,'ltt':"4",'lct':"-1"})
-            huecmd.start()
+            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':lx,'ly':ly,'ltt':"4",'lct':"-1"})
+            #huecmd.start()
             prev_xy = new_xy
             prev_mills = mills
             refresh = 1
