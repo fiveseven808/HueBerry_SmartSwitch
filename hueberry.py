@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 """
+v036
+2017-02-03 0958 //57
+Tweaked the debugmsg string input for WPBack's new method. 
+Added easy to turn off global variable for debugmsg: debug_state
+Implemented WPBack's new function to enable CT for "Color Lights" as well as calculate and send back hue/sat to a group after 0.5s to look for color wobble 
+Cleaned up ct_control a little bit. 
+UNTESTED (but runs without any obvious errors) 
+
 2017-02-03 //WPBack
 Added the method ct_to_hue_sat that converts color-temperatures into hue and saturation-values scaled for the Hue-system.
 For use with the old LED-strip and other lights that doesn't support CT-settings.
@@ -60,11 +68,6 @@ added 2 ways to do it. using the per light way. both ways work actually. may lea
 fuck this was difficult
 
 
-v030 UNTESTED
-2017 0118
-adding debug statements to each main menu item and light and group action so i can figure out what calvin is doing
-
-
 --------------------
 bug:
 --------------------
@@ -100,6 +103,9 @@ import math
 
 global logfile
 logfile = "/home/pi/hueberry.log"
+
+global debug_state
+debug_state = 1
 
 menu_timeout = 30 #seconds
 
@@ -528,21 +534,19 @@ def g_control(group):
             exitvar = True
         time.sleep(0.01)
 
-#Method tho convert color temperature into hue and saturation scaled for the Hue-system
-#Not tested so muck yet
+#------------------------------------------------------------------------------------
+#Method to convert color temperature into hue and saturation scaled for the Hue-system
+#Not tested so much yet
+#------------------------------------------------------------------------------------
 def ct_to_hue_sat(ct):
     #Method from http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
-
-    debugmsg("converting ct " + ct + "into Hue and Saturation")
-
+    debugmsg("converting ct " + str(ct) + "into Hue and Saturation")
     #check range
     if (ct < 1000):
         ct = 1000.0
     elif (ct > 40000):
         ct = 40000.0
-
     ct = ct / 100.0
-
     #calculate red
     if (ct <= 66):
         red = 255.0
@@ -553,7 +557,6 @@ def ct_to_hue_sat(ct):
             red = 0.0
         elif (red > 255):
             red = 255.0
-
     #calculate green
     if (ct <= 66):
         green = ct
@@ -569,7 +572,6 @@ def ct_to_hue_sat(ct):
             green = 0.0
         elif (green > 255):
             green = 255.0
-
     #calculate blue
     if (ct <= 16):
         blue = 255.0
@@ -583,14 +585,12 @@ def ct_to_hue_sat(ct):
             blue = 0.0
         elif (blue > 255):
             blue = 255.0
-
     #Convert to Hue, Saturation and Value
     h, s, v = colorsys.rgb_to_hsv(red/255.0, green/255.0, blue/255.0)
-    h = h * 65535
-    s = s * 254
-
-    debugmsg("hue: " + h + "saturation: " + s)
-
+    #debugmsg("raw hue: " + str(360*h) + "saturation: " + str(s*100) + "value: " + str(v))
+    h = int(h * 65535)
+    s = int(s * 254)
+    debugmsg("hue: " + str(h) + "saturation: " + str(s) + "value: " + str(v))
     return h, s
 
 #------------------------------------------------------------------------------------
@@ -614,42 +614,23 @@ def ct_control(device,mode):
     #os.popen("rm brite")
     type = wat['type']
     print type
-    if (type == "Color light"):
-        #print("color light")
-        display_custom("Light " + str(device) + " will Hue instead")
-        skip_to_hue = 1
-        time.sleep(.5)
-        return skip_to_hue
-    if not brite:
+    #if (type == "Color light"):
+    #    #print("color light")
+    #    display_custom("Light " + str(device) + " will Hue instead")
+    #    skip_to_hue = 1
+    #    time.sleep(.5)
+    #    return skip_to_hue
+    if (not brite and type != "Color light"):
         #print "not brite"
         display_2lines("No capable","devices available",12)
         time.sleep(3)
         return
-    bri_length = len(brite)
-    #print("bri_length: "+str(bri_length))
-    if (bri_length > 0):
-        brite = int(brite)      #make integer
-        brite = 25-((brite - 153) / 14)
-        brite = int(brite)      #convert the float down to int agian
-    else:
-        debugmsg("CT_else statement. should never be called actually")
-        print("oshit, this should never be called")
-        if (mode == "l"):
-            type = wat['type']
-            if (type == "Color light"):
-                print("color light")
-                display_custom("Light " + str(device) + " will Hue instead")
-                skip_to_hue = 1
-                time.sleep(.5)
-                return skip_to_hue
-            else:
-                print("notcolorlight")
-                debugmsg(type)
-                display_custom("Light " + str(device) + " isn't CT-able")
-        elif (mode == "g"):
-            display_custom("Group " + str(device) + " isn't CT-able")
-        time.sleep(.5)
-        return
+    elif(type == "Color Light"):
+        brite = 500         #Start at warmest color as to not shock eyes lol 
+    #brite = wat['action']['ct']
+    brite = int(brite)      #make integer
+    brite = 25-((brite - 153) / 14)
+    brite = int(brite)      #convert the float down to int agian
     global pos
     pos = brite
     exitvar = False
@@ -668,6 +649,7 @@ def ct_control(device,mode):
         millsdiff = mills - prev_mills
         rot_bri = ((max_rot_val-pos) * 14) + 153
         if(bri_pre != rot_bri or refresh ==  1 ):
+            raw_temp = int((-12.968*rot_bri)+8484)
             tempcalc = ((-12.968*rot_bri)+8484)/100
             tempcalc = (round(tempcalc))*100
             tempcalc = int(tempcalc)
@@ -681,31 +663,28 @@ def ct_control(device,mode):
             if(rot_bri > 500):
                 rotbri = 500
             if(mode == "g"):
-                #hue_groups(lnum = device,lon = "true",lbri = "-1",lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = rot_bri)
                 huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
                 huecmd.start()
             elif(mode == "l"):
-                #hue_lights(lnum = device,lon = "true",lbri = "-1",lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = rot_bri)
-                huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
-                huecmd.start()
+                if (type == "Color light"):
+                    hue,sat = ct_to_hue_sat(rawtemp)
+                    huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+                    huecmd.start()
+                else:
+                    huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
+                    huecmd.start()
             bri_pre = rot_bri
             print rot_bri
             prev_mills = mills
             prev_xy = 1
-        if(mode == "g" and prev_xy != new_xy and millsdiff > 5000):
+        if(mode == "g" and prev_xy != new_xy and millsdiff > 500):
             print("inside of the new groupxy function")
-            display_custom("setting group via XY")
-            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
-            whole_json = os.popen("cat brite").read()
-            wat = json.loads(whole_json)
-            print wat
-            new_xy = wat['action']['xy']
-            print new_xy
-            lx = new_xy[0]
-            ly = new_xy[1]
-            #Mode is implicitly G
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':lx,'ly':ly,'ltt':"4",'lct':"-1"})
-            #huecmd.start()
+            #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
+            display_custom("setting group via hue")
+            hue,sat = ct_to_hue_sat(rawtemp)
+            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+            huecmd.start()
+            new_xy = hue
             prev_xy = new_xy
             prev_mills = mills
             refresh = 1
@@ -1347,9 +1326,13 @@ def check_upgrade_file():
 
 def debugmsg(message):
     global logfile
-    current_time = time.strftime("%m / %d / %Y %-H:%M")
-    with open(logfile, "a") as myfile:
-        myfile.write(current_time + " " + message + "\n")
+    global debug_state
+    if debug_state == 1:
+        current_time = time.strftime("%m / %d / %Y %-H:%M")
+        with open(logfile, "a") as myfile:
+            myfile.write(current_time + " " + message + "\n")
+    else:
+        return
 
 def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #If this function is activated, then we're checking for the button being held
