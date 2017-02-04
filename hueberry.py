@@ -90,7 +90,9 @@ def print_usage():
     How to run:
         sudo python hueberry.py [-d] [-h,--help]
     
-    -d          Sets the program to output and take input from the console
+    -d          Sets the program to output and take input from the console 
+                (does not work)
+                
     -h,--help   Displays this help text 
     """
     print(usage)
