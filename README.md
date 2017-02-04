@@ -39,7 +39,7 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
 	
 ## Instructions as of 1/30/17
 
-  * Detailed instructions for developers available [here!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/Dev_setup.md)
+  * [Detailed instructions for developers available here!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/Dev_setup.md) 	
 		
 		  	 
 **Wishlist:**
