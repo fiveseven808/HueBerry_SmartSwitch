@@ -1,11 +1,46 @@
 #!/usr/bin/env python
 """
+v036
+2017-02-03 0958 //57
+Tweaked the debugmsg string input for WPBack's new method. 
+Added easy to turn off global variable for debugmsg: debug_state
+Implemented WPBack's new function to enable CT for "Color Lights" as well as calculate and send back hue/sat to a group after 0.5s to look for color wobble 
+Cleaned up ct_control a little bit. 
+UNTESTED (but runs without any obvious errors) 
+
+2017-02-03 //WPBack
+Added the method ct_to_hue_sat that converts color-temperatures into hue and saturation-values scaled for the Hue-system.
+For use with the old LED-strip and other lights that doesn't support CT-settings.
+Not implemeted anywhere yet though, and not tested enough
+
+v035
+2017 0202
+Tried to fix the 1g light strips and livingcolors bug where you can't control hue.
+added fix in the CT and light_control functions
+
+also tried to fix the CT group and adjusting 1g lightstrips and livingcolors bug, where you adjusting the CT of a group with one of the light strips or living colors in it will not update them.
+new algorithm: wait until 0.5 second has passed since the knob was last touched.
+*should* work but it's untested as of now
+13:32
+
+22:20
+so.... the ct group thing doesn't work, but i'm saving it. it turns out that the time it takes for the bridge to convert a value to HSV or XY is too long and varies too much.
+i'm keeping this for now becuase it's kind of nice to have, but it really shouldn't be merged into prod.
+daniel brought up that hue + sat is actually HSV. python has a built in RGB to HSV conversion function. python kelvin to RGB module exists.
+need to merge the two.... will probably worki on the CT+lightcontrol issue first.
+
+2226
+gonna attempt to fix the individual CT bit where it should go straght to hue...
+2243
+looks like i fixed the CT issue. i had quit the CT function too early in my last error handling. it shoul dbe a lot better now... i think there's an else statement somewhere in there that doesn't need to be... i put some markers just in case it gets called....
+
+
 v034
 2017 0131
-for some reason when a hueberry first connects, the api key doesn't always seem to work... 
-well, not reliably at least. adding retrys when pulling information from the bridge so it doesn't crash 
+for some reason when a hueberry first connects, the api key doesn't always seem to work...
+well, not reliably at least. adding retrys when pulling information from the bridge so it doesn't crash
 
-v033 
+v033
 2017 0130
 looks like the update worked with a little bit of changes.
 scene with holding the button work as they're supposed to. simple but working now
@@ -13,8 +48,8 @@ gonna try and make dynamic menus
 
 v032
 2017 0129
-looks like scene saving is working good. Goona go and rearrange my hard scenes to be at the end. 
-gonna make custom scenes configurable. make a transition time gathering thing. 
+looks like scene saving is working good. Goona go and rearrange my hard scenes to be at the end.
+gonna make custom scenes configurable. make a transition time gathering thing.
 remeoved scene by group since by light is so fast
 new process:
     select a scene
@@ -23,21 +58,20 @@ new process:
         new menu:
         record scene
         edit transition time
-        
-    
+
+
 
 v031
 2017 0126
-adding the scene creation function. and replay. 
+adding the scene creation function. and replay.
 added 2 ways to do it. using the per light way. both ways work actually. may lead to interesting results
-fuck this was difficult 
-    
+fuck this was difficult
 
-v030 UNTESTED
-2017 0118
-adding debug statements to each main menu item and light and group action so i can figure out what calvin is doing 
-
-
+--------------------
+How to run:
+sudo python hueberry.py [-d]
+http://www.diveintopython.net/scripts_and_streams/command_line_arguments.html 
+this is probably a good reference on how to program this in the future 
 --------------------
 bug:
 --------------------
@@ -48,33 +82,61 @@ search and test auth?
 ping on startup?
 
 check for response?
-nothing found? 
+nothing found?
 """
+
+def print_usage():
+    usage = """ 
+    How to run:
+        sudo python hueberry.py [-d] [-h,--help]
+    
+    -d          Sets the program to output and take input from the console 
+                (does not work)
+                
+    -h,--help   Displays this help text 
+    """
+    print(usage)
+
 import os
 import os.path
 #set working directory to script directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-os.popen("python splashscreen.py &")
+
+import sys
+debug_argument = 0
+for arg in sys.argv:
+    if arg == '-d':
+        debug_argument = 1
+    if arg in ("-h","--help"):
+        print_usage()
+        sys.exit()
+
+if debug_argument != 1:
+    os.popen("python splashscreen.py &")
+    import Adafruit_SSD1306
+    import RPi.GPIO as GPIO
+    import pigpio
+    import rotary_encoder
+
 import threading
 import time
-import Adafruit_SSD1306
-import RPi.GPIO as GPIO
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
-import pigpio
-import rotary_encoder
 import authenticate
 import json
-#import subprocess
+import colorsys
+import math
 #import huepi
 #figure out how to export this to huepi
 
 global logfile
 logfile = "/home/pi/hueberry.log"
 
-menu_timeout = 30 #seconds
+global debug_state
+debug_state = 1
 
+menu_timeout = 30 #seconds
 
 
 #--------------------------------------------------------------------------
@@ -90,7 +152,7 @@ def get_group_names():
     #debugmsg(cmdout)
     if not cmdout:
         #print "not brite"
-        retry = 1 
+        retry = 1
         while not cmdout:
             if retry >= 3:
                 display_2lines("An error in ","get_group_name",15)
@@ -101,7 +163,7 @@ def get_group_names():
             display_2lines("Bridge not responding","Retrying " + str(retry),15)
             os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
             cmdout = os.popen("cat groups").read()
-            retry = retry + 1   
+            retry = retry + 1
     #debugmsg("passed ifstatement")
     #print cmdout
     #os.popen("rm groups")
@@ -122,7 +184,7 @@ def get_light_names():
     light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     if not light_names:
         #print "not brite"
-        retry = 1 
+        retry = 1
         while not light_names:
             if retry == 3:
                 display_2lines("An error in ","get_light_names",15)
@@ -143,11 +205,11 @@ def get_light_names():
     total = len(num_array) - 1
     return name_array,num_array,lstate_a,total
 
-    
+
 def get_house_scene_by_light(scenenumber,ltt):
     #Get a fresh groups json file
     display_2lines("Grabbing","Light States",15)
-    name_array,num_array,lstate_a,total = get_light_names() 
+    name_array,num_array,lstate_a,total = get_light_names()
     if name_array == 0:
         display_3lines("Could not record","Scene","Please Try again",11,offset = 15)
         time.sleep(2)
@@ -166,7 +228,7 @@ def get_house_scene_by_light(scenenumber,ltt):
     hue_array = []
     ct_array = []
     sat_array = []
-    xy_array = [] 
+    xy_array = []
     #display_custom("blanked varliables")
     #time.sleep(3)
     for x, v  in wat.items():
@@ -216,7 +278,7 @@ def get_house_scene_by_light(scenenumber,ltt):
     #print hue_array
     #print ct_array
     #print sat_array
-    #print xy_array        
+    #print xy_array
     #ltt = 100
     #api_url = "http://testbridge/something"
     index = 0
@@ -224,7 +286,7 @@ def get_house_scene_by_light(scenenumber,ltt):
     sceneobj = open(scenefile,"w+")
     sceneobj.write("#!/bin/bash\n#\n#This is a scenefile generated by hueBerry\n\n")
     display_2lines("Building","Scene Script!",15)
-    while index < len(result_array):    
+    while index < len(result_array):
         scenecmd = "curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + ",\"bri\":" + str(bri_array[index]) + ",\"sat\":" + str(sat_array[index]) + ",\"xy\":" + str(xy_array[index]) + ",\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(hue_array[index]) + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
         #display_2lines("Writing","Lights " + str(index + 1) + " of " + str(len(result_array)),15)
         print(scenecmd)
@@ -236,15 +298,15 @@ def get_house_scene_by_light(scenenumber,ltt):
     os.popen("chmod a+x " + scenefile)
     display_2lines("Scenefile","Completed!",15)
     status = "completed"
-    return status    
-    
+    return status
+
 def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     debugmsg("entering hue lights")
     if ('hue' in options):
         result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
     else:
         result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
-    debugmsg(result)    
+    debugmsg(result)
     if not result:
         #print "not brite"
         display_2lines("An error in ","hue_lights",17)
@@ -273,9 +335,9 @@ def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     #debugmsg("printed result")
     return result
 
-#------------------------------------------------------------------------------------  
-#   This function is the main menu for any light adjustment 
-#   It displays lights or groups in the hue system and then allows you to control 
+#------------------------------------------------------------------------------------
+#   This function is the main menu for any light adjustment
+#   It displays lights or groups in the hue system and then allows you to control
 #       brightness, color temp, hue, and saturation in a fairly intuitive manner
 #
 #   Usage:
@@ -285,7 +347,7 @@ def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
 #       Long push:
 #           CT adjustment or move to next option
 #
-#   Displays: 
+#   Displays:
 #       Group or Light name as you scroll around. Allows you to change most attributes of the light
 #------------------------------------------------------------------------------------
 def light_control(mode):
@@ -367,7 +429,7 @@ def light_control(mode):
                         else:
                             while(not GPIO.input(21)):
                                 display_custom("entering ct...")
-                        
+
 
                 if(ctmode == 1):
                     if(mode == "g"):
@@ -399,18 +461,21 @@ def light_control(mode):
                             sat_control(keyvalues[display-1],"g")
                         elif(huemode ==0):
                             display_custom("returning...")
-                           
+
                     elif(mode == "l"):
-                        ct_control(num_lights[display-1],"l") 
+                        #print("entering modified ct_control")
+                        #no you're not lol
+                        ct_control(num_lights[display-1],"l")
                         prev_mills = int(round(time.time() * 1000))
-                        while(not GPIO.input(21)):
-                            mills = int(round(time.time() * 1000))
-                            millsdiff = mills - prev_mills
-                            if(millsdiff < 500):
-                                display_custom("hold for hue...")
-                            elif(millsdiff >= 500):
-                                huemode = 1
-                                break
+                        if (huemode == 0):
+                            while(not GPIO.input(21)):
+                                mills = int(round(time.time() * 1000))
+                                millsdiff = mills - prev_mills
+                                if(millsdiff < 500):
+                                    display_custom("hold for hue...")
+                                elif(millsdiff >= 500):
+                                    huemode = 1
+                                    break
                         if (huemode == 1):
                             hue_control(num_lights[display-1],"l")
                             huemode = 0
@@ -433,7 +498,7 @@ def light_control(mode):
                     name_array,total,lstate_a,keyvalues = get_group_names()
                 elif(mode == "l"):
                     name_array,num_lights,lstate_a,total = get_light_names()
-                refresh = 1 
+                refresh = 1
                 pos = display
             else:
                 time.sleep(0.25)
@@ -441,7 +506,7 @@ def light_control(mode):
             time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
     return
-    
+
 
 
 def g_control(group):
@@ -454,7 +519,7 @@ def g_control(group):
         display_2lines("No devices","in group",17)
         time.sleep(3)
         return
-    #else: 
+    #else:
     #    print "guess it was brite"
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
@@ -468,7 +533,7 @@ def g_control(group):
     max_rot_val = 25
     bri_pre = pos * 10
     refresh = 1
-    prev_mills = 0 
+    prev_mills = 0
     while exitvar == False:
         if(pos > max_rot_val):
             pos = max_rot_val
@@ -491,21 +556,88 @@ def g_control(group):
             huecmd.start()
             bri_pre = rot_bri
             prev_mills = mills
-        elif(millsdiff > 200): 
+        elif(millsdiff > 200):
             prev_mills = mills
-            
+
         if(not GPIO.input(21)):
             exitvar = True
         time.sleep(0.01)
 
-#------------------------------------------------------------------------------------  
+#------------------------------------------------------------------------------------
+#Method to convert color temperature into hue and saturation scaled for the Hue-system
+#Not tested so much yet
+#------------------------------------------------------------------------------------
+def ct_to_hue_sat(ct):
+    #Method from http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+    debugmsg("converting ct " + str(ct) + "into Hue and Saturation")
+    #check range
+    print ct
+    if (ct < 1000):
+        ct = 1000.0
+    elif (ct > 40000):
+        ct = 40000.0
+    ct = ct / 100.0
+    #calculate red
+    if (ct <= 10):
+        red = 255.0
+    else:
+        red = ct - 19.0
+        #red = 329.698727446 * math.pow(red, -0.1332047592)
+        red = 175.698727446 * math.pow(red, -0.3332047592)
+        if (red < 0):
+            red = 0.0
+        elif (red > 255):
+            red = 255.0
+    #calculate green
+    if (ct <= 50):
+        green = ct
+        #green = 99.4708025861 * math.log(green) - 161.1195681661
+        green = 99.4708025861 * math.log(green) - 161.1195681661
+        if (green < 0):
+            green = 0.0
+        elif (green > 255):
+            green = 255.0
+    else:
+        #green = ct - 60.0
+        green = ct - 50.0
+        #green = 288.1221695283 * math.pow(green, -0.0755148492)
+        green = 280.1221695283 * math.pow(green, -0.0755148492)
+        if (green < 0):
+            green = 0.0
+        elif (green > 255):
+            green = 255.0
+    #calculate blue
+    if (ct <= 16):
+        blue = 255.0
+    else:
+        if (ct <= 19):
+            blue = 0.0
+        else:
+            blue = ct - 10.0
+            #blue = 138.5177312231 * math.log(blue) - 305.0447927307
+            blue = 150.5177312231 * math.log(blue) - 305.0447927307
+        if (blue < 0):
+            blue = 0.0
+        elif (blue > 255):
+            blue = 255.0
+    #Convert to Hue, Saturation and Value
+    print(red,green,blue)
+    h, s, v = colorsys.rgb_to_hsv(red/255.0, green/255.0, blue/255.0)
+    #debugmsg("raw hue: " + str(360*h) + "saturation: " + str(s*100) + "value: " + str(v))
+    h = int(h * 65535)
+    s = int(s * 254)
+    #h = h + 910
+    debugmsg("hue: " + str(h) + "saturation: " + str(s) + "value: " + str(v))
+    return h, s
+
+#------------------------------------------------------------------------------------
 #   This function controls the color temperature of a light or group
 #   Usage:
 #       Specify the group or light ID in device
 #       Specify "g" or "l" depending if you want to control a group or a light
 #
-#   Displays: 
-#       Group or Light ID and current CT level in Kelvin 
+#   Displays:
+#       Group or Light ID and current CT level in Kelvin
 #------------------------------------------------------------------------------------
 def ct_control(device,mode):
     display_custom("loading ct...")
@@ -513,33 +645,42 @@ def ct_control(device,mode):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
     elif (mode == "l"):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
+    whole_json = os.popen("cat brite").read()
+    wat = json.loads(whole_json)
     brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    os.popen("rm brite")
-    if not brite:
-        #print "not brite"
-        display_2lines("No devices","in group",17)
+    #os.popen("rm brite")
+    type = wat['type']
+    print type
+    #if (type == "Color light"):
+    #    #print("color light")
+    #    display_custom("Light " + str(device) + " will Hue instead")
+    #    skip_to_hue = 1
+    #    time.sleep(.5)
+    #    return skip_to_hue
+    if (not brite and type != "Color light"):
+        print "not brite"
+        display_2lines("No capable","devices available",12)
         time.sleep(3)
         return
-    bri_length = len(brite)
-    print bri_length
-    if (bri_length > 0):
-        brite = int(brite)      #make integer
-        brite = 25-((brite - 153) / 14)
-        brite = int(brite)      #convert the float down to int agian
-    else:
-        if (mode == "l"):
-            display_custom("Light " + str(device) + " isn't CT-able")
-        elif (mode == "g"):
-            display_custom("Group " + str(device) + " isn't CT-able")
-        time.sleep(.5)
-        return
+    elif(type == "Color light"):
+       print("color light was found") 
+       brite = 500         #Start at warmest color as to not shock eyes lol 
+    #brite = wat['action']['ct']
+    print("THIS IS " +str(brite))
+    brite = int(brite)      #make integer
+    print brite
+    brite = 25-((brite - 153) / 14)
+    print brite
+    brite = int(brite)      #convert the float down to int agian
     global pos
     pos = brite
     exitvar = False
     max_rot_val = 25
     bri_pre = ((25-pos) * 14) + 153
     refresh = 1
-    prev_mills = 0 
+    prev_mills = 0
+    prev_xy = 0
+    new_xy = 0
     while exitvar == False:
         if(pos > max_rot_val):
             pos = max_rot_val
@@ -547,8 +688,9 @@ def ct_control(device,mode):
             pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = ((25-pos) * 14) + 153
+        rot_bri = ((max_rot_val-pos) * 14) + 153
         if(bri_pre != rot_bri or refresh ==  1 ):
+            raw_temp = int((-12.968*rot_bri)+8484)
             tempcalc = ((-12.968*rot_bri)+8484)/100
             tempcalc = (round(tempcalc))*100
             tempcalc = int(tempcalc)
@@ -558,22 +700,39 @@ def ct_control(device,mode):
                 display_2lines("Light " + str(device),"CT: " + str(int(tempcalc)) + "K",17)
             refresh = 0
         if(rot_bri != bri_pre and millsdiff > 250):
+            #print("inside old group function " + str(mode) + " " + str(prev_xy))
             if(rot_bri > 500):
                 rotbri = 500
             if(mode == "g"):
-                #hue_groups(lnum = device,lon = "true",lbri = "-1",lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = rot_bri)
-                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':rot_bri})
+                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
                 huecmd.start()
             elif(mode == "l"):
-                #hue_lights(lnum = device,lon = "true",lbri = "-1",lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = rot_bri)
-                huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':rot_bri})
-                huecmd.start()
+                if (type == "Color light"):
+                    hue,sat = ct_to_hue_sat(raw_temp)
+                    huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+                    huecmd.start()
+                else:
+                    huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
+                    huecmd.start()
             bri_pre = rot_bri
             print rot_bri
             prev_mills = mills
-        elif(millsdiff > 250): 
+            millsdiff = mills - prev_mills
+            prev_xy = 1
+        if(mode == "g" and prev_xy != new_xy and millsdiff > 1000):
+            print("inside of the new groupxy function")
+            #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
+            display_custom("setting group via hue")
+            hue,sat = ct_to_hue_sat(raw_temp)
+            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+            #huecmd.start()
+            new_xy = hue
+            prev_xy = new_xy
             prev_mills = mills
-            
+            millsdiff = mills - prev_mills
+            refresh = 1
+        #elif(millsdiff > 250):
+        #    prev_mills = mills
         if(not GPIO.input(21)):
             exitvar = True
         time.sleep(0.01)
@@ -612,12 +771,12 @@ def hue_control(device,mode):
     max_rot_val = 50
     bri_pre = brite
     refresh = 1
-    prev_mills = 0 
+    prev_mills = 0
     while exitvar == False:
         if(pos > max_rot_val):
             pos = 0
         elif(pos < 0):
-            pos = max_rot_val   
+            pos = max_rot_val
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         rot_bri = pos * 1310
@@ -639,13 +798,13 @@ def hue_control(device,mode):
             bri_pre = rot_bri
             print rot_bri
             prev_mills = mills
-        elif(millsdiff > 250): 
+        elif(millsdiff > 250):
             prev_mills = mills
-            
+
         if(not GPIO.input(21)):
             exitvar = True
         time.sleep(0.01)
-        
+
 def sat_control(device,mode):
     while(not GPIO.input(21)):
         display_custom("loading sat...")
@@ -679,7 +838,7 @@ def sat_control(device,mode):
     max_rot_val = 25
     bri_pre = brite
     refresh = 1
-    prev_mills = 0 
+    prev_mills = 0
     while exitvar == False:
         if(pos > max_rot_val):
             pos = max_rot_val
@@ -706,13 +865,13 @@ def sat_control(device,mode):
             bri_pre = rot_bri
             print rot_bri
             prev_mills = mills
-        elif(millsdiff > 250): 
+        elif(millsdiff > 250):
             prev_mills = mills
-            
+
         if(not GPIO.input(21)):
             exitvar = True
         time.sleep(0.01)
-        
+
 def l_control(light):
     display_custom("loading brightness...")
     os.popen("curl -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(light) + " > brite")
@@ -735,7 +894,7 @@ def l_control(light):
     max_rot_val = 25
     bri_pre = pos * 10
     refresh = 1
-    prev_mills = 0 
+    prev_mills = 0
     while exitvar == False:
         if(pos > max_rot_val):
             pos = max_rot_val
@@ -746,7 +905,7 @@ def l_control(light):
         rot_bri = pos * 10
         if(bri_pre != rot_bri or refresh == 1 ):
             display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
-            refresh = 0 
+            refresh = 0
         if rot_bri <= 0 and rot_bri != bri_pre:
             huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':light,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
@@ -756,7 +915,7 @@ def l_control(light):
             huecmd.start()
             bri_pre = rot_bri
             prev_mills = mills
-        elif(millsdiff > 100): 
+        elif(millsdiff > 100):
             prev_mills = mills
 
         if(not GPIO.input(21)):
@@ -772,7 +931,7 @@ def pair_hue_bridge():
             display_3lines("Attempting Link","Push Bridge button" ,"Then push this button",11,offset = 15)
             if(not GPIO.input(21)):
                 break
-        display_custom("doing a thing...") 
+        display_custom("doing a thing...")
         ip = authenticate.search_for_bridge()
         authenticate.authenticate('hueBerry',ip)
         authenticate.load_creds()
@@ -787,7 +946,7 @@ def pair_hue_bridge():
         api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
         display_2lines("Already Paired!",bridge_ip,12)
         time.sleep(1)
-        
+
 def devinfo_screen():
     time.sleep(.25)
     global pos
@@ -795,8 +954,8 @@ def devinfo_screen():
     old_display = 0
     exitvar = False
     menudepth = 4
-    refresh = 1 
-    
+    refresh = 1
+
     ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
     ssid = os.popen("iwconfig wlan0 | grep 'ESSID' | awk '{print $4}' | awk -F\\\" '{print $2}'").read()
     ipaddress_0 = os.popen("ifconfig eth0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
@@ -819,7 +978,7 @@ def devinfo_screen():
             else:
                 display_2lines("Back to","Settings Menu",17)
             old_display = display
-            refresh = 0 
+            refresh = 0
         else:
             time.sleep(0.005)
 
@@ -844,7 +1003,7 @@ def devinfo_screen():
                 time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
     return
-    
+
 def get_hue_devinfo():
     display_custom("loading groups...")
     name_array,total,lstate_a,keyvalues = get_group_names()
@@ -857,19 +1016,19 @@ def get_hue_devinfo():
         time.sleep(0.01)
         if(not GPIO.input(21)):
             break
-            
+
 def shutdown_hueberry():
     display_3lines("Shutting down now...","Don't remove power" ,"Until Display is off",11,offset = 15)
     os.popen("sudo shutdown now")
     while True:
         time.sleep(1)
-        
+
 def restart_hueberry():
     display_3lines("Restarting now...","Don't remove power" ,"Please Wait",11,offset = 15)
     os.popen("sudo shutdown -r now")
     while True:
         time.sleep(1)
-        
+
 def flashlight_mode():
     while True:
         if(GPIO.input(21)):
@@ -886,7 +1045,7 @@ def wifi_settings():
     display_custom("scanning for wifi...")
     global pos
     pos = 0
-    timeout = 0 
+    timeout = 0
     os.popen("wpa_cli scan")
     os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
     ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
@@ -955,8 +1114,8 @@ def wifi_settings():
                 time.sleep(0.25)
                 break
             time.sleep(0.01)
-    
-        
+
+
 def settings_menu():
     time.sleep(.25)
     global pos
@@ -964,7 +1123,7 @@ def settings_menu():
     old_display = 0
     exitvar = False
     menudepth = 7
-    refresh = 1 
+    refresh = 1
     while exitvar == False:
         if(pos > menudepth):
             pos = menudepth
@@ -989,7 +1148,7 @@ def settings_menu():
             else:
                 display_2lines("Back to","Main Menu",17)
             old_display = display
-            refresh = 0 
+            refresh = 0
         else:
             time.sleep(0.005)
 
@@ -1017,7 +1176,7 @@ def settings_menu():
                 time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
     return
-        
+
 #----------------------------------------------------------------------------
 
 def display_time():
@@ -1160,7 +1319,7 @@ def string_width(fontType,string):
 		string_width += char_width
 
 	return string_width
-   
+
 def long_press(message,pin):
     prev_mills = int(round(time.time() * 1000))
     while(not GPIO.input(pin)):
@@ -1194,7 +1353,7 @@ def check_wifi_file():
         os.popen("sudo shutdown -r now")
         while True:
             time.sleep(1)
-            
+
 def check_upgrade_file():
     ADDWIFIPATH ='/boot/upgrade.py'
     if os.path.exists(ADDWIFIPATH):
@@ -1207,13 +1366,17 @@ def check_upgrade_file():
         os.popen("python " + ADDWIFIPATH)
         while True:
             time.sleep(1)
-            
+
 def debugmsg(message):
     global logfile
-    current_time = time.strftime("%m / %d / %Y %-H:%M")
-    with open(logfile, "a") as myfile:
-        myfile.write(current_time + " " + message + "\n")
-        
+    global debug_state
+    if debug_state == 1:
+        current_time = time.strftime("%m / %d / %Y %-H:%M")
+        with open(logfile, "a") as myfile:
+            myfile.write(current_time + " " + message + "\n")
+    else:
+        return
+
 def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #If this function is activated, then we're checking for the button being held
     #ex: result = holding_button(500,"hold to activate","activating",21)
@@ -1234,7 +1397,7 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
 
 def get_scene_total(offset):
     #search all of the scenes in the scenes directory
-    #count how many there are (maybe dump names into a dict then do a len()?) 
+    #count how many there are (maybe dump names into a dict then do a len()?)
     #add that number to the offset
     total_scenes = 3
     total_plus_offset = total_scenes + offset
@@ -1243,22 +1406,27 @@ def get_scene_total(offset):
 
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
-# Set up GPIO with internal pull-up
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#GPIO.setup(4, GPIO.OUT)
-#GPIO.output(4,1)
-# 128x64 display with hardware I2C
-disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
-# Initialize library
-disp.begin()
-# Get display width and height
-width = disp.width
-height = disp.height
-# Clear display
-#disp.clear()
-#disp.display()
-# Create image buffer with mode '1' for 1-bit color
+if debug_argument != 1:
+    # Set up GPIO with internal pull-up
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.setup(4, GPIO.OUT)
+    #GPIO.output(4,1)
+    # 128x64 display with hardware I2C
+    disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
+    # Initialize library
+    disp.begin()
+    # Get display width and height
+    width = disp.width
+    height = disp.height
+    # Clear display
+    #disp.clear()
+    #disp.display()
+    # Create image buffer with mode '1' for 1-bit color
+elif debug_argument == 1:
+    width = 128
+    height = 64
+ 
 image = Image.new('1', (width, height))
 # Load default font
 font = ImageFont.load_default()
@@ -1270,15 +1438,15 @@ display = 0
 time_format = True
 
 #--------------------------------------------------
-#Search to see if an Upgrade file exists, if so, run it 
+#Search to see if an Upgrade file exists, if so, run it
 check_upgrade_file()
 #--------------------------------------------------
-#Search to see if an Add Wifi file exists, if so, add it then delete it. 
+#Search to see if an Add Wifi file exists, if so, add it then delete it.
 check_wifi_file()
 
 
 #--------------------------------------------------
-#Search to see if an api key exists, if not, get it. 
+#Search to see if an api key exists, if not, get it.
 if os.path.isfile('./auth.json') == False:
     display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
     time.sleep(5)
@@ -1286,7 +1454,7 @@ if os.path.isfile('./auth.json') == False:
         display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
         if(not GPIO.input(21)):
             break
-    display_custom("Pairing...") 
+    display_custom("Pairing...")
     ip = authenticate.search_for_bridge()
     authenticate.authenticate('hueBerry',ip)
     authenticate.load_creds()
@@ -1305,12 +1473,12 @@ else:
 #----------------- set variables---------------
 global pos
 pos = 0
-timeout = 0 
-displaytemp = 0 
+timeout = 0
+displaytemp = 0
 prev_secs = 0
-old_min = 60 
+old_min = 60
 old_display = 0
-refresh = 1 
+refresh = 1
 
 def callback(way):
         global pos
@@ -1334,7 +1502,7 @@ while True:
     elif(pos < 0):
         pos = 0
     display = pos
-    #Display Selected Menu 
+    #Display Selected Menu
     if(display == 0):
         cur_min = int(time.strftime("%M"))
         if(old_min != cur_min or refresh == 1):
@@ -1354,7 +1522,7 @@ while True:
         elif(display == 4):
             display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
         #begin scene selection
-        elif(display >= offset and display <= (total_plus_offset-1)): 
+        elif(display >= offset and display <= (total_plus_offset-1)):
             #print(display, offset, total_plus_offset, menudepth)
             #print(allscenes_dict)
             #print (display-offset)
@@ -1370,26 +1538,26 @@ while True:
     elif(display != 0):
         time.sleep(0.005)
         old_min = 60
-    
-    secs = int(round(time.time())) 
-    timeout_secs = secs - prev_secs 
-    if(display != 0 and displaytemp != display): 
+
+    secs = int(round(time.time()))
+    timeout_secs = secs - prev_secs
+    if(display != 0 and displaytemp != display):
         prev_secs = secs
-        displaytemp = display  
+        displaytemp = display
     elif(display != 0 and timeout_secs >= menu_timeout):
         pos = 0
-        display_temp = 0 
+        display_temp = 0
     elif(display == 0):
-        displaytemp = display 
+        displaytemp = display
     #if(display != 0):
     #    print timeout_secs
-    
+
     # Poll button press and trigger action based on current display
     if(not GPIO.input(21)):
         if(display == 0):
             # Toggle between 12/24h format
             time_format =  not time_format
-            refresh = 1 
+            refresh = 1
             while(not GPIO.input(21)):
                 time.sleep(0.01)
         elif(display == 1):
@@ -1427,7 +1595,7 @@ while True:
             #print display, offset
             selected_scenenumber = display-offset+1
             #print selected_scenenumber
-            result = holding_button(5000,"Hold to edit S" + str(selected_scenenumber),"Will record S" + str(selected_scenenumber),21)
+            result = holding_button(5000,"Hold to record S" + str(selected_scenenumber),"Will record S" + str(selected_scenenumber),21)
             if result == 0:
                 display_2lines("Turning lights:","Scene " + str(selected_scenenumber),12)
                 os.popen("./" + str(selected_scenenumber) + "_scene.sh")
@@ -1456,6 +1624,3 @@ while True:
         pos = 0
 
     #time.sleep(0.1)
-
-    
-
