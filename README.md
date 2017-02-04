@@ -35,11 +35,11 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
   * pigpio library
   * SSD1306 compatible display (128x64 resolution)
   * Rotary encoder switch thing 
-  * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hCld2env4vI/edit?usp=sharing)
+  * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hC ld2env4vI/edit?usp=sharing)
 	
-## Instructions as of 1/30/17
+## Instructions as of 2/4/17
 
-  * [Detailed instructions for developers available here!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/Dev_setup.md) 	
+  * [Detailed instructions for developers available here!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/Dev_setup.md)	
 		
 		  	 
 **Wishlist:**
