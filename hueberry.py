@@ -569,34 +569,37 @@ def ct_to_hue_sat(ct):
     #Method from http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
     debugmsg("converting ct " + str(ct) + "into Hue and Saturation")
     #check range
+    print ct
     if (ct < 1000):
         ct = 1000.0
     elif (ct > 40000):
         ct = 40000.0
     ct = ct / 100.0
     #calculate red
-    if (ct <= 66):
+    if (ct <= 10):
         red = 255.0
     else:
-        red = ct - 60.0
-        red = 329.698727446 * math.pow(red, -0.1332047592)
+        red = ct - 19.0
+        #red = 329.698727446 * math.pow(red, -0.1332047592)
+        red = 175.698727446 * math.pow(red, -0.3332047592)
         if (red < 0):
             red = 0.0
         elif (red > 255):
             red = 255.0
     #calculate green
-    if (ct <= 66):
+    if (ct <= 50):
         green = ct
+        #green = 99.4708025861 * math.log(green) - 161.1195681661
         green = 99.4708025861 * math.log(green) - 161.1195681661
         if (green < 0):
             green = 0.0
         elif (green > 255):
             green = 255.0
     else:
-        green = ct - 60.0
-        #green = ct - 50.0
-        green = 288.1221695283 * math.pow(green, -0.0755148492)
-        #green = 300.1221695283 * math.pow(green, -0.0755148492)
+        #green = ct - 60.0
+        green = ct - 50.0
+        #green = 288.1221695283 * math.pow(green, -0.0755148492)
+        green = 280.1221695283 * math.pow(green, -0.0755148492)
         if (green < 0):
             green = 0.0
         elif (green > 255):
@@ -609,12 +612,14 @@ def ct_to_hue_sat(ct):
             blue = 0.0
         else:
             blue = ct - 10.0
-            blue = 138.5177312231 * math.log(blue) - 305.0447927307
+            #blue = 138.5177312231 * math.log(blue) - 305.0447927307
+            blue = 150.5177312231 * math.log(blue) - 305.0447927307
         if (blue < 0):
             blue = 0.0
         elif (blue > 255):
             blue = 255.0
     #Convert to Hue, Saturation and Value
+    print(red,green,blue)
     h, s, v = colorsys.rgb_to_hsv(red/255.0, green/255.0, blue/255.0)
     #debugmsg("raw hue: " + str(360*h) + "saturation: " + str(s*100) + "value: " + str(v))
     h = int(h * 65535)
@@ -710,8 +715,9 @@ def ct_control(device,mode):
             bri_pre = rot_bri
             print rot_bri
             prev_mills = mills
+            millsdiff = mills - prev_mills
             prev_xy = 1
-        if(mode == "g" and prev_xy != new_xy and millsdiff > 2000):
+        if(mode == "g" and prev_xy != new_xy and millsdiff > 1000):
             print("inside of the new groupxy function")
             #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
             display_custom("setting group via hue")
@@ -721,6 +727,7 @@ def ct_control(device,mode):
             new_xy = hue
             prev_xy = new_xy
             prev_mills = mills
+            millsdiff = mills - prev_mills
             refresh = 1
         #elif(millsdiff > 250):
         #    prev_mills = mills
