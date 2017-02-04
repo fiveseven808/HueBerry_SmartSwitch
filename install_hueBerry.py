@@ -53,7 +53,7 @@ for x in n2install:
         print("Done installing " +str(x))
     if x == 'authenticate':
         print("wtf, the " +str(x)+" module should be in the same directory. update re-clone the repo or somethihng")
-        baremetal = 1
+        baremetal = baremetal + 1
     if x == 'Adafruit_SSD1306':
         print("Installing " +str(x))
         os.popen("sudo apt-get install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get install python-imaging python-smbus && sudo apt-get install git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git && sudo Adafruit_Python_SSD1306/python setup.py install")
@@ -64,7 +64,7 @@ for x in n2install:
         os.popen("sudo pip install RPi.GPIO")
     if x == 'rotary_encoder':
         print("wtf, the " +str(x)+" module should be in the same directory. update re-clone the repo or somethihng")
-        baremetal = 1
+        baremetal = baremetal + 1
 
 #print baremetal    
 if baremetal > 0:
