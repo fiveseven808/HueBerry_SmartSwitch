@@ -42,14 +42,13 @@ if len(n2install) > 0:
     print("Looks like we have some requirements! Updating system repo!")
     #p = subprocess.Popen("sudo apt-get update")
     #p.wait()
-    #os.popen("apt-get update")
+    os.popen("apt-get update")
     print("finished")
     
 baremetal = 0
 for x in n2install:
     if x == 'pigpio':
         print("Installing " +str(x))
-	#os.popen("cd ~ ")
         os.open("rm master.zip && sudo rm -rf pigpio-master && wget https://github.com/joan2937/pigpio/archive/master.zip && unzip master.zip &&  pigpio-master/make -j4 && sudo pigpio-master/make install && sudo pigpiod ")
         print("Done installing " +str(x))
     if x == 'authenticate':
@@ -57,7 +56,6 @@ for x in n2install:
         baremetal = 1
     if x == 'Adafruit_SSD1306':
         print("Installing " +str(x))
-	#os.popen("cd ~ ")
         os.popen("sudo apt-get install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get install python-imaging python-smbus && sudo apt-get install git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git && sudo Adafruit_Python_SSD1306/python setup.py install")
         print("Done installing " +str(x))
     if x =='RPi':
@@ -70,7 +68,6 @@ for x in n2install:
 
 #print baremetal    
 if baremetal > 0:
-    #something wrong with this function... can't initiate apt-get update for some reason
     print("Wanna start from scratch?")
     os.popen("git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git")
     print("Cloned Repo lol")
@@ -78,6 +75,12 @@ if baremetal > 0:
 
 finalreadme = """ 
 How to run:
+    Ensure that I2c is enabled and that the display and rotary encoder are wired up properly
+    [Optional] Increase I2c bus
+    [Optional] Disable X and decrease GPU mem to minimum 
+    [Optional] Overclock SD card
+    Then run the following commands:
+    
     cd HueBerry_SmartSwitch
     sudo pigpiod (if not PiGPIOd is not running already)
     sudo python hueberry.py [&]
