@@ -461,8 +461,9 @@ def light_control(mode):
                             display_custom("returning...")
 
                     elif(mode == "l"):
-                        print("entering modified ct_control")
-                        huemode = ct_control(num_lights[display-1],"l")
+                        #print("entering modified ct_control")
+                        #no you're not lol
+                        ct_control(num_lights[display-1],"l")
                         prev_mills = int(round(time.time() * 1000))
                         if (huemode == 0):
                             while(not GPIO.input(21)):
@@ -593,7 +594,9 @@ def ct_to_hue_sat(ct):
             green = 255.0
     else:
         green = ct - 60.0
+        #green = ct - 50.0
         green = 288.1221695283 * math.pow(green, -0.0755148492)
+        #green = 300.1221695283 * math.pow(green, -0.0755148492)
         if (green < 0):
             green = 0.0
         elif (green > 255):
@@ -616,6 +619,7 @@ def ct_to_hue_sat(ct):
     #debugmsg("raw hue: " + str(360*h) + "saturation: " + str(s*100) + "value: " + str(v))
     h = int(h * 65535)
     s = int(s * 254)
+    #h = h + 910
     debugmsg("hue: " + str(h) + "saturation: " + str(s) + "value: " + str(v))
     return h, s
 
@@ -647,15 +651,19 @@ def ct_control(device,mode):
     #    time.sleep(.5)
     #    return skip_to_hue
     if (not brite and type != "Color light"):
-        #print "not brite"
+        print "not brite"
         display_2lines("No capable","devices available",12)
         time.sleep(3)
         return
-    elif(type == "Color Light"):
-        brite = 500         #Start at warmest color as to not shock eyes lol 
+    elif(type == "Color light"):
+       print("color light was found") 
+       brite = 500         #Start at warmest color as to not shock eyes lol 
     #brite = wat['action']['ct']
+    print("THIS IS " +str(brite))
     brite = int(brite)      #make integer
+    print brite
     brite = 25-((brite - 153) / 14)
+    print brite
     brite = int(brite)      #convert the float down to int agian
     global pos
     pos = brite
@@ -693,7 +701,7 @@ def ct_control(device,mode):
                 huecmd.start()
             elif(mode == "l"):
                 if (type == "Color light"):
-                    hue,sat = ct_to_hue_sat(rawtemp)
+                    hue,sat = ct_to_hue_sat(raw_temp)
                     huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
                     huecmd.start()
                 else:
@@ -703,13 +711,13 @@ def ct_control(device,mode):
             print rot_bri
             prev_mills = mills
             prev_xy = 1
-        if(mode == "g" and prev_xy != new_xy and millsdiff > 500):
+        if(mode == "g" and prev_xy != new_xy and millsdiff > 2000):
             print("inside of the new groupxy function")
             #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
             display_custom("setting group via hue")
-            hue,sat = ct_to_hue_sat(rawtemp)
-            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
-            huecmd.start()
+            hue,sat = ct_to_hue_sat(raw_temp)
+            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+            #huecmd.start()
             new_xy = hue
             prev_xy = new_xy
             prev_mills = mills
