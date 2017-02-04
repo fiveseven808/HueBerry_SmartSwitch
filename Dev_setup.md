@@ -81,7 +81,7 @@ sudo python hueberry.py
 ## OR! 
 If you understand all of the instructions above then a new option is now avaliable for you. 
 **[Just download the installer](https://github.com/fiveseven808/HueBerry_SmartSwitch/raw/dev/install_hueBerry.py)**
-and run `sudo python install_hueBerry.py`. The reason why you should install of the instructions above first is because 
+and run `sudo python install_hueBerry.py`. The reason why you should understand of the instructions above first is because 
 this installer is absolutely untested and is in a pre-alpha state of usability. 
 But it would be really cool if it worked, so I'll leave it here for now. 
 
