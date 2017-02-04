@@ -67,7 +67,11 @@ adding the scene creation function. and replay.
 added 2 ways to do it. using the per light way. both ways work actually. may lead to interesting results
 fuck this was difficult
 
-
+--------------------
+How to run:
+sudo python hueberry.py [-d]
+http://www.diveintopython.net/scripts_and_streams/command_line_arguments.html 
+this is probably a good reference on how to program this in the future 
 --------------------
 bug:
 --------------------
@@ -80,20 +84,43 @@ ping on startup?
 check for response?
 nothing found?
 """
+
+def print_usage():
+    usage = """ 
+    How to run:
+        sudo python hueberry.py [-d] [-h,--help]
+    
+    -d          Sets the program to output and take input from the console
+    -h,--help   Displays this help text 
+    """
+    print(usage)
+
 import os
 import os.path
 #set working directory to script directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-os.popen("python splashscreen.py &")
+
+import sys
+debug_argument = 0
+for arg in sys.argv:
+    if arg == '-d':
+        debug_argument = 1
+    if arg in ("-h","--help"):
+        print_usage()
+        sys.exit()
+
+if debug_argument != 1:
+    os.popen("python splashscreen.py &")
+    import Adafruit_SSD1306
+    import RPi.GPIO as GPIO
+    import pigpio
+    import rotary_encoder
+
 import threading
 import time
-import Adafruit_SSD1306
-import RPi.GPIO as GPIO
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
-import pigpio
-import rotary_encoder
 import authenticate
 import json
 import colorsys
@@ -108,7 +135,6 @@ global debug_state
 debug_state = 1
 
 menu_timeout = 30 #seconds
-
 
 
 #--------------------------------------------------------------------------
@@ -1363,22 +1389,27 @@ def get_scene_total(offset):
 
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
-# Set up GPIO with internal pull-up
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#GPIO.setup(4, GPIO.OUT)
-#GPIO.output(4,1)
-# 128x64 display with hardware I2C
-disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
-# Initialize library
-disp.begin()
-# Get display width and height
-width = disp.width
-height = disp.height
-# Clear display
-#disp.clear()
-#disp.display()
-# Create image buffer with mode '1' for 1-bit color
+if debug_argument != 1:
+    # Set up GPIO with internal pull-up
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.setup(4, GPIO.OUT)
+    #GPIO.output(4,1)
+    # 128x64 display with hardware I2C
+    disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
+    # Initialize library
+    disp.begin()
+    # Get display width and height
+    width = disp.width
+    height = disp.height
+    # Clear display
+    #disp.clear()
+    #disp.display()
+    # Create image buffer with mode '1' for 1-bit color
+elif debug_argument == 1:
+    width = 128
+    height = 64
+ 
 image = Image.new('1', (width, height))
 # Load default font
 font = ImageFont.load_default()
