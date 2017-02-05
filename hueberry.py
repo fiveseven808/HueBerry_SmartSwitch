@@ -578,12 +578,16 @@ def ct_to_hue_sat(ct):
         ct = 40000.0
     ct = ct / 100.0
     #calculate red
-    if (ct <= 10):
-        red = 255.0
+    if (ct <= 50):
+        #red = 255.0
+        red = ct - 10.0
+        #brian red = 110.4708025861 * math.log(red) - 161.1195681661
+        red = 99.4708025861 * math.log(red) - 141.1195681661
+
     else:
-        red = ct - 19.0
+        red = ct - 10.0
         #red = 329.698727446 * math.pow(red, -0.1332047592)
-        red = 175.698727446 * math.pow(red, -0.3332047592)
+        red = 329.698727446 * math.pow(red, -0.532047592)
         if (red < 0):
             red = 0.0
         elif (red > 255):
@@ -592,7 +596,7 @@ def ct_to_hue_sat(ct):
     if (ct <= 50):
         green = ct
         #green = 99.4708025861 * math.log(green) - 161.1195681661
-        green = 99.4708025861 * math.log(green) - 161.1195681661
+        green = 92.4708025861 * math.log(green) - 161.1195681661
         if (green < 0):
             green = 0.0
         elif (green > 255):
@@ -615,7 +619,7 @@ def ct_to_hue_sat(ct):
         else:
             blue = ct - 10.0
             #blue = 138.5177312231 * math.log(blue) - 305.0447927307
-            blue = 150.5177312231 * math.log(blue) - 305.0447927307
+            blue = 143.5177312231 * math.log(blue) - 295.0447927307
         if (blue < 0):
             blue = 0.0
         elif (blue > 255):
@@ -724,7 +728,7 @@ def ct_control(device,mode):
             #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
             display_custom("setting group via hue")
             hue,sat = ct_to_hue_sat(raw_temp)
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
             #huecmd.start()
             new_xy = hue
             prev_xy = new_xy
