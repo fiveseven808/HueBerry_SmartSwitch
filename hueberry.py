@@ -307,7 +307,7 @@ def get_house_scene_by_light(scenenumber,ltt):
         #display_2lines("Writing","Lights " + str(index + 1) + " of " + str(len(result_array)),15)
         print(scenecmd)
         groupnum = index + 1
-        sceneobj.write("echo \"Set Lights " + str(keyvalues[index]) + " = " + str(result_array[index]) + "\"\n")
+        sceneobj.write("#echo \"Set Lights " + str(keyvalues[index]) + " = " + str(result_array[index]) + "\"\n")
         sceneobj.write(scenecmd + "\n")
         index += 1
     sceneobj.close
