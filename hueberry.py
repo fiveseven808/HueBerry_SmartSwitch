@@ -1450,14 +1450,15 @@ def set_scene_transition_time():
     transition_time = pos*2
     return transition_time
     
-def binarydecision():
+def binarydecision(questiondict):
+    #def binarydecision(displayfunction,messagedict,)
     #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get display_3lines(something) passed to it, and then run it as pos == 0 or something... 
     #as of now 2/4/17 this is just a placeholder stolen from the function above. not called, and no functionality has been implemented
     global pos
-    pos = 2                 # Start at 40ms
+    pos = 0                 # Start at 0
     exitvar = False
-    max_rot_val = 150       # 30 sec max transition time
-    bri_pre = pos/5.0       # 20ms per rotation
+    max_rot_val = 2       # question,yes,no
+    #bri_pre = pos/5.0       # 20ms per rotation
     refresh = 1
     prev_mills = 0
     while exitvar == False: 
