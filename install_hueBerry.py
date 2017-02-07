@@ -97,6 +97,7 @@ for x in n2install:
         baremetal = baremetal + 1
     if x == 'Adafruit_SSD1306':
         print("Installing " +str(x))
+        myrun("sudo apt-get -y install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get -y install python-imaging python-smbus && sudo apt-get install -y git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git && sudo Adafruit_Python_SSD1306/python setup.py install")
         print("Done installing " +str(x))
     if x =='RPi':
         print("wtf, the " +str(x)+" module should be part of the most recent Raspberry Pi distribution.\nAre you even running this on a Pi?")
