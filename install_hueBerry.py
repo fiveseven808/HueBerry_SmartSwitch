@@ -93,18 +93,18 @@ for x in n2install:
         myrun("rm master.zip && sudo rm -rf pigpio-master && wget https://github.com/joan2937/pigpio/archive/master.zip && unzip master.zip &&  pigpio-master/make -j4 && sudo pigpio-master/make install && sudo pigpiod ")
         print("Done installing " +str(x))
     if x == 'authenticate':
-        print("wtf, the " +str(x)+" module should be in the same directory. update re-clone the repo or somethihng")
+        print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC)
         baremetal = baremetal + 1
     if x == 'Adafruit_SSD1306':
         print("Installing " +str(x))
         myrun("sudo apt-get -y install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get -y install python-imaging python-smbus && sudo apt-get install -y git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git && sudo Adafruit_Python_SSD1306/python setup.py install")
         print("Done installing " +str(x))
     if x =='RPi':
-        print("wtf, the " +str(x)+" module should be part of the most recent Raspberry Pi distribution.\nAre you even running this on a Pi?")
-        print("installing anyway. lel")
+        print(bcolors.RED + "    wtf, the " +str(x)+" module should be part of the most recent Raspberry Pi distribution.\nAre you even running this on a Pi?" + bcolors.ENDC)
+        print("    installing anyway. lel")
         myrun("sudo pip install RPi.GPIO")
     if x == 'rotary_encoder':
-        print("wtf, the " +str(x)+" module should be in the same directory. update re-clone the repo or somethihng")
+        print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC)
         #myrun("echo ididathing && echo doing another thing && echo doing a third thing").read()
         baremetal = baremetal + 1
 
