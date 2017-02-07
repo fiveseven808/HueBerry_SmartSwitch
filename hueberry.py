@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 """
+v037
+2017-02-04 2319 //57
+bunch of tweaks here and there. biggest thing is that scene creation now has adjustable transition time :D that's cool :)
+thinking about making the menu system a generic function.... pass it a bunch of things like names of functions to display shit or something
+then give it a dict to build the menu from... idk... 
+to "start" this effort, i've made a generic/filler funtion called binarydecision() which currently does nothing inttentionally
+    the idea behind this function is to put a "yes or no" decision anywhere I want to without hard coding it in. 
+    just give pass it a "question" in the form of a display_nlines function, and it'll return whether or not the person
+    clicked yes or no. it wont be pretty, but it should be pretty functional. 
+
 v036
 2017-02-03 0958 //57
 Tweaked the debugmsg string input for WPBack's new method. 
@@ -207,6 +217,12 @@ def get_light_names():
 
 
 def get_house_scene_by_light(scenenumber,ltt):
+    rot_bri = ltt/10.0
+    display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15)
+    while True:
+        time.sleep(0.01)
+        if(not GPIO.input(21)):
+            break
     #Get a fresh groups json file
     display_2lines("Grabbing","Light States",15)
     name_array,num_array,lstate_a,total = get_light_names()
@@ -291,7 +307,7 @@ def get_house_scene_by_light(scenenumber,ltt):
         #display_2lines("Writing","Lights " + str(index + 1) + " of " + str(len(result_array)),15)
         print(scenecmd)
         groupnum = index + 1
-        sceneobj.write("echo \"Set Lights " + str(keyvalues[index]) + " = " + str(result_array[index]) + "\"\n")
+        sceneobj.write("#echo \"Set Lights " + str(keyvalues[index]) + " = " + str(result_array[index]) + "\"\n")
         sceneobj.write(scenecmd + "\n")
         index += 1
     sceneobj.close
@@ -524,7 +540,6 @@ def g_control(group):
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
-
     brite = brite/10        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     global pos
@@ -558,7 +573,6 @@ def g_control(group):
             prev_mills = mills
         elif(millsdiff > 200):
             prev_mills = mills
-
         if(not GPIO.input(21)):
             exitvar = True
         time.sleep(0.01)
@@ -578,12 +592,16 @@ def ct_to_hue_sat(ct):
         ct = 40000.0
     ct = ct / 100.0
     #calculate red
-    if (ct <= 10):
-        red = 255.0
+    if (ct <= 50):
+        #red = 255.0
+        red = ct - 10.0
+        #brian red = 110.4708025861 * math.log(red) - 161.1195681661
+        red = 99.4708025861 * math.log(red) - 141.1195681661
+
     else:
-        red = ct - 19.0
+        red = ct - 10.0
         #red = 329.698727446 * math.pow(red, -0.1332047592)
-        red = 175.698727446 * math.pow(red, -0.3332047592)
+        red = 329.698727446 * math.pow(red, -0.532047592)
         if (red < 0):
             red = 0.0
         elif (red > 255):
@@ -592,7 +610,7 @@ def ct_to_hue_sat(ct):
     if (ct <= 50):
         green = ct
         #green = 99.4708025861 * math.log(green) - 161.1195681661
-        green = 99.4708025861 * math.log(green) - 161.1195681661
+        green = 92.4708025861 * math.log(green) - 161.1195681661
         if (green < 0):
             green = 0.0
         elif (green > 255):
@@ -615,7 +633,7 @@ def ct_to_hue_sat(ct):
         else:
             blue = ct - 10.0
             #blue = 138.5177312231 * math.log(blue) - 305.0447927307
-            blue = 150.5177312231 * math.log(blue) - 305.0447927307
+            blue = 143.5177312231 * math.log(blue) - 295.0447927307
         if (blue < 0):
             blue = 0.0
         elif (blue > 255):
@@ -724,7 +742,7 @@ def ct_control(device,mode):
             #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
             display_custom("setting group via hue")
             hue,sat = ct_to_hue_sat(raw_temp)
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
             #huecmd.start()
             new_xy = hue
             prev_xy = new_xy
@@ -867,7 +885,6 @@ def sat_control(device,mode):
             prev_mills = mills
         elif(millsdiff > 250):
             prev_mills = mills
-
         if(not GPIO.input(21)):
             exitvar = True
         time.sleep(0.01)
@@ -1394,6 +1411,83 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     time.sleep(0.1)
     successvar = held_down
     return successvar
+    
+def set_scene_transition_time():
+    #placeholder 
+    #display_custom("doing a thing")
+    global pos
+    pos = 2                 # Start at 40ms
+    exitvar = False
+    max_rot_val = 150       # 30 sec max transition time
+    bri_pre = pos/5.0       # 20ms per rotation
+    refresh = 1
+    prev_mills = 0
+    while exitvar == False: 
+        if(pos > max_rot_val):
+            pos = max_rot_val
+        elif(pos < 0):
+            pos = 0
+        mills = int(round(time.time() * 1000))
+        millsdiff = mills - prev_mills
+        rot_bri = pos/5.0
+        if(bri_pre != rot_bri or refresh ==  1 ):
+            display_2lines("Transition Time",'%.2f'%rot_bri + " sec",15)
+            refresh = 0
+        if rot_bri <= 0 and rot_bri != bri_pre:
+            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            #huecmd.start()
+            bri_pre = rot_bri
+        elif(rot_bri != bri_pre and millsdiff > 200):
+            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            #huecmd.start()
+            bri_pre = rot_bri
+            prev_mills = mills
+        elif(millsdiff > 200):
+            prev_mills = mills
+        if(not GPIO.input(21)):
+            exitvar = True
+        time.sleep(0.01)
+    transition_time = pos*2
+    return transition_time
+    
+def binarydecision(questiondict):
+    #def binarydecision(displayfunction,messagedict,)
+    #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get display_3lines(something) passed to it, and then run it as pos == 0 or something... 
+    #as of now 2/4/17 this is just a placeholder stolen from the function above. not called, and no functionality has been implemented
+    global pos
+    pos = 0                 # Start at 0
+    exitvar = False
+    max_rot_val = 2       # question,yes,no
+    #bri_pre = pos/5.0       # 20ms per rotation
+    refresh = 1
+    prev_mills = 0
+    while exitvar == False: 
+        if(pos > max_rot_val):
+            pos = max_rot_val
+        elif(pos < 0):
+            pos = 0
+        mills = int(round(time.time() * 1000))
+        millsdiff = mills - prev_mills
+        rot_bri = pos/5.0
+        if(bri_pre != rot_bri or refresh ==  1 ):
+            display_2lines("Transition Time",'%.2f'%rot_bri + " sec",15)
+            refresh = 0
+        if rot_bri <= 0 and rot_bri != bri_pre:
+            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            #huecmd.start()
+            bri_pre = rot_bri
+        elif(rot_bri != bri_pre and millsdiff > 200):
+            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            #huecmd.start()
+            bri_pre = rot_bri
+            prev_mills = mills
+        elif(millsdiff > 200):
+            prev_mills = mills
+        if(not GPIO.input(21)):
+            exitvar = True
+        time.sleep(0.01)
+    transition_time = pos*2
+    return transition_time
 
 def get_scene_total(offset):
     #search all of the scenes in the scenes directory
@@ -1595,16 +1689,14 @@ while True:
             #print display, offset
             selected_scenenumber = display-offset+1
             #print selected_scenenumber
-            result = holding_button(5000,"Hold to record S" + str(selected_scenenumber),"Will record S" + str(selected_scenenumber),21)
+            result = holding_button(5000,"Hold to edit S" + str(selected_scenenumber),"Will edit S" + str(selected_scenenumber),21)
             if result == 0:
                 display_2lines("Turning lights:","Scene " + str(selected_scenenumber),12)
                 os.popen("./" + str(selected_scenenumber) + "_scene.sh")
                 time.sleep(1)
                 debugmsg("turning lights scene" + str(selected_scenenumber))
             elif result == 1:
-                scenenumber = 1
-                ltt = 4
-                #result = get_house_scene_by_group(scenenumber,ltt)
+                ltt = set_scene_transition_time()
                 result = get_house_scene_by_light(selected_scenenumber,ltt)
                 debugmsg("ran scene by group creation with result = " + result)
             else:
