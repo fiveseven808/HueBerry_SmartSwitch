@@ -2,7 +2,7 @@ hueBerry: Setup instructions for Developers
 =============
 ### *"Bare-metal" install instructions for dev-kit*
 
-[![hueBerry Mess!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/hueBerry%20Photos/B%20reel/IMG_20160812_165047.jpg?raw=true)](https://youtu.be/YTvbsL82ZcM?t=1m3s "hueBerry Mess!")
+[![hueBerry Mess!](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/hueBerry%20Photos/B%20reel/IMG_20160812_165047.jpg?raw=true)]
 
 
 
@@ -79,6 +79,7 @@ sudo python hueberry.py
  * *If the above instructions do not work, please contact the maintainer to correct this accordingly*
  
 ## OR! 
+[![Installer Alpha](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/hueBerry%20Photos/Installer/1st_alpha.PNG?raw=true)]
 If you understand all of the instructions above then a new option is now avaliable for you. 
 **[Just download the installer](https://github.com/fiveseven808/HueBerry_SmartSwitch/raw/dev/install_hueBerry.py)**
 and run `sudo python install_hueBerry.py`. The reason why you should understand of the instructions above first is because 
