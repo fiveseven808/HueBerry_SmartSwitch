@@ -1164,6 +1164,7 @@ def settings_menu(g_scenesdir):
     exitvar = False
     menudepth = 8
     refresh = 1
+    scene_refresh = 0
     while exitvar == False:
         if(pos > menudepth):
             pos = menudepth
@@ -1211,6 +1212,7 @@ def settings_menu(g_scenesdir):
                 wifi_settings()
             elif(display == 7):
                 new_scene_creator(g_scenesdir)
+                scene_refresh = 1
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -1219,7 +1221,7 @@ def settings_menu(g_scenesdir):
             while(not GPIO.input(21)):
                 time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
-    return
+    return scene_refresh
 
 #----------------------------------------------------------------------------
 
@@ -1640,6 +1642,8 @@ old_min = 60
 old_display = 0
 refresh = 1
 
+scene_refresh = 1 #Do the initial scene refresh
+
 def callback(way):
         global pos
         pos += way
@@ -1653,8 +1657,10 @@ debugmsg("Starting hueBerry program version " + __file__)
 
 offset = 5 #clock (0) + 4 presets
 post_offset = 3 #settings, light, group menu after scenes)
-total_screens,total_plus_offset,scene_files = get_scene_total(,g_scenesdir,offset)
 while True:    
+    if (scene_refresh == 1):
+        total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
+        scene_refresh = 0
     menudepth = total_plus_offset + post_offset - 1
     # Cycle through different displays
     if(pos > menudepth):
@@ -1756,11 +1762,12 @@ while True:
             selected_scenenumber = display-offset+1
             #print selected_scenenumber
             result = holding_button(5000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+            selected_file = str(g_scenesdir) + str(scene_files[display-offset])
             if result == 0:
                 display_2lines("Turning lights:",str(scene_files[display-offset]),12)
                 #print scene_files[display-offset]
                 print "running the below thing"
-                selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                #selected_file = str(g_scenesdir) + str(scene_files[display-offset])
                 os.popen("\"" + str(selected_file) + "\"")
                 print(str(selected_file))
                 time.sleep(1)
@@ -1768,13 +1775,14 @@ while True:
             elif result == 1:
                 ltt = set_scene_transition_time()
                 result = get_house_scene_by_light(selected_file,ltt)
-                debugmsg("ran scene by group creation with result = " + result)
+                debugmsg("Ran scene editing by group with result = " + result)
             else:
                 display_2lines("Something weird","Happened...",12)
                 time.sleep(5)
         elif(display == (menudepth-2)):
             pos = 0
-            settings_menu(g_scenesdir)
+            scene_refresh = settings_menu(g_scenesdir)
+            scene_refresh = 1 # lol override. this might be useful lol 
         elif(display == (menudepth-1)):
             pos = 0
             light_control("l")
