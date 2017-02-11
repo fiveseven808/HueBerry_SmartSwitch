@@ -1,5 +1,34 @@
 #!/usr/bin/env python
 """
+v040
+2017-02-10 1610 //57
+Extra bigass update. Just like Windows 10, skipping a few versions to get to v040. I'm pretty sure I made a whole bunch of little updates and just didn't push them to git. Will do my best to document all of them. 
+ * Changing the working directory structure for hueBerry
+  * Now using /boot/hueBerry/ for upgrade and wifi settings
+  * Now using /boot/hueBerry/scenes/ for scene files!
+  * Psuedo Global variable used (passed around a lot lol) 
+  * "Should" automatically create the directories if they don't exist already
+ * Changed get_house_scene_by_light's parameter to selected_filendirect because I'm now passing it a full path name of a file 
+  * Can be optimizied a little bit. I'm duplicating the variable right now lol
+ * Made a new_scene_creator function that will generate a new scene with a new number based on the amount of scenes that already exist
+  * i.e. if 5 scenes exist, regardless of name, the next scene will be named 6_scene.sh
+ * Added new scene creation to the settings menu so the main menu is less cluttered. I can't imagine many scenes being created once the inital setup is done by the user
+ * check_wifi_file and check_upgrade_file now use the new p-global directory variable
+ * get_scene_total now properly queries the p-global scenes directory instead of replying back with static values
+  * Also sorts the scenes alphabetically so the user can now order things
+ * Adjusted the main menu to properly execute the right script from the new directories (I think?) 
+ * Files can now be managed by Windows!
+  * Power off the hueBerry
+  * Stick the SD card into the Windows machine
+  * Navigate to Boot:\hueBerry\scenes\
+  * Sort by Name
+  * Rename files however you please
+  * The order represented by the name sort is the order they will appear on the hueBerry
+  * You are free to delete ones you don't use anymore
+
+By the way, all of this except for the new_scene_creator() function has been tested! 
+
+
 v037
 2017-02-04 2319 //57
 bunch of tweaks here and there. biggest thing is that scene creation now has adjustable transition time :D that's cool :)
@@ -43,39 +72,6 @@ need to merge the two.... will probably worki on the CT+lightcontrol issue first
 gonna attempt to fix the individual CT bit where it should go straght to hue...
 2243
 looks like i fixed the CT issue. i had quit the CT function too early in my last error handling. it shoul dbe a lot better now... i think there's an else statement somewhere in there that doesn't need to be... i put some markers just in case it gets called....
-
-
-v034
-2017 0131
-for some reason when a hueberry first connects, the api key doesn't always seem to work...
-well, not reliably at least. adding retrys when pulling information from the bridge so it doesn't crash
-
-v033
-2017 0130
-looks like the update worked with a little bit of changes.
-scene with holding the button work as they're supposed to. simple but working now
-gonna try and make dynamic menus
-
-v032
-2017 0129
-looks like scene saving is working good. Goona go and rearrange my hard scenes to be at the end.
-gonna make custom scenes configurable. make a transition time gathering thing.
-remeoved scene by group since by light is so fast
-new process:
-    select a scene
-        click to activate scene
-    hold down for 5 seconds to edit scene
-        new menu:
-        record scene
-        edit transition time
-
-
-
-v031
-2017 0126
-adding the scene creation function. and replay.
-added 2 ways to do it. using the per light way. both ways work actually. may lead to interesting results
-fuck this was difficult
 
 --------------------
 How to run:
@@ -148,6 +144,19 @@ debug_state = 1
 
 menu_timeout = 30 #seconds
 
+#--------------------------------------------------------------------------
+#Create Required directories if they do not exist. 
+maindirectory = "/boot/hueBerry/"
+if (os.path.isdir(maindirectory) == False):
+    os.popen("sudo mkdir /boot/hueBerry")
+    print "Created Directory: " + str(maindirectory)
+    
+g_scenesdir = str(maindirectory) + "scenes/"
+if (os.path.isdir(g_scenesdir) == False):
+    os.popen("sudo mkdir /boot/hueBerry/scenes")
+    print "Created Directory: " + str(g_scenesdir)
+print "Main Directory is: " + str(maindirectory)
+print "Scripts Directory is: " + str(g_scenesdir)
 
 #--------------------------------------------------------------------------
 def get_group_names():
@@ -216,7 +225,7 @@ def get_light_names():
     return name_array,num_array,lstate_a,total
 
 
-def get_house_scene_by_light(scenenumber,ltt):
+def get_house_scene_by_light(selected_filendirect,ltt):
     rot_bri = ltt/10.0
     display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15)
     while True:
@@ -232,7 +241,7 @@ def get_house_scene_by_light(scenenumber,ltt):
         return "failed"
     #display_custom("ran get light names")
     cmdout = os.popen("cat lights").read()
-    #os.popen("cat scene_template.py >> custom_scene" + scenenumber + ".py" )
+    #os.popen("cat scene_template.py >> custom_scene" + selected_filendirect + ".py" )
     wat = json.loads(cmdout)
     #display_custom("used jsonloads")
     keyvalues =  wat.keys()
@@ -298,7 +307,8 @@ def get_house_scene_by_light(scenenumber,ltt):
     #ltt = 100
     #api_url = "http://testbridge/something"
     index = 0
-    scenefile = str(scenenumber) + "_scene.sh"
+    scenefile = str(selected_filendirect)
+    print scenefile
     sceneobj = open(scenefile,"w+")
     sceneobj.write("#!/bin/bash\n#\n#This is a scenefile generated by hueBerry\n\n")
     display_2lines("Building","Scene Script!",15)
@@ -330,6 +340,20 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
         return
     print(result)
     return result
+    
+def new_scene_creator(g_scenesdir):
+    #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
+    total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset = 0)
+    new_scene_number = total_scenes + 1
+    new_scene_name = str(g_scenesdir) + str(new_scene_number) + "_scene.sh"
+    print "New scene will be: " + str(new_scene_name)
+    ltt = set_scene_transition_time()
+    result = get_house_scene_by_light(new_scene_name,ltt)
+    debugmsg("ran NEW scene by individual creation with result = " + result)
+    #THIS FUNCTION IS NOT TESTED
+    return
+    
+
 
 def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     debugmsg("entering hue groups")
@@ -1133,13 +1157,13 @@ def wifi_settings():
             time.sleep(0.01)
 
 
-def settings_menu():
+def settings_menu(g_scenesdir):
     time.sleep(.25)
     global pos
     pos = 0
     old_display = 0
     exitvar = False
-    menudepth = 7
+    menudepth = 8
     refresh = 1
     while exitvar == False:
         if(pos > menudepth):
@@ -1162,6 +1186,8 @@ def settings_menu():
                 display_2lines(str(display) + ". Flashlight","Function",17)
             elif(display == 6):
                 display_2lines(str(display) + ". Connect to","WiFi",17)
+            elif(display == 7):
+                display_2lines(str(display) + ". Create a","New Scene",17)
             else:
                 display_2lines("Back to","Main Menu",17)
             old_display = display
@@ -1184,6 +1210,8 @@ def settings_menu():
                 flashlight_mode()
             elif(display == 6):
                 wifi_settings()
+            elif(display == 7):
+                new_scene_creator(g_scenesdir)
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -1348,15 +1376,16 @@ def long_press(message,pin):
             ctmode = 1
             break
 
-def check_wifi_file():
-    ADDWIFIPATH ='/boot/add_wifi.txt'
+def check_wifi_file(maindirectory):
+    ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
+    print "Checking if add wifi file exists in: " + str(ADDWIFIPATH)
     if os.path.exists(ADDWIFIPATH):
         display_3lines("Wifi Creds Detected","Loading File...","Click to continue",13,16)
         while True:
             time.sleep(0.01)
             if(not GPIO.input(21)):
                 break
-        ssids = os.popen("cat /boot/add_wifi.txt | awk '{print $1}'").read()
+        ssids = os.popen("cat " + str(ADDWIFIPATH) + " | awk '{print $1}'").read()
         ssid_array = ssids.split('\n')
         display_3lines("SSID: " + str(ssid_array[0]),"PSK: " + str(ssid_array[1]),"Continue?",11,offset = 15)
         while True:
@@ -1371,8 +1400,9 @@ def check_wifi_file():
         while True:
             time.sleep(1)
 
-def check_upgrade_file():
-    ADDWIFIPATH ='/boot/upgrade.py'
+def check_upgrade_file(maindirectory):
+    ADDWIFIPATH = str(maindirectory) + 'upgrade.py'
+    print "Checking if upgrade file exists in: " + str(ADDWIFIPATH)
     if os.path.exists(ADDWIFIPATH):
         display_3lines("New Firmware Detected","Loading File...","Click to continue",13,16)
         while True:
@@ -1489,14 +1519,20 @@ def binarydecision(questiondict):
     transition_time = pos*2
     return transition_time
 
-def get_scene_total(offset):
+def get_scene_total(g_scenesdir,offset):
     #search all of the scenes in the scenes directory
     #count how many there are (maybe dump names into a dict then do a len()?)
     #add that number to the offset
-    total_scenes = 3
+    #direc = "/boot/hueBerry/scenes/"
+    direc = g_scenesdir
+    scene_files = [i for i in os.listdir(direc)]
+    scene_files = sorted(scene_files)
+    print scene_files
+    total_scenes = len(scene_files)
+    #total_scenes = 3           #static value
     total_plus_offset = total_scenes + offset
-    allscenes_dict = ["Scene 1","Scene 2","Scene 3"]
-    return total_scenes,total_plus_offset,allscenes_dict
+    #allscenes_dict = ["Scene 1","Scene 2","Scene 3"]   #Static value
+    return total_scenes,total_plus_offset,scene_files
 
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
@@ -1533,10 +1569,10 @@ time_format = True
 
 #--------------------------------------------------
 #Search to see if an Upgrade file exists, if so, run it
-check_upgrade_file()
+check_upgrade_file(maindirectory)
 #--------------------------------------------------
 #Search to see if an Add Wifi file exists, if so, add it then delete it.
-check_wifi_file()
+check_wifi_file(maindirectory)
 
 
 #--------------------------------------------------
@@ -1587,8 +1623,8 @@ debugmsg("Starting hueBerry program version " + __file__)
 
 offset = 5 #clock (0) + 4 presets
 post_offset = 3 #settings, light, group menu after scenes)
-while True:
-    total_screens,total_plus_offset,allscenes_dict = get_scene_total(offset)
+total_screens,total_plus_offset,scene_files = get_scene_total(,g_scenesdir,offset)
+while True:    
     menudepth = total_plus_offset + post_offset - 1
     # Cycle through different displays
     if(pos > menudepth):
@@ -1618,9 +1654,9 @@ while True:
         #begin scene selection
         elif(display >= offset and display <= (total_plus_offset-1)):
             #print(display, offset, total_plus_offset, menudepth)
-            #print(allscenes_dict)
+            #print(scene_files)
             #print (display-offset)
-            display_2lines(str(display) + ". " + str(allscenes_dict[display-offset]),"Play?",15)
+            display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
         elif(display == (menudepth-2)):
             display_2lines(str(display) + ". Settings", "Menu",13)
         elif(display == (menudepth-1)):
@@ -1689,22 +1725,26 @@ while True:
             #print display, offset
             selected_scenenumber = display-offset+1
             #print selected_scenenumber
-            result = holding_button(5000,"Hold to edit S" + str(selected_scenenumber),"Will edit S" + str(selected_scenenumber),21)
+            result = holding_button(5000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
             if result == 0:
-                display_2lines("Turning lights:","Scene " + str(selected_scenenumber),12)
-                os.popen("./" + str(selected_scenenumber) + "_scene.sh")
+                display_2lines("Turning lights:",str(scene_files[display-offset]),12)
+                #print scene_files[display-offset]
+                print "running the below thing"
+                selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                os.popen("\"" + str(selected_file) + "\"")
+                print(str(selected_file))
                 time.sleep(1)
-                debugmsg("turning lights scene" + str(selected_scenenumber))
+                debugmsg("Running: " + str(scene_files[display-offset]))
             elif result == 1:
                 ltt = set_scene_transition_time()
-                result = get_house_scene_by_light(selected_scenenumber,ltt)
+                result = get_house_scene_by_light(selected_file,ltt)
                 debugmsg("ran scene by group creation with result = " + result)
             else:
                 display_2lines("Something weird","Happened...",12)
                 time.sleep(5)
         elif(display == (menudepth-2)):
             pos = 0
-            settings_menu()
+            settings_menu(g_scenesdir)
         elif(display == (menudepth-1)):
             pos = 0
             light_control("l")
