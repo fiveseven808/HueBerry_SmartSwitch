@@ -133,6 +133,7 @@ import authenticate
 import json
 import colorsys
 import math
+import pprint
 #import huepi
 #figure out how to export this to huepi
 
@@ -242,6 +243,9 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     cmdout = os.popen("cat lights").read()
     #os.popen("cat scene_template.py >> custom_scene" + selected_filendirect + ".py" )
     wat = json.loads(cmdout)
+    #Just trying to figure out how to sort this and make it a little nicer... bleh 
+    #test_wat = sorted(wat.items())
+    #pprint.pprint(test_wat)
     #display_custom("used jsonloads")
     keyvalues =  wat.keys()
     arraysize = len(keyvalues)
@@ -259,7 +263,7 @@ def get_house_scene_by_light(selected_filendirect,ltt):
             result_array.append(wat[x]['name'])
             lstate_a.append(wat[x]['state']['on'])
             #debugmsg v
-    display_custom("ran first for")
+    #display_custom("ran first for")
     #time.sleep(3)
     for x, v  in wat.items():
         display_2lines("Building Array for","Light " + str(x) + " of " + str(len(result_array)),15)
