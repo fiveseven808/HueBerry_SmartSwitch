@@ -143,8 +143,7 @@ global debug_state
 debug_state = 1
 
 menu_timeout = 30 #seconds
-
-#--------------------------------------------------------------------------
+print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
 #Create Required directories if they do not exist. 
 maindirectory = "/boot/hueBerry/"
 if (os.path.isdir(maindirectory) == False):
@@ -1338,32 +1337,63 @@ def display_3lines(line1,line2,line3,size,offset):
 
 
 def display_custom(text):
-	# Clear image buffer by drawing a black filled box
-	draw.rectangle((0,0,width,height), outline=0, fill=0)
-
-	# Set font type and size
-	#font = ImageFont.truetype('FreeMono.ttf', 8)
-	font = ImageFont.load_default()
-
-	# Position SSID
-	x_pos = (width/2) - (string_width(font,text)/2)
-	y_pos = (height/2) - (8/2)
-
-	# Draw SSID
-	draw.text((x_pos, y_pos), text, font=font, fill=255)
-
-	# Draw the image buffer
-	disp.image(image)
-	disp.display()
+    # Clear image buffer by drawing a black filled box
+    draw.rectangle((0,0,width,height), outline=0, fill=0)
+    # Set font type and size
+    #font = ImageFont.truetype('FreeMono.ttf', 8)
+    font = ImageFont.load_default()
+    # Position SSID
+    x_pos = (width/2) - (string_width(font,text)/2)
+    y_pos = (height/2) - (8/2)
+    # Draw SSID
+    draw.text((x_pos, y_pos), text, font=font, fill=255)
+    # Draw the image buffer
+    disp.image(image)
+    disp.display()
 
 def string_width(fontType,string):
-	string_width = 0
+    string_width = 0
+    for i, c in enumerate(string):
+        char_width, char_height = draw.textsize(c, font=fontType)
+        string_width += char_width
+    return string_width
+    
+def IntelliDraw(drawer,text,font,containerWidth):
+    # Modified and stolen from https://mail.python.org/pipermail/image-sig/2004-December/003064.html
+    # I'm not using it yet but this is some good inspiration
+    words = text.split()  
+    lines = [] # prepare a return argument
+    lines.append(words) 
+    finished = False
+    line = 0
+    while not finished:
+        thistext = lines[line]
+        newline = []
+        innerFinished = False
+        while not innerFinished:
+            #print 'thistext: '+str(thistext)
+            if drawer.textsize(' '.join(thistext),font)[0] > containerWidth:
+                # this is the heart of the algorithm: we pop words off the current
+                # sentence until the width is ok, then in the next outer loop
+                # we move on to the next sentence. 
+                newline.insert(0,thistext.pop(-1))
+            else:
+                innerFinished = True
+        if len(newline) > 0:
+            lines.append(newline)
+            line = line + 1
+        else:
+            finished = True
+    tmp = []        
+    for i in lines:
+        tmp.append( ' '.join(i) )
+    lines = tmp
+    (width,height) = drawer.textsize(lines[0],font)            
+    total_height = len(lines)*(height+1)
+    return (lines,width,height,total_height)
 
-	for i, c in enumerate(string):
-		char_width, char_height = draw.textsize(c, font=fontType)
-		string_width += char_width
+#----------------------------------------------------------------------------
 
-	return string_width
 
 def long_press(message,pin):
     prev_mills = int(round(time.time() * 1000))
@@ -1527,7 +1557,7 @@ def get_scene_total(g_scenesdir,offset):
     direc = g_scenesdir
     scene_files = [i for i in os.listdir(direc)]
     scene_files = sorted(scene_files)
-    print scene_files
+    print "Loading Scene Files: " + str(scene_files)
     total_scenes = len(scene_files)
     #total_scenes = 3           #static value
     total_plus_offset = total_scenes + offset
