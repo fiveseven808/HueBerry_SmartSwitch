@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 """
+v041
+2017-02-11 2233 //57
+binarydecision() is finished!
+Pass it a function for the first thing, then a word or so for the "answers"
+We can now cancel scene creation!
+Also added a user initiated update function! it'll go and pull the latest file down from github and compare before installing! Then it'll ask the user based on the binarydecision function! 
+Lots of goodies today!
+
 v040
 2017-02-10 1610 //57
 Extra bigass update. Just like Windows 10, skipping a few versions to get to v040. I'm pretty sure I made a whole bunch of little updates and just didn't push them to git. Will do my best to document all of them. 
@@ -227,11 +235,16 @@ def get_light_names():
 
 def get_house_scene_by_light(selected_filendirect,ltt):
     rot_bri = ltt/10.0
-    display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15)
-    while True:
-        time.sleep(0.01)
-        if(not GPIO.input(21)):
-            break
+    #display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15)
+    answer1 = "Yes?"
+    answer2 = "No?"
+    decision_result = binarydecision(lambda: display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15),answer1,answer2)
+    print decision_result
+    if (decision_result == 2):
+        print "Canceled"
+        display_2lines("Scene Creation","Canceled",15)
+        time.sleep(1)
+        return "Canceled"
     #Get a fresh groups json file
     display_2lines("Grabbing","Light States",15)
     name_array,num_array,lstate_a,total = get_light_names()
@@ -1166,7 +1179,7 @@ def settings_menu(g_scenesdir):
     pos = 0
     old_display = 0
     exitvar = False
-    menudepth = 8
+    menudepth = 9
     refresh = 1
     scene_refresh = 0
     while exitvar == False:
@@ -1191,6 +1204,8 @@ def settings_menu(g_scenesdir):
             elif(display == 6):
                 display_2lines(str(display) + ". Connect to","WiFi",17)
             elif(display == 7):
+                display_2lines(str(display) + ". Check for","Upgrades?",17)
+            elif(display == 8):
                 display_2lines(str(display) + ". Create a","New Scene",17)
             else:
                 display_2lines("Back to","Main Menu",17)
@@ -1215,6 +1230,8 @@ def settings_menu(g_scenesdir):
             elif(display == 6):
                 wifi_settings()
             elif(display == 7):
+                user_init_upgrade()
+            elif(display == 8):
                 new_scene_creator(g_scenesdir)
                 scene_refresh = 1
             else:
@@ -1449,6 +1466,47 @@ def check_upgrade_file(maindirectory):
         os.popen("python " + ADDWIFIPATH)
         while True:
             time.sleep(1)
+            
+def user_init_upgrade():
+    display_2lines("Checking for","Updates! :)",15)
+    #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/wrong.py --output-document=something.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    if wget_results:
+        print("Could not download the file for whatever reason")
+        print("Returning to previous state")
+        print("There are no changes or upgrades avaliable")
+        display_2lines("Could not connect","to server :(",15)
+        time.sleep(2)
+        return
+    else:
+        print("File Downloaded Successfully! Comparing...")
+        display_2lines("Comparing","Versions...",15)
+    #Change this to an upgrade only file. Smaller, easier and quicker to check if it just contains a version number and a changelog
+    diff_result = os.popen("diff hueberry.py new_hueberry.py").read()
+    #diff_result = os.popen("diff hueberry.py hueberry.py").read()
+    if not diff_result:
+        print("There are no changes or upgrades avaliable")
+        display_2lines("You are","up to date! :)",15)
+        time.sleep(2)
+        return
+    else:
+        print("It looks like there are changes avaliable. Installing...")
+        answer1 = "Upgrade Now!"
+        answer2 = "Cancel"
+        decision_result = binarydecision(lambda: display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
+        if (decision_result != 1):
+            display_2lines("Canceling...","Returning...",15)
+            #os.popen("rm new_hueberry.py")
+            time.sleep(1)
+            return
+        display_2lines("Upgrading!!!","Please wait...",15)
+        os.popen("mv hueberry.py hueberry_old.py")
+        os.popen("mv new_hueberry.py hueberry.py")
+        display_2lines("Upgrade Finished!","Rebooting...",15)
+        #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
+        os.open("sudo shutdown -r now")
+    return
 
 def debugmsg(message):
     global logfile
@@ -1516,15 +1574,18 @@ def set_scene_transition_time():
     transition_time = pos*2
     return transition_time
     
-def binarydecision(questiondict):
+def binarydecision(binary_decision_question_function,answer1,answer2):
     #def binarydecision(displayfunction,messagedict,)
     #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get display_3lines(something) passed to it, and then run it as pos == 0 or something... 
     #as of now 2/4/17 this is just a placeholder stolen from the function above. not called, and no functionality has been implemented
+    #disassemble question dict
+    #line1 = question_line1
+    #line2 = question_line2
     global pos
     pos = 0                 # Start at 0
     exitvar = False
-    max_rot_val = 2       # question,yes,no
-    #bri_pre = pos/5.0       # 20ms per rotation
+    max_rot_val = 2       # binar question
+    old_pos = 0       # idk
     refresh = 1
     prev_mills = 0
     while exitvar == False: 
@@ -1534,26 +1595,31 @@ def binarydecision(questiondict):
             pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = pos/5.0
-        if(bri_pre != rot_bri or refresh ==  1 ):
-            display_2lines("Transition Time",'%.2f'%rot_bri + " sec",15)
+        if(old_pos != pos or refresh ==  1 ):
+            old_pos = pos
+            if (pos == 0):
+                #display_2lines(str(line1),str(line2),15)
+                binary_decision_question_function()
+                result = 0
+                print "pos = "+str(pos)
+                print "old pos = "+str(old_pos)
+            elif (pos == 1):
+                display_2lines("Choose",str(answer1),15)
+                result = 1
+                print "pos = "+str(pos)
+                print "old pos = "+str(old_pos)
+            elif (pos == 2):
+                display_2lines("Choose",str(answer2),15)
+                result = 2
+                print "pos = "+str(pos)
+                print "old pos = "+str(old_pos)
+            else:
+                print("fuck, something went wrong in binary decision")
             refresh = 0
-        if rot_bri <= 0 and rot_bri != bri_pre:
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            #huecmd.start()
-            bri_pre = rot_bri
-        elif(rot_bri != bri_pre and millsdiff > 200):
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            #huecmd.start()
-            bri_pre = rot_bri
-            prev_mills = mills
-        elif(millsdiff > 200):
-            prev_mills = mills
-        if(not GPIO.input(21)):
+        if(not GPIO.input(21) and result > 0 ):
             exitvar = True
         time.sleep(0.01)
-    transition_time = pos*2
-    return transition_time
+    return result
 
 def get_scene_total(g_scenesdir,offset):
     #search all of the scenes in the scenes directory
@@ -1765,7 +1831,7 @@ while True:
             #print display, offset
             selected_scenenumber = display-offset+1
             #print selected_scenenumber
-            result = holding_button(5000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+            result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
             selected_file = str(g_scenesdir) + str(scene_files[display-offset])
             if result == 0:
                 display_2lines("Turning lights:",str(scene_files[display-offset]),12)
