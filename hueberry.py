@@ -1601,18 +1601,18 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
                 #display_2lines(str(line1),str(line2),15)
                 binary_decision_question_function()
                 result = 0
-                print "pos = "+str(pos)
-                print "old pos = "+str(old_pos)
+                #print "pos = "+str(pos)
+                #print "old pos = "+str(old_pos)
             elif (pos == 1):
                 display_2lines("Choose",str(answer1),15)
                 result = 1
-                print "pos = "+str(pos)
-                print "old pos = "+str(old_pos)
+                #print "pos = "+str(pos)
+                #print "old pos = "+str(old_pos)
             elif (pos == 2):
                 display_2lines("Choose",str(answer2),15)
                 result = 2
-                print "pos = "+str(pos)
-                print "old pos = "+str(old_pos)
+                #print "pos = "+str(pos)
+                #print "old pos = "+str(old_pos)
             else:
                 print("fuck, something went wrong in binary decision")
             refresh = 0
