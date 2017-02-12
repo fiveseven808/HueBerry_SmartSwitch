@@ -1476,7 +1476,7 @@ def user_init_upgrade():
         print("Could not download the file for whatever reason")
         print("Returning to previous state")
         print("There are no changes or upgrades avaliable")
-        display_2lines("Could not connect","to server :(",15)
+        display_2lines("Could not connect","to server :(",13)
         time.sleep(2)
         return
     else:
@@ -1503,9 +1503,12 @@ def user_init_upgrade():
         display_2lines("Upgrading!!!","Please wait...",15)
         os.popen("mv hueberry.py hueberry_old.py")
         os.popen("mv new_hueberry.py hueberry.py")
-        display_2lines("Upgrade Finished!","Rebooting...",15)
+        #lol this probably isn't very secure... but if you have access to the pi then you have issues already 
+        os.popen("chmod a+rwx hueberry.py")
+        os.popen("chmod a+rwx hueberry_old.py")
+        display_2lines("Upgrade Finished!","Rebooting...",14)
         #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
-        os.open("sudo shutdown -r now")
+        os.popen("sudo shutdown -r now")
     return
 
 def debugmsg(message):
