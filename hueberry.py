@@ -1501,12 +1501,12 @@ def user_init_upgrade():
             time.sleep(1)
             return
         display_2lines("Upgrading!!!","Please wait...",15)
-        os.popen("mv hueberry.py hueberry_old.py")
-        os.popen("mv new_hueberry.py hueberry.py")
+        os.popen("sudo mv hueberry.py hueberry_old.py")
+        os.popen("sudo mv new_hueberry.py hueberry.py")
         #lol this probably isn't very secure... but if you have access to the pi then you have issues already 
-        os.popen("chmod a+rwx hueberry.py")
-        os.popen("chmod a+rwx hueberry_old.py")
-        display_2lines("Upgrade Finished!","Rebooting...",14)
+        os.popen("sudo chmod a+rwx hueberry.py")
+        os.popen("sudo chmod a+rwx hueberry_old.py")
+        display_2lines("Upgrade Finished!","Rebooting...",13)
         #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
         os.popen("sudo shutdown -r now")
     return
