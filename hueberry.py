@@ -1449,6 +1449,7 @@ def InteliDraw_Test():
             j = j + 1
         disp.image(image)
         disp.display()
+        time.sleep(0.01)
     time.sleep(1)
 
 #----------------------------------------------------------------------------
@@ -1846,11 +1847,11 @@ while True:
         elif(display == 2):
             # Turn on NIGHT lights dim (groups 1,2,3)
             display_2lines("Turning specific","lights on DIM",12)
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/1/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/1/action").read()
             hue_lights(lnum = "8",lon = "true",lbri = "1",lsat = "1",lx = "-1",ly = "-1",ltt = "4", lct = "400")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/2/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/2/action").read()
             hue_lights(lnum = "5",lon = "true",lbri = "1",lsat = "200",lx = "0.5015",ly = "0.4153",ltt = "4", lct = "-1")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/3/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/3/action").read()
             hue_groups(lnum = "6",lon = "true",lbri = "1",lsat = "200",lx = "-1",ly = "-1",ltt = "4",lct = "400")
             # Turn off front door light
             #print(debug)
@@ -1858,13 +1859,13 @@ while True:
             debugmsg("turning on night lights dim")
         elif(display == 3):
             display_2lines("Turning all","lights on FULL",12)
-            hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+            hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
             ##turn off front door light... we dont want that...
-            #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+            #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
             debugmsg("turning all lights on full")
         elif(display == 4):
             display_2lines("Turning all","lights OFF quickly",12)
-            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
             debugmsg("turning all lights off quick")
         elif(display >= offset and display < total_plus_offset):
             #print display, offset
