@@ -1574,7 +1574,7 @@ while True:
     if(display == 0):
         cur_min = int(time.strftime("%M"))
         if(old_min != cur_min or refresh == 1):
-            display_time()
+            hb_display.display_time()
             old_min = cur_min
             refresh = 0
         timeout = 0
