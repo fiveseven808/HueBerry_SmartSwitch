@@ -8,6 +8,14 @@ We can now cancel scene creation!
 Also added a user initiated update function! it'll go and pull the latest file down from github and compare before installing! Then it'll ask the user based on the binarydecision function! 
 Lots of goodies today!
 
+2017-02-12 //57
+Implemeneted InteliDraw with InteliDraw_Test. Word wrap and scrolling is now a thing!
+need to figure out where it goes. 
+seperate hueberry_api module is now avaliable! need to integrate it into hueberry.py
+    all major display_* functions have been transferred to that module. 
+    runs independently to test all functions. fuck yeah!
+
+
 v040
 2017-02-10 1610 //57
 Extra bigass update. Just like Windows 10, skipping a few versions to get to v040. I'm pretty sure I made a whole bunch of little updates and just didn't push them to git. Will do my best to document all of them. 
