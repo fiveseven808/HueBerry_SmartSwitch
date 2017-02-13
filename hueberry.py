@@ -1416,6 +1416,41 @@ def IntelliDraw(drawer,text,font,containerWidth):
     total_height = len(lines)*(height+1)
     return (lines,width,height,total_height)
 
+def InteliDraw_Test():
+    global pos
+    pos = 0
+    text = 'One very extremely long string that cannot possibly fit \
+    into a small number of pixels of horizontal width, and the idea \
+    is to break this text up into multiple lines that can be placed like \
+    a paragraph into our image'
+    #draw = ImageDraw.Draw(OurImagePreviouslyDefined)
+    #font = fontpath = ImageFont.truetype('/usr/local/share/fonts/ttf/times.ttf',26)
+    #pixelWidth = 500 # pixels
+    lines,tmp,h,total_h = IntelliDraw(draw,text,font,width)
+    j = 0
+    #for i in lines:
+    #    draw.text( (0,0+j*h), i , font=font, fill=255)
+    #    j = j + 1
+    #disp.image(image)
+    #disp.display()
+    #time.sleep(5)
+    #draw.rectangle((0,0,width,height), outline=0, fill=0)
+    while(not GPIO.input(21)):
+        time.sleep(0.01)
+    time.sleep(0.5)
+    while GPIO.input(21):
+        draw.rectangle((0,0,width,height), outline=0, fill=0)
+        offset = ((h/2)*-1)*pos
+        j = 0 
+        for i in lines:
+            #Line Centering code
+            x_pos = (width/2) - (string_width(font,i)/2)
+            draw.text( (x_pos,offset+(j*h)), i , font=font, fill=255)
+            j = j + 1
+        disp.image(image)
+        disp.display()
+    time.sleep(1)
+
 #----------------------------------------------------------------------------
 
 
@@ -1856,6 +1891,7 @@ while True:
         elif(display == (menudepth-2)):
             pos = 0
             scene_refresh = settings_menu(g_scenesdir)
+            #InteliDraw_Test()
             scene_refresh = 1 # lol override. this might be useful lol 
         elif(display == (menudepth-1)):
             pos = 0
