@@ -81,7 +81,7 @@ if len(n2install) > 0:
     #print cout
     myrun("apt-get -q update")
     #myrun("apt-get -y -V -q dist-upgrade")
-    print("finished\r")
+    print("Finished updating system repository\n\n")
     
 #print "test finished"
 #sys.exit()
@@ -90,27 +90,27 @@ baremetal = 0
 for x in n2install:
     if x == 'pigpio':
         print("Installing " +str(x))
-        myrun("rm master.zip && sudo rm -rf pigpio-master && wget https://github.com/joan2937/pigpio/archive/master.zip && unzip master.zip &&  pigpio-master/make -j4 && sudo pigpio-master/make install && sudo pigpiod ")
-        print("Done installing " +str(x))
+        myrun("rm master.zip; sudo rm -rf pigpio-master; wget https://github.com/joan2937/pigpio/archive/master.zip && unzip master.zip &&  pigpio-master/make -j4 && sudo pigpio-master/make install && sudo pigpiod ")
+        print("Done installing " +str(x)+"\n\n")
     if x == 'authenticate':
-        print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC)
+        print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC + "\n\n")
         baremetal = baremetal + 1
     if x == 'Adafruit_SSD1306':
-        print("Installing " +str(x))
-        myrun("sudo apt-get -y install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get -y install python-imaging python-smbus && sudo apt-get install -y git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git && sudo Adafruit_Python_SSD1306/python setup.py install")
-        print("Done installing " +str(x))
+        print("Installing " +str(x)+"\n\n")
+        myrun("sudo apt-get -y install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get -y install python-imaging python-smbus && sudo apt-get install -y git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git && sudo python Adafruit_Python_SSD1306/setup.py install")
+        print("Done installing " +str(x)+"\n\n")
     if x =='RPi':
-        print(bcolors.RED + "    wtf, the " +str(x)+" module should be part of the most recent Raspberry Pi distribution.\nAre you even running this on a Pi?" + bcolors.ENDC)
+        print(bcolors.RED + "    wtf, the " +str(x)+" module should be part of the most recent Raspberry Pi distribution.\nAre you even running this on a Pi?" + bcolors.ENDC + "\n\n")
         print("    installing anyway. lel")
         myrun("sudo pip install RPi.GPIO")
     if x == 'rotary_encoder':
-        print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC)
+        print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC + "\n\n")
         #myrun("echo ididathing && echo doing another thing && echo doing a third thing").read()
         baremetal = baremetal + 1
 
 #print baremetal    
 if baremetal > 0:
-    print("\n\n\n" + bcolors.BOLD + "Downloading dev branch of hueBerry" + bcolors.ENDC)
+    print("" + bcolors.BOLD + "Downloading dev branch of hueBerry" + bcolors.ENDC)
     myrun("git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git")
     print("Cloned Repo lol")
     

@@ -1,5 +1,50 @@
 #!/usr/bin/env python
 """
+v041
+2017-02-11 2233 //57
+binarydecision() is finished!
+Pass it a function for the first thing, then a word or so for the "answers"
+We can now cancel scene creation!
+Also added a user initiated update function! it'll go and pull the latest file down from github and compare before installing! Then it'll ask the user based on the binarydecision function! 
+Lots of goodies today!
+
+2017-02-12 //57
+Implemeneted InteliDraw with InteliDraw_Test. Word wrap and scrolling is now a thing!
+need to figure out where it goes. 
+seperate hueberry_api module is now avaliable! need to integrate it into hueberry.py
+    all major display_* functions have been transferred to that module. 
+    runs independently to test all functions. fuck yeah!
+
+
+v040
+2017-02-10 1610 //57
+Extra bigass update. Just like Windows 10, skipping a few versions to get to v040. I'm pretty sure I made a whole bunch of little updates and just didn't push them to git. Will do my best to document all of them. 
+ * Changing the working directory structure for hueBerry
+  * Now using /boot/hueBerry/ for upgrade and wifi settings
+  * Now using /boot/hueBerry/scenes/ for scene files!
+  * Psuedo Global variable used (passed around a lot lol) 
+  * "Should" automatically create the directories if they don't exist already
+ * Changed get_house_scene_by_light's parameter to selected_filendirect because I'm now passing it a full path name of a file 
+  * Can be optimizied a little bit. I'm duplicating the variable right now lol
+ * Made a new_scene_creator function that will generate a new scene with a new number based on the amount of scenes that already exist
+  * i.e. if 5 scenes exist, regardless of name, the next scene will be named 6_scene.sh
+ * Added new scene creation to the settings menu so the main menu is less cluttered. I can't imagine many scenes being created once the inital setup is done by the user
+ * check_wifi_file and check_upgrade_file now use the new p-global directory variable
+ * get_scene_total now properly queries the p-global scenes directory instead of replying back with static values
+  * Also sorts the scenes alphabetically so the user can now order things
+ * Adjusted the main menu to properly execute the right script from the new directories (I think?) 
+ * Files can now be managed by Windows!
+  * Power off the hueBerry
+  * Stick the SD card into the Windows machine
+  * Navigate to Boot:\hueBerry\scenes\
+  * Sort by Name
+  * Rename files however you please
+  * The order represented by the name sort is the order they will appear on the hueBerry
+  * You are free to delete ones you don't use anymore
+
+By the way, all of this except for the new_scene_creator() function has been tested! 
+
+
 v037
 2017-02-04 2319 //57
 bunch of tweaks here and there. biggest thing is that scene creation now has adjustable transition time :D that's cool :)
@@ -43,39 +88,6 @@ need to merge the two.... will probably worki on the CT+lightcontrol issue first
 gonna attempt to fix the individual CT bit where it should go straght to hue...
 2243
 looks like i fixed the CT issue. i had quit the CT function too early in my last error handling. it shoul dbe a lot better now... i think there's an else statement somewhere in there that doesn't need to be... i put some markers just in case it gets called....
-
-
-v034
-2017 0131
-for some reason when a hueberry first connects, the api key doesn't always seem to work...
-well, not reliably at least. adding retrys when pulling information from the bridge so it doesn't crash
-
-v033
-2017 0130
-looks like the update worked with a little bit of changes.
-scene with holding the button work as they're supposed to. simple but working now
-gonna try and make dynamic menus
-
-v032
-2017 0129
-looks like scene saving is working good. Goona go and rearrange my hard scenes to be at the end.
-gonna make custom scenes configurable. make a transition time gathering thing.
-remeoved scene by group since by light is so fast
-new process:
-    select a scene
-        click to activate scene
-    hold down for 5 seconds to edit scene
-        new menu:
-        record scene
-        edit transition time
-
-
-
-v031
-2017 0126
-adding the scene creation function. and replay.
-added 2 ways to do it. using the per light way. both ways work actually. may lead to interesting results
-fuck this was difficult
 
 --------------------
 How to run:
@@ -137,6 +149,7 @@ import authenticate
 import json
 import colorsys
 import math
+import pprint
 #import huepi
 #figure out how to export this to huepi
 
@@ -147,7 +160,19 @@ global debug_state
 debug_state = 1
 
 menu_timeout = 30 #seconds
-
+print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
+#Create Required directories if they do not exist. 
+maindirectory = "/boot/hueBerry/"
+if (os.path.isdir(maindirectory) == False):
+    os.popen("sudo mkdir /boot/hueBerry")
+    print "Created Directory: " + str(maindirectory)
+    
+g_scenesdir = str(maindirectory) + "scenes/"
+if (os.path.isdir(g_scenesdir) == False):
+    os.popen("sudo mkdir /boot/hueBerry/scenes")
+    print "Created Directory: " + str(g_scenesdir)
+print "Main Directory is: " + str(maindirectory)
+print "Scripts Directory is: " + str(g_scenesdir)
 
 #--------------------------------------------------------------------------
 def get_group_names():
@@ -216,13 +241,18 @@ def get_light_names():
     return name_array,num_array,lstate_a,total
 
 
-def get_house_scene_by_light(scenenumber,ltt):
+def get_house_scene_by_light(selected_filendirect,ltt):
     rot_bri = ltt/10.0
-    display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15)
-    while True:
-        time.sleep(0.01)
-        if(not GPIO.input(21)):
-            break
+    #display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15)
+    answer1 = "Yes?"
+    answer2 = "No?"
+    decision_result = binarydecision(lambda: display_3lines("Set scene with","Transition Time",'%.2f'%rot_bri + " sec?",13,offset = 15),answer1,answer2)
+    print decision_result
+    if (decision_result == 2):
+        print "Canceled"
+        display_2lines("Scene Creation","Canceled",15)
+        time.sleep(1)
+        return "Canceled"
     #Get a fresh groups json file
     display_2lines("Grabbing","Light States",15)
     name_array,num_array,lstate_a,total = get_light_names()
@@ -232,8 +262,11 @@ def get_house_scene_by_light(scenenumber,ltt):
         return "failed"
     #display_custom("ran get light names")
     cmdout = os.popen("cat lights").read()
-    #os.popen("cat scene_template.py >> custom_scene" + scenenumber + ".py" )
+    #os.popen("cat scene_template.py >> custom_scene" + selected_filendirect + ".py" )
     wat = json.loads(cmdout)
+    #Just trying to figure out how to sort this and make it a little nicer... bleh 
+    #test_wat = sorted(wat.items())
+    #pprint.pprint(test_wat)
     #display_custom("used jsonloads")
     keyvalues =  wat.keys()
     arraysize = len(keyvalues)
@@ -251,7 +284,7 @@ def get_house_scene_by_light(scenenumber,ltt):
             result_array.append(wat[x]['name'])
             lstate_a.append(wat[x]['state']['on'])
             #debugmsg v
-    display_custom("ran first for")
+    #display_custom("ran first for")
     #time.sleep(3)
     for x, v  in wat.items():
         display_2lines("Building Array for","Light " + str(x) + " of " + str(len(result_array)),15)
@@ -298,7 +331,8 @@ def get_house_scene_by_light(scenenumber,ltt):
     #ltt = 100
     #api_url = "http://testbridge/something"
     index = 0
-    scenefile = str(scenenumber) + "_scene.sh"
+    scenefile = str(selected_filendirect)
+    print scenefile
     sceneobj = open(scenefile,"w+")
     sceneobj.write("#!/bin/bash\n#\n#This is a scenefile generated by hueBerry\n\n")
     display_2lines("Building","Scene Script!",15)
@@ -312,6 +346,7 @@ def get_house_scene_by_light(scenenumber,ltt):
         index += 1
     sceneobj.close
     os.popen("chmod a+x " + scenefile)
+    os.popen("chown pi " + scenefile)
     display_2lines("Scenefile","Completed!",15)
     status = "completed"
     return status
@@ -330,6 +365,20 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
         return
     print(result)
     return result
+    
+def new_scene_creator(g_scenesdir):
+    #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
+    total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset = 0)
+    new_scene_number = total_scenes + 1
+    new_scene_name = str(g_scenesdir) + str(new_scene_number) + "_scene.sh"
+    print "New scene will be: " + str(new_scene_name)
+    ltt = set_scene_transition_time()
+    result = get_house_scene_by_light(new_scene_name,ltt)
+    debugmsg("ran NEW scene by individual creation with result = " + result)
+    #THIS FUNCTION IS NOT TESTED
+    return
+    
+
 
 def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     debugmsg("entering hue groups")
@@ -1133,14 +1182,15 @@ def wifi_settings():
             time.sleep(0.01)
 
 
-def settings_menu():
+def settings_menu(g_scenesdir):
     time.sleep(.25)
     global pos
     pos = 0
     old_display = 0
     exitvar = False
-    menudepth = 7
+    menudepth = 9
     refresh = 1
+    scene_refresh = 0
     while exitvar == False:
         if(pos > menudepth):
             pos = menudepth
@@ -1162,6 +1212,10 @@ def settings_menu():
                 display_2lines(str(display) + ". Flashlight","Function",17)
             elif(display == 6):
                 display_2lines(str(display) + ". Connect to","WiFi",17)
+            elif(display == 7):
+                display_2lines(str(display) + ". Check for","Upgrades?",17)
+            elif(display == 8):
+                display_2lines(str(display) + ". Create a","New Scene",17)
             else:
                 display_2lines("Back to","Main Menu",17)
             old_display = display
@@ -1184,6 +1238,11 @@ def settings_menu():
                 flashlight_mode()
             elif(display == 6):
                 wifi_settings()
+            elif(display == 7):
+                user_init_upgrade()
+            elif(display == 8):
+                new_scene_creator(g_scenesdir)
+                scene_refresh = 1
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -1192,7 +1251,7 @@ def settings_menu():
             while(not GPIO.input(21)):
                 time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
-    return
+    return scene_refresh
 
 #----------------------------------------------------------------------------
 
@@ -1310,32 +1369,99 @@ def display_3lines(line1,line2,line3,size,offset):
 
 
 def display_custom(text):
-	# Clear image buffer by drawing a black filled box
-	draw.rectangle((0,0,width,height), outline=0, fill=0)
-
-	# Set font type and size
-	#font = ImageFont.truetype('FreeMono.ttf', 8)
-	font = ImageFont.load_default()
-
-	# Position SSID
-	x_pos = (width/2) - (string_width(font,text)/2)
-	y_pos = (height/2) - (8/2)
-
-	# Draw SSID
-	draw.text((x_pos, y_pos), text, font=font, fill=255)
-
-	# Draw the image buffer
-	disp.image(image)
-	disp.display()
+    # Clear image buffer by drawing a black filled box
+    draw.rectangle((0,0,width,height), outline=0, fill=0)
+    # Set font type and size
+    #font = ImageFont.truetype('FreeMono.ttf', 8)
+    font = ImageFont.load_default()
+    # Position SSID
+    x_pos = (width/2) - (string_width(font,text)/2)
+    y_pos = (height/2) - (8/2)
+    # Draw SSID
+    draw.text((x_pos, y_pos), text, font=font, fill=255)
+    # Draw the image buffer
+    disp.image(image)
+    disp.display()
 
 def string_width(fontType,string):
-	string_width = 0
+    string_width = 0
+    for i, c in enumerate(string):
+        char_width, char_height = draw.textsize(c, font=fontType)
+        string_width += char_width
+    return string_width
+    
+def IntelliDraw(drawer,text,font,containerWidth):
+    # Modified and stolen from https://mail.python.org/pipermail/image-sig/2004-December/003064.html
+    # I'm not using it yet but this is some good inspiration
+    words = text.split()  
+    lines = [] # prepare a return argument
+    lines.append(words) 
+    finished = False
+    line = 0
+    while not finished:
+        thistext = lines[line]
+        newline = []
+        innerFinished = False
+        while not innerFinished:
+            #print 'thistext: '+str(thistext)
+            if drawer.textsize(' '.join(thistext),font)[0] > containerWidth:
+                # this is the heart of the algorithm: we pop words off the current
+                # sentence until the width is ok, then in the next outer loop
+                # we move on to the next sentence. 
+                newline.insert(0,thistext.pop(-1))
+            else:
+                innerFinished = True
+        if len(newline) > 0:
+            lines.append(newline)
+            line = line + 1
+        else:
+            finished = True
+    tmp = []        
+    for i in lines:
+        tmp.append( ' '.join(i) )
+    lines = tmp
+    (width,height) = drawer.textsize(lines[0],font)            
+    total_height = len(lines)*(height+1)
+    return (lines,width,height,total_height)
 
-	for i, c in enumerate(string):
-		char_width, char_height = draw.textsize(c, font=fontType)
-		string_width += char_width
+def InteliDraw_Test():
+    global pos
+    pos = 0
+    text = 'One very extremely long string that cannot possibly fit \
+    into a small number of pixels of horizontal width, and the idea \
+    is to break this text up into multiple lines that can be placed like \
+    a paragraph into our image'
+    #draw = ImageDraw.Draw(OurImagePreviouslyDefined)
+    #font = fontpath = ImageFont.truetype('/usr/local/share/fonts/ttf/times.ttf',26)
+    #pixelWidth = 500 # pixels
+    lines,tmp,h,total_h = IntelliDraw(draw,text,font,width)
+    j = 0
+    #for i in lines:
+    #    draw.text( (0,0+j*h), i , font=font, fill=255)
+    #    j = j + 1
+    #disp.image(image)
+    #disp.display()
+    #time.sleep(5)
+    #draw.rectangle((0,0,width,height), outline=0, fill=0)
+    while(not GPIO.input(21)):
+        time.sleep(0.01)
+    time.sleep(0.5)
+    while GPIO.input(21):
+        draw.rectangle((0,0,width,height), outline=0, fill=0)
+        offset = ((h/2)*-1)*pos
+        j = 0 
+        for i in lines:
+            #Line Centering code
+            x_pos = (width/2) - (string_width(font,i)/2)
+            draw.text( (x_pos,offset+(j*h)), i , font=font, fill=255)
+            j = j + 1
+        disp.image(image)
+        disp.display()
+        time.sleep(0.01)
+    time.sleep(1)
 
-	return string_width
+#----------------------------------------------------------------------------
+
 
 def long_press(message,pin):
     prev_mills = int(round(time.time() * 1000))
@@ -1348,15 +1474,16 @@ def long_press(message,pin):
             ctmode = 1
             break
 
-def check_wifi_file():
-    ADDWIFIPATH ='/boot/add_wifi.txt'
+def check_wifi_file(maindirectory):
+    ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
+    print "Checking if add wifi file exists in: " + str(ADDWIFIPATH)
     if os.path.exists(ADDWIFIPATH):
         display_3lines("Wifi Creds Detected","Loading File...","Click to continue",13,16)
         while True:
             time.sleep(0.01)
             if(not GPIO.input(21)):
                 break
-        ssids = os.popen("cat /boot/add_wifi.txt | awk '{print $1}'").read()
+        ssids = os.popen("cat " + str(ADDWIFIPATH) + " | awk '{print $1}'").read()
         ssid_array = ssids.split('\n')
         display_3lines("SSID: " + str(ssid_array[0]),"PSK: " + str(ssid_array[1]),"Continue?",11,offset = 15)
         while True:
@@ -1371,8 +1498,9 @@ def check_wifi_file():
         while True:
             time.sleep(1)
 
-def check_upgrade_file():
-    ADDWIFIPATH ='/boot/upgrade.py'
+def check_upgrade_file(maindirectory):
+    ADDWIFIPATH = str(maindirectory) + 'upgrade.py'
+    print "Checking if upgrade file exists in: " + str(ADDWIFIPATH)
     if os.path.exists(ADDWIFIPATH):
         display_3lines("New Firmware Detected","Loading File...","Click to continue",13,16)
         while True:
@@ -1383,6 +1511,50 @@ def check_upgrade_file():
         os.popen("python " + ADDWIFIPATH)
         while True:
             time.sleep(1)
+            
+def user_init_upgrade():
+    display_2lines("Checking for","Updates! :)",15)
+    #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/wrong.py --output-document=something.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    if wget_results:
+        print("Could not download the file for whatever reason")
+        print("Returning to previous state")
+        print("There are no changes or upgrades avaliable")
+        display_2lines("Could not connect","to server :(",13)
+        time.sleep(2)
+        return
+    else:
+        print("File Downloaded Successfully! Comparing...")
+        display_2lines("Comparing","Versions...",15)
+    #Change this to an upgrade only file. Smaller, easier and quicker to check if it just contains a version number and a changelog
+    diff_result = os.popen("diff hueberry.py new_hueberry.py").read()
+    #diff_result = os.popen("diff hueberry.py hueberry.py").read()
+    if not diff_result:
+        print("There are no changes or upgrades avaliable")
+        display_2lines("You are","up to date! :)",15)
+        time.sleep(2)
+        return
+    else:
+        print("It looks like there are changes avaliable. Installing...")
+        answer1 = "Upgrade Now!"
+        answer2 = "Cancel"
+        decision_result = binarydecision(lambda: display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
+        if (decision_result != 1):
+            display_2lines("Canceling...","Returning...",15)
+            #os.popen("rm new_hueberry.py")
+            time.sleep(1)
+            return
+        display_2lines("Upgrading!!!","Please wait...",15)
+        os.popen("sudo mv hueberry.py hueberry_old.py")
+        os.popen("sudo mv new_hueberry.py hueberry.py")
+        #lol this probably isn't very secure... but if you have access to the pi then you have issues already 
+        os.popen("sudo chown pi hueberry.py")
+        os.popen("sudo chown pi hueberry_old.py")
+        display_2lines("Upgrade Finished!","Rebooting...",13)
+        #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
+        os.popen("sudo shutdown -r now")
+    return
 
 def debugmsg(message):
     global logfile
@@ -1450,15 +1622,18 @@ def set_scene_transition_time():
     transition_time = pos*2
     return transition_time
     
-def binarydecision(questiondict):
+def binarydecision(binary_decision_question_function,answer1,answer2):
     #def binarydecision(displayfunction,messagedict,)
     #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get display_3lines(something) passed to it, and then run it as pos == 0 or something... 
     #as of now 2/4/17 this is just a placeholder stolen from the function above. not called, and no functionality has been implemented
+    #disassemble question dict
+    #line1 = question_line1
+    #line2 = question_line2
     global pos
     pos = 0                 # Start at 0
     exitvar = False
-    max_rot_val = 2       # question,yes,no
-    #bri_pre = pos/5.0       # 20ms per rotation
+    max_rot_val = 2       # binar question
+    old_pos = 0       # idk
     refresh = 1
     prev_mills = 0
     while exitvar == False: 
@@ -1468,35 +1643,46 @@ def binarydecision(questiondict):
             pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = pos/5.0
-        if(bri_pre != rot_bri or refresh ==  1 ):
-            display_2lines("Transition Time",'%.2f'%rot_bri + " sec",15)
+        if(old_pos != pos or refresh ==  1 ):
+            old_pos = pos
+            if (pos == 0):
+                #display_2lines(str(line1),str(line2),15)
+                binary_decision_question_function()
+                result = 0
+                #print "pos = "+str(pos)
+                #print "old pos = "+str(old_pos)
+            elif (pos == 1):
+                display_2lines("Choose",str(answer1),15)
+                result = 1
+                #print "pos = "+str(pos)
+                #print "old pos = "+str(old_pos)
+            elif (pos == 2):
+                display_2lines("Choose",str(answer2),15)
+                result = 2
+                #print "pos = "+str(pos)
+                #print "old pos = "+str(old_pos)
+            else:
+                print("fuck, something went wrong in binary decision")
             refresh = 0
-        if rot_bri <= 0 and rot_bri != bri_pre:
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            #huecmd.start()
-            bri_pre = rot_bri
-        elif(rot_bri != bri_pre and millsdiff > 200):
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            #huecmd.start()
-            bri_pre = rot_bri
-            prev_mills = mills
-        elif(millsdiff > 200):
-            prev_mills = mills
-        if(not GPIO.input(21)):
+        if(not GPIO.input(21) and result > 0 ):
             exitvar = True
         time.sleep(0.01)
-    transition_time = pos*2
-    return transition_time
+    return result
 
-def get_scene_total(offset):
+def get_scene_total(g_scenesdir,offset):
     #search all of the scenes in the scenes directory
     #count how many there are (maybe dump names into a dict then do a len()?)
     #add that number to the offset
-    total_scenes = 3
+    #direc = "/boot/hueBerry/scenes/"
+    direc = g_scenesdir
+    scene_files = [i for i in os.listdir(direc)]
+    scene_files = sorted(scene_files)
+    print "Loading Scene Files: " + str(scene_files)
+    total_scenes = len(scene_files)
+    #total_scenes = 3           #static value
     total_plus_offset = total_scenes + offset
-    allscenes_dict = ["Scene 1","Scene 2","Scene 3"]
-    return total_scenes,total_plus_offset,allscenes_dict
+    #allscenes_dict = ["Scene 1","Scene 2","Scene 3"]   #Static value
+    return total_scenes,total_plus_offset,scene_files
 
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
@@ -1533,10 +1719,10 @@ time_format = True
 
 #--------------------------------------------------
 #Search to see if an Upgrade file exists, if so, run it
-check_upgrade_file()
+check_upgrade_file(maindirectory)
 #--------------------------------------------------
 #Search to see if an Add Wifi file exists, if so, add it then delete it.
-check_wifi_file()
+check_wifi_file(maindirectory)
 
 
 #--------------------------------------------------
@@ -1574,6 +1760,8 @@ old_min = 60
 old_display = 0
 refresh = 1
 
+scene_refresh = 1 #Do the initial scene refresh
+
 def callback(way):
         global pos
         pos += way
@@ -1587,8 +1775,10 @@ debugmsg("Starting hueBerry program version " + __file__)
 
 offset = 5 #clock (0) + 4 presets
 post_offset = 3 #settings, light, group menu after scenes)
-while True:
-    total_screens,total_plus_offset,allscenes_dict = get_scene_total(offset)
+while True:    
+    if (scene_refresh == 1):
+        total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
+        scene_refresh = 0
     menudepth = total_plus_offset + post_offset - 1
     # Cycle through different displays
     if(pos > menudepth):
@@ -1618,9 +1808,9 @@ while True:
         #begin scene selection
         elif(display >= offset and display <= (total_plus_offset-1)):
             #print(display, offset, total_plus_offset, menudepth)
-            #print(allscenes_dict)
+            #print(scene_files)
             #print (display-offset)
-            display_2lines(str(display) + ". " + str(allscenes_dict[display-offset]),"Play?",15)
+            display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
         elif(display == (menudepth-2)):
             display_2lines(str(display) + ". Settings", "Menu",13)
         elif(display == (menudepth-1)):
@@ -1665,11 +1855,11 @@ while True:
         elif(display == 2):
             # Turn on NIGHT lights dim (groups 1,2,3)
             display_2lines("Turning specific","lights on DIM",12)
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/1/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/1/action").read()
             hue_lights(lnum = "8",lon = "true",lbri = "1",lsat = "1",lx = "-1",ly = "-1",ltt = "4", lct = "400")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/2/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/2/action").read()
             hue_lights(lnum = "5",lon = "true",lbri = "1",lsat = "200",lx = "0.5015",ly = "0.4153",ltt = "4", lct = "-1")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":4}' " + api_url + "/groups/3/action").read()
+            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/3/action").read()
             hue_groups(lnum = "6",lon = "true",lbri = "1",lsat = "200",lx = "-1",ly = "-1",ltt = "4",lct = "400")
             # Turn off front door light
             #print(debug)
@@ -1677,34 +1867,41 @@ while True:
             debugmsg("turning on night lights dim")
         elif(display == 3):
             display_2lines("Turning all","lights on FULL",12)
-            hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+            hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
             ##turn off front door light... we dont want that...
-            #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+            #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
             debugmsg("turning all lights on full")
         elif(display == 4):
             display_2lines("Turning all","lights OFF quickly",12)
-            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "4",lct = "-1")
+            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
             debugmsg("turning all lights off quick")
         elif(display >= offset and display < total_plus_offset):
             #print display, offset
             selected_scenenumber = display-offset+1
             #print selected_scenenumber
-            result = holding_button(5000,"Hold to edit S" + str(selected_scenenumber),"Will edit S" + str(selected_scenenumber),21)
+            result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+            selected_file = str(g_scenesdir) + str(scene_files[display-offset])
             if result == 0:
-                display_2lines("Turning lights:","Scene " + str(selected_scenenumber),12)
-                os.popen("./" + str(selected_scenenumber) + "_scene.sh")
+                display_2lines("Turning lights:",str(scene_files[display-offset]),12)
+                #print scene_files[display-offset]
+                print "running the below thing"
+                #selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                os.popen("\"" + str(selected_file) + "\"")
+                print(str(selected_file))
                 time.sleep(1)
-                debugmsg("turning lights scene" + str(selected_scenenumber))
+                debugmsg("Running: " + str(scene_files[display-offset]))
             elif result == 1:
                 ltt = set_scene_transition_time()
-                result = get_house_scene_by_light(selected_scenenumber,ltt)
-                debugmsg("ran scene by group creation with result = " + result)
+                result = get_house_scene_by_light(selected_file,ltt)
+                debugmsg("Ran scene editing by group with result = " + result)
             else:
                 display_2lines("Something weird","Happened...",12)
                 time.sleep(5)
         elif(display == (menudepth-2)):
             pos = 0
-            settings_menu()
+            scene_refresh = settings_menu(g_scenesdir)
+            #InteliDraw_Test()
+            scene_refresh = 1 # lol override. this might be useful lol 
         elif(display == (menudepth-1)):
             pos = 0
             light_control("l")
