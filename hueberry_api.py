@@ -40,9 +40,11 @@ class display(object):
         H = int(time.strftime("%H"))
         if (self.console == 1):
             os.system('clear')
-            print("------------------------")
             print("Currently on Time screen")
-            print(current_time)
+            print("------------------------")
+            print("")
+            print("        "+str(current_time))
+            print("")
             print("------------------------\n\n")
             if (self.mirror == 0):
                 return
