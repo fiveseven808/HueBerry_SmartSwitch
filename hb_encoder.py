@@ -13,7 +13,8 @@ variable is specific to the object, and cannot be changed via
 other means. 
 """
 class rotary(object):
-    def __init__(self,self.debug = 0):
+    def __init__(self,debug = 0):
+        self.debug = debug
         self.pos = 0 
         if (self.debug == 0):
             self.pi = pigpio.pi()
