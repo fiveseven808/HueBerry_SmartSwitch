@@ -39,8 +39,8 @@ class display(object):
         if (self.console == 1):
             print("------------------------")
             print("Currently on Time screen")
-            print(str(current_time) + "\n\n")
-            print("------------------------")
+            print(current_time)
+            print("------------------------\n\n")
             return
         # Set font type and size
         if H >= 21 or H < 6:
@@ -73,83 +73,110 @@ class display(object):
         self.disp.display()
 
     def display_2lines(self,line1,line2,size):
-        # Clear image buffer by drawing a black filled box
-        self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
         if(self.time_format):
             current_time = time.strftime("%-I:%M")
         else:
             current_time = time.strftime("%-H:%M")
         current_date = time.strftime("%m / %d / %Y")
-        font = ImageFont.truetype('BMW_naa.ttf', 11)
-        #font = ImageFont.load_default()
-        #draw a clock
-        # Position time
-        x_pos = (self.width/2)-(self.string_width(font,current_time)/2)
-        y_pos = 0
-        # Draw time
-        self.draw.text((x_pos, y_pos), current_time, font=font, fill=255)
-        #draw a menu line
-        timeheight = 10
-        self.draw.line((0, timeheight, self.width, timeheight), fill=255)
-        # Set font type and size
-        font = ImageFont.truetype('BMW_naa.ttf', size)
-        x_pos = (self.width/2)-(self.string_width(font,line1)/2)
-        y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
-        self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
-        x_pos = (self.width/2)-(self.string_width(font,line2)/2)
-        y_pos = self.disp.height-26
-        self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
-        self.disp.image(self.image)
-        self.disp.display()
-
+        if (self.console == 0):
+            font = ImageFont.truetype('BMW_naa.ttf', 11)
+            #font = ImageFont.load_default()
+            #draw a clock
+            # Position time
+            x_pos = (self.width/2)-(self.string_width(font,current_time)/2)
+            y_pos = 0
+            # Clear image buffer by drawing a black filled box
+            self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
+            # Draw time
+            self.draw.text((x_pos, y_pos), current_time, font=font, fill=255)
+            #draw a menu line
+            timeheight = 10
+            self.draw.line((0, timeheight, self.width, timeheight), fill=255)
+            # Set font type and size
+            font = ImageFont.truetype('BMW_naa.ttf', size)
+            x_pos = (self.width/2)-(self.string_width(font,line1)/2)
+            y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
+            self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
+            x_pos = (self.width/2)-(self.string_width(font,line2)/2)
+            y_pos = self.disp.height-26
+            self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
+            self.disp.image(self.image)
+            self.disp.display()
+        elif (self.console == 1):
+            print("----------------------------")
+            print("Currently Displaying 2 lines")
+            print(current_time)
+            print("----------------------------")
+            print(line1)
+            print(line2)
+            print("----------------------------")
+            return
+            
     def display_3lines(self,line1,line2,line3,size,offset):
-        # Clear image buffer by drawing a black filled box
-        self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
         if(self.time_format):
             current_time = time.strftime("%-I:%M")
         else:
             current_time = time.strftime("%-H:%M")
         current_date = time.strftime("%m / %d / %Y")
-        font = ImageFont.truetype('BMW_naa.ttf', 11)
-        #font = ImageFont.load_default()
-        #draw a clock
-        # Position time
-        x_pos = (self.width/2)-(self.string_width(font,current_time)/2)
-        y_pos = 0
-        # Draw time
-        self.draw.text((x_pos, y_pos), current_time, font=font, fill=255)
-        #draw a menu line
-        timeheight = 10
-        self.draw.line((0, timeheight, self.width, timeheight), fill=255)
-        # Set font type and size
-        font = ImageFont.truetype('BMW_naa.ttf', size)
-        x_pos = (self.width/2)-(self.string_width(font,line1)/2)
-        y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
-        self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
-        x_pos = (self.width/2)-(self.string_width(font,line2)/2)
-        y_pos += offset
-        self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
-        x_pos = (self.width/2)-(self.string_width(font,line3)/2)
-        y_pos += offset
-        self.draw.text((x_pos, y_pos), line3, font=font, fill=255)
-        self.disp.image(self.image)
-        self.disp.display()
-
+        if (self.console == 0):
+            # Clear image buffer by drawing a black filled box
+            self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
+            font = ImageFont.truetype('BMW_naa.ttf', 11)
+            #font = ImageFont.load_default()
+            #draw a clock
+            # Position time
+            x_pos = (self.width/2)-(self.string_width(font,current_time)/2)
+            y_pos = 0
+            # Draw time
+            self.draw.text((x_pos, y_pos), current_time, font=font, fill=255)
+            #draw a menu line
+            timeheight = 10
+            self.draw.line((0, timeheight, self.width, timeheight), fill=255)
+            # Set font type and size
+            font = ImageFont.truetype('BMW_naa.ttf', size)
+            x_pos = (self.width/2)-(self.string_width(font,line1)/2)
+            y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
+            self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
+            x_pos = (self.width/2)-(self.string_width(font,line2)/2)
+            y_pos += offset
+            self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
+            x_pos = (self.width/2)-(self.string_width(font,line3)/2)
+            y_pos += offset
+            self.draw.text((x_pos, y_pos), line3, font=font, fill=255)
+            self.disp.image(self.image)
+            self.disp.display()
+        elif (self.console == 1):
+            print("----------------------------")
+            print("Currently Displaying 3 lines")
+            print(current_time)
+            print("----------------------------")
+            print(line1)
+            print(line2)
+            print(line3)
+            print("----------------------------")
+            return
 
     def display_custom(self,text):
-        # Clear image buffer by drawing a black filled box
-        self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
-        # Set font type and size
-        #font = ImageFont.truetype('FreeMono.ttf', 8)
-        font = ImageFont.load_default()
-        # Position SSID
-        x_pos = (self.width/2) - (self.string_width(font,text)/2)
-        y_pos = (self.height/2) - (8/2)
-        # Draw SSID
-        self.draw.text((x_pos, y_pos), text, font=font, fill=255)
-        # Draw the image buffer
-        self.disp.image(self.image)
-        self.disp.display()
+        if (self.console == 0):
+            # Clear image buffer by drawing a black filled box
+            self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
+            # Set font type and size
+            #font = ImageFont.truetype('FreeMono.ttf', 8)
+            font = ImageFont.load_default()
+            # Position SSID
+            x_pos = (self.width/2) - (self.string_width(font,text)/2)
+            y_pos = (self.height/2) - (8/2)
+            # Draw SSID
+            self.draw.text((x_pos, y_pos), text, font=font, fill=255)
+            # Draw the image buffer
+            self.disp.image(self.image)
+            self.disp.display()
+        elif (self.console == 1):
+            print("----------------------------")
+            print("custom text")
+            print(text)
+            print("----------------------------")
+            return
 
     def string_width(self,fontType,string):
         string_width = 0
