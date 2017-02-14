@@ -1114,9 +1114,7 @@ def flashlight_mode():
     while True:
         if(GPIO.input(21)):
             break
-    draw.rectangle((0,0,width,height), outline=0, fill=1)
-    disp.image(image)
-    disp.display()
+    hb_display.draw_flashlight()
     while True:
         if(not GPIO.input(21)):
             break

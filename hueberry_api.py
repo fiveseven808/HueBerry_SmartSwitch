@@ -110,9 +110,9 @@ class display(object):
             self.disp.display()
         if (self.console == 1):
             os.system('clear')
-            print("----------------------------")
             print("Currently Displaying 2 lines")
-            print(current_time)
+            print("----------------------------")
+            print("        "+str(current_time))
             print("----------------------------")
             print(line1)
             print(line2)
@@ -154,9 +154,9 @@ class display(object):
             self.disp.display()
         if (self.console == 1):
             os.system('clear')
-            print("----------------------------")
             print("Currently Displaying 3 lines")
-            print(current_time)
+            print("----------------------------")
+            print("        "+str(current_time))
             print("----------------------------")
             print(line1)
             print(line2)
@@ -181,12 +181,29 @@ class display(object):
             self.disp.display()
         if (self.console == 1):
             os.system('clear')
+            print("        custom text")
             print("----------------------------")
-            print("custom text")
+            print("")
             print(text)
+            print("")
             print("----------------------------")
             return
-
+            
+    def draw_flashlight(self):
+        if (self.console == 0 or self.mirror == 1):
+            self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=1)
+            self.disp.image(self.image)
+            self.disp.display()
+        if (self.console == 1):
+            os.system('clear')
+            print("         flashlight")
+            print("----------------------------")
+            print("############################")
+            print("############################")
+            print("############################")
+            print("----------------------------")
+            return
+            
     def string_width(self,fontType,string):
         string_width = 0
         for i, c in enumerate(string):
