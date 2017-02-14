@@ -7,6 +7,12 @@ gonna attempt to pull everything into the hueberry_api display modules
 1403 //57
 completed! looks good to me! haven't tested it out on actual hardware yet, but i'm liking it so far... gonna do a console interface spinoff just to see what happens
 
+2021 //57
+console display mode and mirror mode now a thing. still no controls. try them out! very cool stuff! 
+console mode = redirect all output to console. (but can't control it LOL can control it with hueberry though LOL (but no lcd))
+mirror mode = see exactly what's going on on the screen on the hueberry in the console! emulation!!! 
+added a little routine in the beginning to go and download the new hueberry_api.py 
+
 
 v041
 2017-02-11 2233 //57
@@ -135,6 +141,14 @@ import os.path
 #set working directory to script directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+#check requirements for new v042
+try:
+    import hueberry_api
+except:
+    print "Downloading the api thing since it doesn't exist"
+    os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry_api.py")
+    print "Finished! hopefully this will work!"
+
 import sys
 debug_argument = 0
 mirror_mode = 0 
@@ -188,6 +202,8 @@ if (os.path.isdir(g_scenesdir) == False):
     print "Created Directory: " + str(g_scenesdir)
 print "Main Directory is: " + str(maindirectory)
 print "Scripts Directory is: " + str(g_scenesdir)
+
+
 
 #--------------------------------------------------------------------------
 def get_group_names():
