@@ -4,6 +4,10 @@ v042
 2017-02-13 1041 //57
 gonna attempt to pull everything into the hueberry_api display modules
 
+1403 //57
+completed! looks good to me! haven't tested it out on actual hardware yet, but i'm liking it so far... gonna do a console interface spinoff just to see what happens
+
+
 v041
 2017-02-11 2233 //57
 binarydecision() is finished!
@@ -1494,7 +1498,10 @@ elif debug_argument == 1:
     height = 64
  
 #Instantiate the hueberry display object
-hb_display = hueberry_api.display()
+if (debug_argument == 0): 
+    hb_display = hueberry_api.display()
+elif (debug_argument == 1):
+    hb_display = hueberry_api.display(console = 1)
 
 #--------------------------------------------------
 prev_millis = 0

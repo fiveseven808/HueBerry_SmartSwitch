@@ -11,14 +11,20 @@ class display(object):
     # Will work to integrate this into hueberry.py soon
     # For now, this is just a proof of concept
     
-    def __init__(self):
-        self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
-        self.disp.begin()
-        self.width = self.disp.width
-        self.height = self.disp.height
-        self.image = Image.new('1', (self.width, self.height))
-        self.font = ImageFont.load_default()
-        self.draw = ImageDraw.Draw(self.image)
+    def __init__(self,console=0):
+        self.console = console
+        if (self.console == 0):
+            self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
+            self.disp.begin()
+            self.width = self.width
+            self.height = self.disp.height
+            self.image = Image.new('1', (self.width, self.height))
+            self.font = ImageFont.load_default()
+            self.draw = ImageDraw.Draw(self.image)
+        else:
+            #console specific initiation goes here
+            #Adafruit OLED library standard width for string calculation
+            self.width = 128
         self.time_format = True
         
     def display_time(self):
@@ -28,12 +34,15 @@ class display(object):
         else:
             current_time = time.strftime("%-H:%M")
         current_date = time.strftime("%m / %d / %Y")
-        # Clear image buffer by drawing a black filled box
-        self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
         #Get 24 hour time variable
         H = int(time.strftime("%H"))
+        if (self.console == 1):
+            print("------------------------")
+            print("Currently on Time screen")
+            print(str(current_time) + "\n\n")
+            print("------------------------")
+            return
         # Set font type and size
-        #H = 9
         if H >= 21 or H < 6:
             font = ImageFont.truetype('BMW_outline.otf', 40)
             #print("outline")
@@ -43,22 +52,19 @@ class display(object):
             #print("regular")
         #print H
         #time.sleep(100)
-
         # Position time
-        x_pos = (self.disp.width/2)-(self.string_width(font,current_time)/2)
+        x_pos = (self.width/2)-(self.string_width(font,current_time)/2)
         y_pos = 2 + (self.disp.height-4-8)/2 - (35/2)
-
+        # Clear image buffer by drawing a black filled box
+        self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
         # Draw time
         self.draw.text((x_pos, y_pos), current_time, font=font, fill=255)
-
         # Set font type and size
         font = ImageFont.truetype('BMW_naa.ttf', 13)
         #font = ImageFont.load_default()
-
         # Position date
-        x_pos = (self.disp.width/2)-(self.string_width(font,current_date)/2)
+        x_pos = (self.width/2)-(self.string_width(font,current_date)/2)
         y_pos = self.disp.height-10
-
         # Draw date during daytime hours
         if H < 21 and H > 6:
             self.draw.text((x_pos, y_pos), current_date, font=font, fill=255)
@@ -78,19 +84,19 @@ class display(object):
         #font = ImageFont.load_default()
         #draw a clock
         # Position time
-        x_pos = (self.disp.width/2)-(self.string_width(font,current_time)/2)
+        x_pos = (self.width/2)-(self.string_width(font,current_time)/2)
         y_pos = 0
         # Draw time
         self.draw.text((x_pos, y_pos), current_time, font=font, fill=255)
         #draw a menu line
         timeheight = 10
-        self.draw.line((0, timeheight, self.disp.width, timeheight), fill=255)
+        self.draw.line((0, timeheight, self.width, timeheight), fill=255)
         # Set font type and size
         font = ImageFont.truetype('BMW_naa.ttf', size)
-        x_pos = (self.disp.width/2)-(self.string_width(font,line1)/2)
+        x_pos = (self.width/2)-(self.string_width(font,line1)/2)
         y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
         self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
-        x_pos = (self.disp.width/2)-(self.string_width(font,line2)/2)
+        x_pos = (self.width/2)-(self.string_width(font,line2)/2)
         y_pos = self.disp.height-26
         self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
         self.disp.image(self.image)
@@ -108,22 +114,22 @@ class display(object):
         #font = ImageFont.load_default()
         #draw a clock
         # Position time
-        x_pos = (self.disp.width/2)-(self.string_width(font,current_time)/2)
+        x_pos = (self.width/2)-(self.string_width(font,current_time)/2)
         y_pos = 0
         # Draw time
         self.draw.text((x_pos, y_pos), current_time, font=font, fill=255)
         #draw a menu line
         timeheight = 10
-        self.draw.line((0, timeheight, self.disp.width, timeheight), fill=255)
+        self.draw.line((0, timeheight, self.width, timeheight), fill=255)
         # Set font type and size
         font = ImageFont.truetype('BMW_naa.ttf', size)
-        x_pos = (self.disp.width/2)-(self.string_width(font,line1)/2)
+        x_pos = (self.width/2)-(self.string_width(font,line1)/2)
         y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
         self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
-        x_pos = (self.disp.width/2)-(self.string_width(font,line2)/2)
+        x_pos = (self.width/2)-(self.string_width(font,line2)/2)
         y_pos += offset
         self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
-        x_pos = (self.disp.width/2)-(self.string_width(font,line3)/2)
+        x_pos = (self.width/2)-(self.string_width(font,line3)/2)
         y_pos += offset
         self.draw.text((x_pos, y_pos), line3, font=font, fill=255)
         self.disp.image(self.image)
