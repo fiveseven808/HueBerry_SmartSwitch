@@ -3,6 +3,7 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 import time
+import os
 
 class display(object):
     """ hueBerry Display API v0.1 """
@@ -37,6 +38,7 @@ class display(object):
         #Get 24 hour time variable
         H = int(time.strftime("%H"))
         if (self.console == 1):
+            os.system('clear')
             print("------------------------")
             print("Currently on Time screen")
             print(current_time)
@@ -103,6 +105,7 @@ class display(object):
             self.disp.image(self.image)
             self.disp.display()
         elif (self.console == 1):
+            os.system('clear')
             print("----------------------------")
             print("Currently Displaying 2 lines")
             print(current_time)
@@ -146,6 +149,7 @@ class display(object):
             self.disp.image(self.image)
             self.disp.display()
         elif (self.console == 1):
+            os.system('clear')
             print("----------------------------")
             print("Currently Displaying 3 lines")
             print(current_time)
@@ -172,6 +176,7 @@ class display(object):
             self.disp.image(self.image)
             self.disp.display()
         elif (self.console == 1):
+            os.system('clear')
             print("----------------------------")
             print("custom text")
             print(text)
