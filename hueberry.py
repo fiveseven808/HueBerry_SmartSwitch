@@ -121,7 +121,10 @@ def print_usage():
         sudo python hueberry.py [-d] [-h,--help]
     
     -d          Sets the program to output and take input from the console 
-                (does not work)
+                (input does not work yet)
+                
+    -m          Turns on mirror mode. needs '-d' to work. Outputs to the 
+                display as well as the terminal. 
                 
     -h,--help   Displays this help text 
     """
@@ -134,9 +137,12 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 import sys
 debug_argument = 0
+mirror_mode = 0 
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
+    if arg == '-m':
+        mirror_mode = 1
     if arg in ("-h","--help"):
         print_usage()
         sys.exit()
@@ -1505,7 +1511,10 @@ elif debug_argument == 1:
 if (debug_argument == 0): 
     hb_display = hueberry_api.display()
 elif (debug_argument == 1):
-    hb_display = hueberry_api.display(console = 1)
+    if (mirror_mode == 0):
+        hb_display = hueberry_api.display(console = 1)
+    elif (mirror_mode == 1):
+        hb_display = hueberry_api.display(console = 1,mirror = 1)
 
 #--------------------------------------------------
 prev_millis = 0

@@ -12,8 +12,9 @@ class display(object):
     # Will work to integrate this into hueberry.py soon
     # For now, this is just a proof of concept
     
-    def __init__(self,console=0):
+    def __init__(self,console=0,mirror = 0):
         self.console = console
+        self.mirror = mirror
         if (self.console == 0):
             self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
             self.disp.begin()
@@ -43,7 +44,8 @@ class display(object):
             print("Currently on Time screen")
             print(current_time)
             print("------------------------\n\n")
-            return
+            if (self.mirror == 0):
+                return
         # Set font type and size
         if H >= 21 or H < 6:
             font = ImageFont.truetype('BMW_outline.otf', 40)
@@ -80,7 +82,7 @@ class display(object):
         else:
             current_time = time.strftime("%-H:%M")
         current_date = time.strftime("%m / %d / %Y")
-        if (self.console == 0):
+        if (self.console == 0 or self.mirror == 1):
             font = ImageFont.truetype('BMW_naa.ttf', 11)
             #font = ImageFont.load_default()
             #draw a clock
@@ -121,7 +123,7 @@ class display(object):
         else:
             current_time = time.strftime("%-H:%M")
         current_date = time.strftime("%m / %d / %Y")
-        if (self.console == 0):
+        if (self.console == 0 or self.mirror == 1):
             # Clear image buffer by drawing a black filled box
             self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
             font = ImageFont.truetype('BMW_naa.ttf', 11)
@@ -161,7 +163,7 @@ class display(object):
             return
 
     def display_custom(self,text):
-        if (self.console == 0):
+        if (self.console == 0 or self.mirror == 1):
             # Clear image buffer by drawing a black filled box
             self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
             # Set font type and size
