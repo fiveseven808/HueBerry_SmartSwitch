@@ -1497,6 +1497,9 @@ if debug_argument != 1:
 elif debug_argument == 1:
     width = 128
     height = 64
+    #temporary until i figure out how to redirect intput
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
  
 #Instantiate the hueberry display object
 if (debug_argument == 0): 
