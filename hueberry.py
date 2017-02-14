@@ -13,6 +13,9 @@ console mode = redirect all output to console. (but can't control it LOL can con
 mirror mode = see exactly what's going on on the screen on the hueberry in the console! emulation!!! 
 added a little routine in the beginning to go and download the new hueberry_api.py 
 
+2017-02-13 1041 //57
+Seperating classes into their own modules per WPBack's suggestion
+
 
 v041
 2017-02-11 2233 //57
@@ -143,11 +146,11 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 #check requirements for new v042
 #try:
-#    import hueberry_api
+#    import hb_display
 #except:
 #print "Downloading the api thing since it doesn't exist"
-os.popen("rm hueberry_api.py")
-os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry_api.py")
+os.popen("rm hueberry_api.py") # Remove old libraries
+os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
 #os.popen("wget SOMETHING AWESOME GOES HERE LIKE AN UPGRADER FILER")
 #THEN later in the code where the upgrade code is, reference the upgrader file insead 
 print "Finished! hopefully this will work!"
@@ -174,15 +177,12 @@ import rotary_encoder
 
 import threading
 import time
-#from PIL import Image
-#from PIL import ImageFont
-#from PIL import ImageDraw
 import authenticate
 import json
 import colorsys
 import math
 import pprint
-import hueberry_api
+import hb_display
 
 
 global logfile
@@ -1526,12 +1526,12 @@ elif debug_argument == 1:
  
 #Instantiate the hueberry display object
 if (debug_argument == 0): 
-    hb_display = hueberry_api.display()
+    hb_display = hb_display.display()
 elif (debug_argument == 1):
     if (mirror_mode == 0):
-        hb_display = hueberry_api.display(console = 1)
+        hb_display = hb_display.display(console = 1)
     elif (mirror_mode == 1):
-        hb_display = hueberry_api.display(console = 1,mirror = 1)
+        hb_display = hb_display.display(console = 1,mirror = 1)
 
 #--------------------------------------------------
 prev_millis = 0

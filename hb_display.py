@@ -288,41 +288,13 @@ class display(object):
             time.sleep(0.01)
         time.sleep(1)
 
-import curses
-class control(object):
-    def __init__(self):
-        # get the curses screen window
-        self.screen = curses.initscr()
-        # turn off input echoing
-        curses.noecho()
-        # respond to keys immediately (don't wait for enter)
-        curses.cbreak()
-        # map arrow keys to special values
-        self.screen.keypad(True)
-    def get_key(self):
-        char = self.screen.getch()
-        if char == ord('q'):
-            #break
-            return "q"
-        elif char == curses.KEY_RIGHT:
-            # print doesn't work with curses, use addstr instead
-            #screen.addstr(0, 0, 'right')
-            return "right"
-        elif char == curses.KEY_LEFT:
-            #screen.addstr(0, 0, 'left ')  
-            return "left"
-        elif char == curses.KEY_UP:
-            #screen.addstr(0, 0, 'up   ') 
-            return "up"
-        elif char == curses.KEY_DOWN:
-            #screen.addstr(0, 0, 'down ')
-            return "down"
+
 
         
 if __name__ == "__main__":
     import time
-    import hueberry_api
-    test = hueberry_api.display()
+    import hb_display
+    test = hb_display.display()
     test.display_time()
     time.sleep(1)
     test.display_custom("holy shit")
