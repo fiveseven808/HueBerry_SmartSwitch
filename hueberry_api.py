@@ -38,7 +38,7 @@ class display(object):
         current_date = time.strftime("%m / %d / %Y")
         #Get 24 hour time variable
         H = int(time.strftime("%H"))
-        if (self.console == 1):
+        if (self.console == 1 or self.mirror == 1):
             os.system('clear')
             print("Currently on Time screen")
             print("------------------------")
@@ -108,7 +108,7 @@ class display(object):
             self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
             self.disp.image(self.image)
             self.disp.display()
-        elif (self.console == 1):
+        elif (self.console == 1 or self.mirror == 1):
             os.system('clear')
             print("----------------------------")
             print("Currently Displaying 2 lines")
@@ -152,7 +152,7 @@ class display(object):
             self.draw.text((x_pos, y_pos), line3, font=font, fill=255)
             self.disp.image(self.image)
             self.disp.display()
-        elif (self.console == 1):
+        elif (self.console == 1 or self.mirror == 1):
             os.system('clear')
             print("----------------------------")
             print("Currently Displaying 3 lines")
@@ -179,7 +179,7 @@ class display(object):
             # Draw the image buffer
             self.disp.image(self.image)
             self.disp.display()
-        elif (self.console == 1):
+        elif (self.console == 1 or self.mirror == 1):
             os.system('clear')
             print("----------------------------")
             print("custom text")
