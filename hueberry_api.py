@@ -18,7 +18,7 @@ class display(object):
         if (self.console == 0 or self.mirror == 1):
             self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
             self.disp.begin()
-            self.width = self.width
+            self.width = self.disp.width
             self.height = self.disp.height
             self.image = Image.new('1', (self.width, self.height))
             self.font = ImageFont.load_default()
