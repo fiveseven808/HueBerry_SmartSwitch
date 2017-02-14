@@ -144,11 +144,10 @@ for arg in sys.argv:
 if debug_argument != 1:
     os.popen("python splashscreen.py &")
 #    import Adafruit_SSD1306
-    import RPi.GPIO as GPIO
-    import pigpio
-    import rotary_encoder
-
-import pigpio # temporary until i figure out how to reroute input for console mode
+import RPi.GPIO as GPIO
+import pigpio
+import rotary_encoder
+# temporary enabled until i figure out how to reroute input for console mode
 
 import threading
 import time
