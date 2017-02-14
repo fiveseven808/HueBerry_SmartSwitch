@@ -15,7 +15,7 @@ class display(object):
     def __init__(self,console=0,mirror = 0):
         self.console = console
         self.mirror = mirror
-        if (self.console == 0):
+        if (self.console == 0 or self.mirror == 1):
             self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
             self.disp.begin()
             self.width = self.width
@@ -263,7 +263,37 @@ class display(object):
             self.disp.display()
             time.sleep(0.01)
         time.sleep(1)
-        
+
+import curses
+class control(object):
+    def __init__(self):
+        # get the curses screen window
+        self.screen = curses.initscr()
+        # turn off input echoing
+        curses.noecho()
+        # respond to keys immediately (don't wait for enter)
+        curses.cbreak()
+        # map arrow keys to special values
+        self.screen.keypad(True)
+    def get_key(self):
+        char = self.screen.getch()
+        if char == ord('q'):
+            #break
+            return "q"
+        elif char == curses.KEY_RIGHT:
+            # print doesn't work with curses, use addstr instead
+            #screen.addstr(0, 0, 'right')
+            return "right"
+        elif char == curses.KEY_LEFT:
+            #screen.addstr(0, 0, 'left ')  
+            return "left"
+        elif char == curses.KEY_UP:
+            #screen.addstr(0, 0, 'up   ') 
+            return "up"
+        elif char == curses.KEY_DOWN:
+            #screen.addstr(0, 0, 'down ')
+            return "down"
+
         
 if __name__ == "__main__":
     import time
