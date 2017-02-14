@@ -40,12 +40,14 @@ class display(object):
         H = int(time.strftime("%H"))
         if (self.console == 1):
             os.system('clear')
-            print("Currently on Time screen")
-            print("------------------------")
+            print(" Currently on Time screen")
+            print("----------------------------")
             print("")
-            print("        "+str(current_time))
             print("")
-            print("------------------------\n\n")
+            print("          "+str(current_time))
+            print("")
+            print("")
+            print("----------------------------")
             if (self.mirror == 0):
                 return
         # Set font type and size
@@ -112,10 +114,11 @@ class display(object):
             os.system('clear')
             print("Currently Displaying 2 lines")
             print("----------------------------")
-            print("        "+str(current_time))
+            print("         "+str(current_time))
             print("----------------------------")
-            print(line1)
-            print(line2)
+            print("        "+str(line1))
+            print("        "+str(line2))
+            print("")
             print("----------------------------")
             return
             
@@ -156,11 +159,11 @@ class display(object):
             os.system('clear')
             print("Currently Displaying 3 lines")
             print("----------------------------")
-            print("        "+str(current_time))
+            print("         "+str(current_time))
             print("----------------------------")
-            print(line1)
-            print(line2)
-            print(line3)
+            print("        "+str(line1))
+            print("        "+str(line2))
+            print("        "+str(line3))
             print("----------------------------")
             return
 
@@ -181,10 +184,12 @@ class display(object):
             self.disp.display()
         if (self.console == 1):
             os.system('clear')
-            print("        custom text")
+            print("       display_custom")
             print("----------------------------")
             print("")
-            print(text)
+            print("")
+            print("        "+str(text))
+            print("")
             print("")
             print("----------------------------")
             return
@@ -196,8 +201,10 @@ class display(object):
             self.disp.display()
         if (self.console == 1):
             os.system('clear')
-            print("         flashlight")
+            print("         Flashlight")
             print("----------------------------")
+            print("############################")
+            print("############################")
             print("############################")
             print("############################")
             print("############################")

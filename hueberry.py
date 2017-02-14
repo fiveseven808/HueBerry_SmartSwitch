@@ -142,12 +142,15 @@ import os.path
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 #check requirements for new v042
-try:
-    import hueberry_api
-except:
-    print "Downloading the api thing since it doesn't exist"
-    os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry_api.py")
-    print "Finished! hopefully this will work!"
+#try:
+#    import hueberry_api
+#except:
+#print "Downloading the api thing since it doesn't exist"
+os.popen("rm hueberry_api.py")
+os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry_api.py")
+#os.popen("wget SOMETHING AWESOME GOES HERE LIKE AN UPGRADER FILER")
+#THEN later in the code where the upgrade code is, reference the upgrader file insead 
+print "Finished! hopefully this will work!"
 
 import sys
 debug_argument = 0
