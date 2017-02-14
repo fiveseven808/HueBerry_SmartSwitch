@@ -148,6 +148,8 @@ if debug_argument != 1:
     import pigpio
     import rotary_encoder
 
+import pigpio # temporary until i figure out how to reroute input for console mode
+
 import threading
 import time
 #from PIL import Image
