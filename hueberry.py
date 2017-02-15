@@ -149,8 +149,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 #    import hb_display
 #except:
 #print "Downloading the api thing since it doesn't exist"
-os.popen("rm hueberry_api.py") # Remove old libraries
-os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
+#   os.popen("rm hueberry_api.py") # Remove old libraries
+#   os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
 #os.popen("wget SOMETHING AWESOME GOES HERE LIKE AN UPGRADER FILER")
 #THEN later in the code where the upgrade code is, reference the upgrader file insead 
 print "Finished! hopefully this will work!"
@@ -1292,7 +1292,7 @@ def settings_menu(g_scenesdir):
 
         # Poll button press and trigger action based on current display
         #if(not GPIO.input(21)):
-        if(pushed:)
+        if(pushed):
             if(display == 1):
                 devinfo_screen()
             elif(display == 2):
