@@ -66,16 +66,19 @@ class rotary(object):
     def query_console(self):
         #do a thing querying the console. it's fine if it stops everything
         #right now i just want something that works
-        print("Enter a command (Left, Right, Enter): ")
-        """
-        if left:
+        command = raw_input("Enter a command (Left[,][<], Right[.][>], Enter[/]): ")
+        #if left:
+        if(command == ','):
             self.callback(-1)
-        if right:
+        #if right:
+        if(command == '.'):
             self.callback(1)
-        if enter: 
+        #if enter: 
+        if(command == '/'):
             self.pushed = 0
         """
         pass
+        """
 
         
 class control(object):
@@ -116,13 +119,13 @@ if __name__ == "__main__":
     import hb_encoder
     test = hb_encoder.rotary(debug = 1)
     test.callback(1)
-    time.sleep(1)
+    time.sleep(.5)
     test.callback(1)
-    time.sleep(1)
+    time.sleep(.5)
     test.callback(1)
-    time.sleep(1)
+    time.sleep(.5)
     test.callback(-1)
     print "testing button... please push the encoder or enter"
-    while (test.check_button == 0):
+    while (test.get_state == 0):
         time.sleep(0.01)
     print "button pushed! yay!"
