@@ -11,6 +11,17 @@ so that all other hueBerry functions can reference this instance
 and check the pos variable. This avoids globals becuase the pos 
 variable is specific to the object, and cannot be changed via 
 other means. 
+
+
+Maybe I want it so that I have something like
+rotary = hb_encoder.rotary(debug = 1)
+And then in every function I'll have it check to see if a state has changed by doing
+pos,pushed = rotary.get_state()
+
+So I guess when get_state() is called, it'll go and check if the debug variable was set
+If the debug variable was set then it'll go and pull a value from the console
+If the debug variable wasn't set then it'll just pull the pos value from the object scope variable
+    It'll go and then immediately check if the button is being pushed
 """
 class rotary(object):
     def __init__(self,debug = 0,enc_plus = 16, enc_minus = 20,enc_button = 21):
@@ -31,43 +42,41 @@ class rotary(object):
             GPIO.setup(self.enc_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     
     def callback(self,way):
+        #This function updates object scoped variables
         self.pos += way
         if (self.debug == 1):
             print("pos={}".format(self.pos))
     
-    def check_button(self,console_control = 0):
-        self.console_control = console_control
-        if (self.debug == 1 or self.console_control = 1):
-            gpio_input()
-        if (self.debug == 0 or self.console_control = 0):
-            self.gpio_input()
-        return self.pushed
-        
-    def console_input(self,button_only = 0):
-        #Code to get the BUFFERED enter key or something from the console
-        if (button_only == 1):
-            return
-        return
-        
+    def get_state(self):
+        #This function updates object scoped variables
+        if (self.debug == 1):
+            query_console()
+        if (self.debug == 0):
+            self.pushed = self.gpio_input()
+        return self.pos,self.pushed
     
     def gpio_input(self):
         if (not GPIO.input(self.enc_button)):
             #The button is pushed
-            self.pushed = 1
+            pushed = 1
         elif (GPIO.input(self.enc_button)):
-            self.pushed = 0 
-        return self.pushed
+            pushed = 0 
+        return pushed
+    
+    def query_console(self):
+        #do a thing querying the console. it's fine if it stops everything
+        #right now i just want something that works
+        print("Enter a command (Left, Right, Enter): ")
+        """
+        if left:
+            self.callback(-1)
+        if right:
+            self.callback(1)
+        if enter: 
+            self.pushed = 0
+        """
+        pass
 
-class monitor_keyboard(object):
-    def __init__(self):
-        #Do things related to setting up monitoring keyboard input
-        while True:
-            #Check keyboard input and update a callback function accordingly 
-            #i.e. if ">" then rotary.callback(1)
-            # if "<" then rotary.callback(-1)
-            # if "/" then rotary.pushed = 1
-            # or soemthing like that
-            pass
         
 class control(object):
     def __init__(self):
