@@ -458,6 +458,7 @@ def light_control(mode):
         hb_display.display_custom("loading lights...")
         name_array,num_lights,lstate_a,total = get_light_names()
     #global pos
+    encoder.pos = 0 #Reset to top menu
     old_display = 0
     refresh = 1
     exitvar = False
@@ -1073,7 +1074,7 @@ def pair_hue_bridge():
 def devinfo_screen():
     time.sleep(.25)
     #global pos
-    encoder.pos = 0
+    encoder.pos = 0 #Reset to top menu
     old_display = 0
     exitvar = False
     menudepth = 4
@@ -1169,7 +1170,7 @@ def flashlight_mode():
 def wifi_settings():
     hb_display.display_custom("scanning for wifi...")
     #global pos
-    encoder.pos = 0
+    encoder.pos = 0 #Reset to top menu
     timeout = 0
     os.popen("wpa_cli scan")
     os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
@@ -1251,7 +1252,7 @@ def settings_menu(g_scenesdir):
     time.sleep(.25)
     #global pos
     #pos = 0
-    encoder.pos = 0
+    encoder.pos = 0 #Reset to top menu
     old_display = 0
     exitvar = False
     menudepth = 9
@@ -1263,7 +1264,7 @@ def settings_menu(g_scenesdir):
             encoder.pos = menudepth
         elif(pos < 1):
             encoder.pos = 1
-        display = pos
+        display = encoder.pos
 
         #Display Selected Menu
         if (old_display != display or refresh == 1):
