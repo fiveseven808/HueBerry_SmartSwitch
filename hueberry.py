@@ -611,7 +611,7 @@ def light_control(mode):
                 elif(mode == "l"):
                     name_array,num_lights,lstate_a,total = get_light_names()
                 refresh = 1
-                pos = display
+                encoder.pos = display
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -1123,7 +1123,7 @@ def devinfo_screen():
                 time.sleep(0.25)
                 exitvar = True
             refresh = 1
-            pos = display
+            encoder.pos = display
             pos,pushed = encoder.get_state()
             while(pushed):
                 pos,pushed = encoder.get_state()
@@ -1317,7 +1317,7 @@ def settings_menu(g_scenesdir):
                 time.sleep(0.25)
                 exitvar = True
             refresh = 1
-            pos = display
+            encoder.pos = display
             while(pushed):
                 pos,pushed = encoder.get_state()
                 time.sleep(0.01)
