@@ -1652,15 +1652,14 @@ debugmsg("Starting hueBerry program version " + __file__)
 offset = 5 #clock (0) + 4 presets
 post_offset = 3 #settings, light, group menu after scenes)
 while True:    
-    pos,pushed = encoder.get_state()
     if (scene_refresh == 1):
         total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
         scene_refresh = 0
     menudepth = total_plus_offset + post_offset - 1
     # Cycle through different displays
-    if(pos > menudepth):
+    if(encoder.pos > menudepth):
         encoder.pos = menudepth
-    elif(pos < 0):
+    elif(encoder.pos < 0):
         encoder.pos = 0
     display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down. 
     #Display Selected Menu
@@ -1790,5 +1789,5 @@ while True:
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
         encoder.pos = 0
-
+    pos,pushed = encoder.get_state() # after loading everything, get state#
     #time.sleep(0.1)
