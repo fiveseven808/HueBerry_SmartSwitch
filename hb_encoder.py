@@ -68,6 +68,7 @@ class rotary(object):
         #do a thing querying the console. it's fine if it stops everything
         #right now i just want something that works
         command = raw_input("Enter a command (Left[,][<], Right[.][>], Enter[/]): ")
+        #print command
         #if left:
         if(command == ','):
             self.callback(-1)
