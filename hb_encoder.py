@@ -49,6 +49,7 @@ class rotary(object):
     
     def get_state(self):
         #This function updates object scoped variables
+        self.pushed = 0
         if (self.debug == 1):
             self.query_console()
         if (self.debug == 0):
@@ -75,7 +76,7 @@ class rotary(object):
             self.callback(1)
         #if enter: 
         if(command == '/'):
-            self.pushed = 0
+            self.pushed = 1
         """
         pass
         """
