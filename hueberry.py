@@ -1124,6 +1124,7 @@ def devinfo_screen():
                 exitvar = True
             refresh = 1
             pos = display
+            pos,pushed = encoder.get_state()
             while(pushed):
                 pos,pushed = encoder.get_state()
                 time.sleep(0.01)
