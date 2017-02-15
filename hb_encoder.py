@@ -50,7 +50,7 @@ class rotary(object):
     def get_state(self):
         #This function updates object scoped variables
         if (self.debug == 1):
-            query_console()
+            self.query_console()
         if (self.debug == 0):
             self.pushed = self.gpio_input()
         return self.pos,self.pushed
@@ -126,6 +126,5 @@ if __name__ == "__main__":
     time.sleep(.5)
     test.callback(-1)
     print "testing button... please push the encoder or enter"
-    while (test.get_state == 0):
-        time.sleep(0.01)
-    print "button pushed! yay!"
+    pos,pushed = test.get_state()
+    print "pos: "+str(pos)+" pushed: "+str(pushed)
