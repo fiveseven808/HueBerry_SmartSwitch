@@ -1489,7 +1489,7 @@ def set_scene_transition_time():
         if(pushed):
             exitvar = True
         time.sleep(0.01)
-    transition_time = pos*2
+    transition_time = encoder.pos*2
     return transition_time
     
 def binarydecision(binary_decision_question_function,answer1,answer2):
@@ -1706,7 +1706,7 @@ while True:
         prev_secs = secs
         displaytemp = display
     elif(display != 0 and timeout_secs >= menu_timeout):
-        pos = 0
+        encoder.pos = 0
         display_temp = 0
     elif(display == 0):
         displaytemp = display
@@ -1777,18 +1777,18 @@ while True:
                 hb_display.display_2lines("Something weird","Happened...",12)
                 time.sleep(5)
         elif(display == (menudepth-2)):
-            pos = 0
+            encoder.pos = 0
             scene_refresh = settings_menu(g_scenesdir)
             #InteliDraw_Test()
             scene_refresh = 1 # lol override. this might be useful lol 
         elif(display == (menudepth-1)):
-            pos = 0
+            encoder.pos = 0
             light_control("l")
         elif(display == (menudepth)):
-            pos = 0
+            encoder.pos = 0
             light_control("g")
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
-        pos = 0
+        encoder.pos = 0
 
     #time.sleep(0.1)
