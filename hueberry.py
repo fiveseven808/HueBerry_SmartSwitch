@@ -1631,6 +1631,7 @@ prev_secs = 0
 old_min = 60
 old_display = 0
 refresh = 1
+pushed = 0
 
 scene_refresh = 1 #Do the initial scene refresh
 
