@@ -1383,6 +1383,18 @@ def check_upgrade_file(maindirectory):
             time.sleep(1)
             
 def user_init_upgrade():
+    """
+    2017-02-15 //57
+    Planning on rework for update capability..... 
+    method: 
+        delete current upgrade_hb.py
+        download upgrade_hb.py from github
+        drop control of screen (no running functions)
+        run it. 
+            upgrade.hb.py 
+                load hb_display module
+                
+    """
     hb_display.display_2lines("Checking for","Updates! :)",15)
     #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/wrong.py --output-document=something.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
     wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
