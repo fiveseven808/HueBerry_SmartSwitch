@@ -1026,7 +1026,7 @@ def l_control(light):
             encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = enoder.pos * 10
+        rot_bri = encoder.pos * 10
         if(bri_pre != rot_bri or refresh == 1 ):
             hb_display.display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
             refresh = 0
