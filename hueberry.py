@@ -1332,7 +1332,8 @@ def settings_menu(g_scenesdir):
 
 def long_press(message,pin):
     prev_mills = int(round(time.time() * 1000))
-    while(not GPIO.input(pin)):
+    pos,pushed = encoder.get_state()
+    while(pushed):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         if(millsdiff < 500):
@@ -1340,6 +1341,7 @@ def long_press(message,pin):
         elif(millsdiff >= 500):
             ctmode = 1
             break
+        pos,pushed = encoder.get_state()
 
 def check_wifi_file(maindirectory):
     ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
@@ -1453,7 +1455,8 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #ex: result = holding_button(500,"hold to activate","activating",21)
     held_down = 0
     prev_mills = int(round(time.time() * 1000))
-    while(not GPIO.input(button_pin)):
+    pos,pushed = encoder.get_state()
+    while(pushed):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         if(millsdiff < holding_time_ms):
@@ -1461,6 +1464,7 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
         elif(millsdiff >= holding_time_ms):
             hb_display.display_custom(display_after)
             held_down = 1
+        pos,pushed = encoder.get_state()
         time.sleep(0.01)
     time.sleep(0.1)
     successvar = held_down
