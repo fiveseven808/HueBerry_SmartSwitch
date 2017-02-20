@@ -1,5 +1,33 @@
 #!/usr/bin/env python
 """
+v043
+2017-02-18 //57
+Starting work on "Guest mode" or "Single Room mode"
+how it will work?
+    idea 1:
+        pick a room for guest mode by going into groups, and holding for 5 seconds? 
+    idea 2;
+        go into settings, click on guest mode, then select a room
+    single room mode:
+        will replace the clock, with a clock + room brightness control
+            blind brightness?
+                + adjust without changing what lights are on
+                + incremental
+                - no brightness value displayable i think...
+                - cannot turn the light off... 
+                    - if the light turns off, cannot turn on just that light again
+                + can do like a dimmer mode? push to on off? 
+                    + then dial is brightness, like guest mode? 
+        can break out to control rest of house if desired
+            + i.e. activate scenes?
+            * how to break out to ontrol rest of house? 
+what i also want to do is auto update the brightness level i.e. if the brightness changes, while in the brightness mode, i want it to auto update... somehow...
+
+2017-02-19 //57
+o shit... i fucked up 
+this is on the dev branch, not the other one... gotta fix this shit... hold on gonna backup everything... wish me luck 
+
+
 v042
 2017-02-13 1041 //57
 gonna attempt to pull everything into the hueberry_api display modules
@@ -619,31 +647,70 @@ def light_control(mode):
             #prev_millis = int(round(time.time() * 1000))
     return
 
+    
+def l_control(light):
+    brite = get_huejson_value("l",light,"bri")
+    if(brite == -1):
+        #print "No lights avaliable"
+        return
+    brite = int(brite)      #make integer
+    if brite < 10 and brite >= 0:
+        brite = 10
+    brite = brite/10        #trim it down to 25 values
+    brite = int(brite)      #convert the float down to int agian
+    global pos
+    pos = brite
+    exitvar = False
+    max_rot_val = 25
+    bri_pre = pos * 10
+    refresh = 1
+    prev_mills = 0
+    while exitvar == False:
+        if(pos > max_rot_val):
+            pos = max_rot_val
+        elif(pos < 0):
+            pos = 0
+        mills = int(round(time.time() * 1000))
+        millsdiff = mills - prev_mills
+        rot_bri = pos * 10
+        if(bri_pre != rot_bri or refresh == 1 ):
+            hb_display.display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
+            refresh = 0
+        if rot_bri <= 0 and rot_bri != bri_pre:
+            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':light,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            huecmd.start()
+            bri_pre = rot_bri
+        elif(rot_bri != bri_pre and millsdiff > 100):
+            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':light,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            huecmd.start()
+            bri_pre = rot_bri
+            prev_mills = mills
+        elif(millsdiff > 100):
+            prev_mills = mills
+        if(not GPIO.input(21)):
+            exitvar = True
+        time.sleep(0.01)
 
-
+        
 def g_control(group):
-    hb_display.display_custom("loading brightness...")
-    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(group) + " > brite")
-    brite = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    os.popen("rm brite")
-    if not brite:
-        #print "not brite"
-        hb_display.display_2lines("No devices","in group",17)
-        time.sleep(3)
+    brite = get_huejson_value("g",group,"bri")
+    if(brite == -1):
+        #print "No lights avaliable"
         return
     #else:
     #    print "guess it was brite"
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
-    brite = brite/10        #trim it down to 25 values
+    brite = brite/10.16        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     #global pos
     #pos = brite
     encoder.pos = brite
     exitvar = False
     max_rot_val = 25
-    bri_pre = encoder.pos * 10
+    #bri_pre = encoder.pos * 10
+    bri_pre = encoder.pos * 10.16
     refresh = 1
     prev_mills = 0
     while exitvar == False:
@@ -654,26 +721,74 @@ def g_control(group):
             encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = encoder.pos * 10
+        #rot_bri = encoder.pos * 10
+        rot_bri = encoder.pos * 10.16
         if(bri_pre != rot_bri or refresh ==  1 ):
-            hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
+            hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.54)) + "%",17)
             refresh = 0
         if rot_bri <= 0 and rot_bri != bri_pre:
+            print"turning off?"
             #hue_groups(lnum = group,lon = "false",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
-            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
             bri_pre = rot_bri
         elif(rot_bri != bri_pre and millsdiff > 200):
+            print"millsdiff > 200"
             #hue_groups(lnum = group,lon = "true",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
-            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
             bri_pre = rot_bri
             prev_mills = mills
-        elif(millsdiff > 200):
+        millsdiff = mills - prev_mills
+        if(millsdiff > 5000):
+            #If 5.0 seconds have passed and nothing has happened, go and refresh the display and reset the miliseconds
+            rot_bri = get_huejson_value("g",group,"bri")
+            print "the rot bri is: "+str(rot_bri)
+            hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
             prev_mills = mills
         if(pushed):
             exitvar = True
         time.sleep(0.01)
+        
+def get_huejson_value(g_or_l,num,type):
+    #g_or_l:
+    #   Provide "l" if looking up a Light value
+    #   Provide "g" if looking up a Group value
+    #num:
+    #   This is the number of the light or group that you want to retrieve brightness from
+    #type:
+    #   Provide a type of value you're looking for
+    #   bri,ct,hue,sat,type
+    #
+    #If successful, the function will return back the requested value
+    #This function returns -1 if there is nothing returned when the bridge is queried
+    #hb_display.display_custom("Loading "+str(type)+"...")
+    if(g_or_l == "g"):
+        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
+    if(g_or_l == "l"):
+        os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
+    wholejson = os.popen("cat brite").read() #in case i wana do something properly lol 
+    wholejson = json.loads(wholejson)
+    if(type == "bri"):
+        value = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    if(type == "ct"):
+        value = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    if(type == "hue"):
+        value = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    if(type == "sat"):
+        value = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    if(type == "type"):
+        value = wholejson['type']
+    os.popen("rm brite")
+    if not value:
+        if(g_or_l == "l"):
+            hb_display.display_2lines("No devices","in lights",17)
+        if(g_or_l == "g"):
+            hb_display.display_2lines("No devices","in groups",17)
+        time.sleep(3)
+        value = -1
+    return value
+    
 
 #------------------------------------------------------------------------------------
 #Method to convert color temperature into hue and saturation scaled for the Hue-system
@@ -756,16 +871,18 @@ def ct_to_hue_sat(ct):
 #       Group or Light ID and current CT level in Kelvin
 #------------------------------------------------------------------------------------
 def ct_control(device,mode):
-    hb_display.display_custom("loading ct...")
-    if (mode == "g"):
-        os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
-    elif (mode == "l"):
-        os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
-    whole_json = os.popen("cat brite").read()
-    wat = json.loads(whole_json)
-    brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    #hb_display.display_custom("loading ct...")
+    #if (mode == "g"):
+    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
+    #elif (mode == "l"):
+    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
+    brite = get_huejson_value(mode,device,"ct")
+    type = get_huejson_value(mode,device,"type")
+    #whole_json = os.popen("cat brite").read()
+    #wat = json.loads(whole_json)
+    #brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
     #os.popen("rm brite")
-    type = wat['type']
+    #type = wat['type']
     print type
     #if (type == "Color light"):
     #    #print("color light")
@@ -784,9 +901,9 @@ def ct_control(device,mode):
     #brite = wat['action']['ct']
     print("THIS IS " +str(brite))
     brite = int(brite)      #make integer
-    print brite
+    print("integer= "+str(brite))
     brite = 25-((brite - 153) / 14)
-    print brite
+    print ("brite after calc: "+str(brite))
     brite = int(brite)      #convert the float down to int agian
     #global pos
     encoder.pos = brite
@@ -830,6 +947,7 @@ def ct_control(device,mode):
                     huecmd.start()
                 else:
                     huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"4",'lct':rot_bri})
+                    print("sending ct:"+str(rot_bri))
                     huecmd.start()
             bri_pre = rot_bri
             print rot_bri
@@ -837,10 +955,13 @@ def ct_control(device,mode):
             millsdiff = mills - prev_mills
             prev_xy = 1
         if(mode == "g" and prev_xy != new_xy and millsdiff > 1000):
-            print("inside of the new groupxy function")
+            #   as of 2/19 the main bit of this function huecmd.start() 
+            #   has been dsiabled so even though it calculates, it does not send 
+            #print("inside of the new groupxy function")
             #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
-            hb_display.display_custom("setting group via hue")
+            #hb_display.display_custom("setting group via hue")
             hue,sat = ct_to_hue_sat(raw_temp)
+            #print hue
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
             #huecmd.start()
             new_xy = hue
