@@ -177,8 +177,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 #    import hb_display
 #except:
 #print "Downloading the api thing since it doesn't exist"
-#os.popen("rm hueberry_api.py") # Remove old libraries
-#os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
+#   os.popen("rm hueberry_api.py") # Remove old libraries
+#   os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
 #os.popen("wget SOMETHING AWESOME GOES HERE LIKE AN UPGRADER FILER")
 #THEN later in the code where the upgrade code is, reference the upgrader file insead 
 print "Finished! hopefully this will work!"
@@ -198,9 +198,9 @@ for arg in sys.argv:
 if debug_argument != 1:
     os.popen("python splashscreen.py &")
 #    import Adafruit_SSD1306
-import RPi.GPIO as GPIO
-import pigpio
-import rotary_encoder
+#import RPi.GPIO as GPIO
+#import pigpio
+#import rotary_encoder
 # temporary enabled until i figure out how to reroute input for console mode
 
 import threading
@@ -211,6 +211,7 @@ import colorsys
 import math
 import pprint
 import hb_display
+import hb_encoder
 
 
 global logfile
@@ -484,17 +485,19 @@ def light_control(mode):
     elif (mode == "l"):
         hb_display.display_custom("loading lights...")
         name_array,num_lights,lstate_a,total = get_light_names()
-    global pos
+    #global pos
+    encoder.pos = 0 #Reset to top menu
     old_display = 0
     refresh = 1
     exitvar = False
     menudepth = total + 1
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > menudepth):
-            pos = menudepth
+            encoder.pos = menudepth
         elif(pos < 1):
-            pos = 1
-        display = pos
+            encoder.pos = 1
+        display = encoder.pos
 
         #Display Selected Menu
         if (old_display != display or refresh == 1):
@@ -508,12 +511,12 @@ def light_control(mode):
             time.sleep(0.005)
 
         # Poll button press and trigger action based on current display
-        if(not GPIO.input(21)):
+        if(pushed):
             if(display <= total):
                 ctmode = 0
                 huemode = 0
                 prev_mills = int(round(time.time() * 1000))
-                while(not GPIO.input(21)):
+                while(pushed):
                     mills = int(round(time.time() * 1000))
                     millsdiff = mills - prev_mills
                     if(millsdiff < 500):
@@ -521,13 +524,15 @@ def light_control(mode):
                     elif(millsdiff >= 500):
                         ctmode = 1
                         break
-                while(not GPIO.input(21)):
+                    pos,pushed = encoder.get_state()
+                while(pushed):
                     hb_display.display_custom("entering ct...")
+                    pos,pushed = encoder.get_state()
                 if(ctmode == 0):
                     if(mode == "g"):
                         g_control(keyvalues[display-1])
                         prev_mills = int(round(time.time() * 1000))
-                        while(not GPIO.input(21)):
+                        while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
                             if(millsdiff < 500):
@@ -535,15 +540,17 @@ def light_control(mode):
                             elif(millsdiff >= 500):
                                 ctmode = 1
                                 break
+                            pos,pushed = encoder.get_state()
                         if (ctmode ==0):
                             hb_display.display_custom("returning...")
                         else:
-                            while(not GPIO.input(21)):
+                            while(pushed):
                                 hb_display.display_custom("entering ct...")
+                                pos,pushed = encoder.get_state()
                     elif(mode == "l"):
                         l_control(num_lights[display-1])
                         prev_mills = int(round(time.time() * 1000))
-                        while(not GPIO.input(21)):
+                        while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
                             if(millsdiff < 500):
@@ -551,18 +558,20 @@ def light_control(mode):
                             elif(millsdiff >= 500):
                                 ctmode = 1
                                 break
+                            pos,pushed = encoder.get_state()
                         if (ctmode ==0):
                             hb_display.display_custom("returning...")
                         else:
-                            while(not GPIO.input(21)):
+                            while(pushed):
                                 hb_display.display_custom("entering ct...")
+                                pos,pushed = encoder.get_state()
 
 
                 if(ctmode == 1):
                     if(mode == "g"):
                         ct_control(keyvalues[display-1],"g")
                         prev_mills = int(round(time.time() * 1000))
-                        while(not GPIO.input(21)):
+                        while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
                             if(millsdiff < 500):
@@ -570,13 +579,14 @@ def light_control(mode):
                             elif(millsdiff >= 500):
                                 huemode = 1
                                 break
+                            pos,pushed = encoder.get_state()
                         if (huemode == 1):
                             hue_control(keyvalues[display-1],"g")
                             huemode = 0
                         elif(huemode ==0):
                             hb_display.display_custom("returning...")
                         prev_mills = int(round(time.time() * 1000))
-                        while(not GPIO.input(21)):
+                        while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
                             if(millsdiff < 500):
@@ -584,6 +594,7 @@ def light_control(mode):
                             elif(millsdiff >= 500):
                                 huemode = 1
                                 break
+                            pos,pushed = encoder.get_state()
                         if (huemode == 1):
                             sat_control(keyvalues[display-1],"g")
                         elif(huemode ==0):
@@ -595,7 +606,7 @@ def light_control(mode):
                         ct_control(num_lights[display-1],"l")
                         prev_mills = int(round(time.time() * 1000))
                         if (huemode == 0):
-                            while(not GPIO.input(21)):
+                            while(pushed):
                                 mills = int(round(time.time() * 1000))
                                 millsdiff = mills - prev_mills
                                 if(millsdiff < 500):
@@ -603,13 +614,14 @@ def light_control(mode):
                                 elif(millsdiff >= 500):
                                     huemode = 1
                                     break
+                                pos,pushed = encoder.get_state()
                         if (huemode == 1):
                             hue_control(num_lights[display-1],"l")
                             huemode = 0
                         elif(huemode ==0):
                             hb_display.display_custom("returning...")
                         prev_mills = int(round(time.time() * 1000))
-                        while(not GPIO.input(21)):
+                        while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
                             if(millsdiff < 500):
@@ -617,6 +629,7 @@ def light_control(mode):
                             elif(millsdiff >= 500):
                                 huemode = 1
                                 break
+                            pos,pushed = encoder.get_state()
                         if (huemode == 1):
                             sat_control(num_lights[display-1],"l")
                         elif(huemode ==0):
@@ -626,7 +639,7 @@ def light_control(mode):
                 elif(mode == "l"):
                     name_array,num_lights,lstate_a,total = get_light_names()
                 refresh = 1
-                pos = display
+                encoder.pos = display
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -691,21 +704,25 @@ def g_control(group):
         brite = 10
     brite = brite/10.16        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
-    global pos
-    pos = brite
+    #global pos
+    #pos = brite
+    encoder.pos = brite
     exitvar = False
     max_rot_val = 25
-    bri_pre = pos * 10.16
+    #bri_pre = encoder.pos * 10
+    bri_pre = encoder.pos * 10.16
     refresh = 1
     prev_mills = 0
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
-            pos = max_rot_val
+            encoder.pos = max_rot_val
         elif(pos < 0):
-            pos = 0
+            encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = pos * 10.16
+        #rot_bri = encoder.pos * 10
+        rot_bri = encoder.pos * 10.16
         if(bri_pre != rot_bri or refresh ==  1 ):
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.54)) + "%",17)
             refresh = 0
@@ -729,7 +746,7 @@ def g_control(group):
             print "the rot bri is: "+str(rot_bri)
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
             prev_mills = mills
-        if(not GPIO.input(21)):
+        if(pushed):
             exitvar = True
         time.sleep(0.01)
         
@@ -888,23 +905,24 @@ def ct_control(device,mode):
     brite = 25-((brite - 153) / 14)
     print ("brite after calc: "+str(brite))
     brite = int(brite)      #convert the float down to int agian
-    global pos
-    pos = brite
+    #global pos
+    encoder.pos = brite
     exitvar = False
     max_rot_val = 25
-    bri_pre = ((25-pos) * 14) + 153
+    bri_pre = ((25-encoder.pos) * 14) + 153
     refresh = 1
     prev_mills = 0
     prev_xy = 0
     new_xy = 0
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
-            pos = max_rot_val
+            encoder.pos = max_rot_val
         elif(pos < 0):
-            pos = 0
+            encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = ((max_rot_val-pos) * 14) + 153
+        rot_bri = ((max_rot_val-encoder.pos) * 14) + 153
         if(bri_pre != rot_bri or refresh ==  1 ):
             raw_temp = int((-12.968*rot_bri)+8484)
             tempcalc = ((-12.968*rot_bri)+8484)/100
@@ -953,13 +971,16 @@ def ct_control(device,mode):
             refresh = 1
         #elif(millsdiff > 250):
         #    prev_mills = mills
-        if(not GPIO.input(21)):
+        if(pushed):
             exitvar = True
         time.sleep(0.01)
 
 def hue_control(device,mode):
-    while(not GPIO.input(21)):
+    pos,pushed = encoder.get_state()
+    while(pushed):
         hb_display.display_custom("loading hue...")
+        pos,pushed = encoder.get_state()
+        time.sleep(0.01)
     if (mode == "g"):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
     elif (mode == "l"):
@@ -985,21 +1006,22 @@ def hue_control(device,mode):
             hb_display.display_custom("Group " + str(device) + " isn't HUE-able")
         time.sleep(.5)
         return
-    global pos
-    pos = brite
+    #global pos
+    encoder.pos = brite
     exitvar = False
     max_rot_val = 50
     bri_pre = brite
     refresh = 1
     prev_mills = 0
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
-            pos = 0
+            encoder.pos = 0
         elif(pos < 0):
-            pos = max_rot_val
+            encoder.pos = max_rot_val
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = pos * 1310
+        rot_bri = encoder.pos * 1310
         if(bri_pre != rot_bri or refresh ==  1 ):
             if(mode == "g"):
                 hb_display.display_2lines("Group " + str(device),"Hue: " + str(int(rot_bri)) ,17)
@@ -1021,13 +1043,16 @@ def hue_control(device,mode):
         elif(millsdiff > 250):
             prev_mills = mills
 
-        if(not GPIO.input(21)):
+        if(pushed):
             exitvar = True
         time.sleep(0.01)
 
 def sat_control(device,mode):
-    while(not GPIO.input(21)):
+    pos,pushed = encoder.get_state()
+    while(pushed):
         hb_display.display_custom("loading sat...")
+        pos,pushed = encoder.get_state()
+        time.sleep(0.01)
     if (mode == "g"):
         os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
     elif (mode == "l"):
@@ -1052,8 +1077,8 @@ def sat_control(device,mode):
             hb_display.display_custom("Group " + str(device) + " isn't SAT-able")
         time.sleep(.5)
         return
-    global pos
-    pos = brite
+    #global pos
+    encoder.pos = brite
     exitvar = False
     max_rot_val = 25
     bri_pre = brite
@@ -1061,12 +1086,12 @@ def sat_control(device,mode):
     prev_mills = 0
     while exitvar == False:
         if(pos > max_rot_val):
-            pos = max_rot_val
+            encoder.pos = max_rot_val
         elif(pos < 0):
-            pos = 0
+            encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = pos * 10
+        rot_bri = encoder.pos * 10
         if(bri_pre != rot_bri or refresh ==  1 ):
             if(mode == "g"):
                 hb_display.display_2lines("Group " + str(device),"Sat: " + str(int(rot_bri)) ,17)
@@ -1087,11 +1112,59 @@ def sat_control(device,mode):
             prev_mills = mills
         elif(millsdiff > 250):
             prev_mills = mills
-        if(not GPIO.input(21)):
+        if(pushed):
             exitvar = True
         time.sleep(0.01)
 
+def l_control(light):
+    hb_display.display_custom("loading brightness...")
+    os.popen("curl -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(light) + " > brite")
+    brite = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    os.popen("rm brite")
+    if not brite:
+        #print "not brite"
+        hb_display.display_2lines("No devices","in lights",17)
+        time.sleep(3)
+        return
+    brite = int(brite)      #make integer
+    if brite < 10 and brite >= 0:
+        brite = 10
 
+    brite = brite/10        #trim it down to 25 values
+    brite = int(brite)      #convert the float down to int agian
+    #global pos
+    encoder.pos = brite
+    exitvar = False
+    max_rot_val = 25
+    bri_pre = encoder.pos * 10
+    refresh = 1
+    prev_mills = 0
+    while exitvar == False:
+        pos,pushed = encoder.get_state()
+        if(pos > max_rot_val):
+            encoder.pos = max_rot_val
+        elif(pos < 0):
+            encoder.pos = 0
+        mills = int(round(time.time() * 1000))
+        millsdiff = mills - prev_mills
+        rot_bri = encoder.pos * 10
+        if(bri_pre != rot_bri or refresh == 1 ):
+            hb_display.display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
+            refresh = 0
+        if rot_bri <= 0 and rot_bri != bri_pre:
+            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':light,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            huecmd.start()
+            bri_pre = rot_bri
+        elif(rot_bri != bri_pre and millsdiff > 100):
+            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':light,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+            huecmd.start()
+            bri_pre = rot_bri
+            prev_mills = mills
+        elif(millsdiff > 100):
+            prev_mills = mills
+        if(pushed):
+            exitvar = True
+        time.sleep(0.01)
 #-------------------------------------------------------------------
 #---------------Settings Menu and stuff-----------------------------
 #-------------------------------------------------------------------
@@ -1100,7 +1173,8 @@ def pair_hue_bridge():
     if os.path.isfile('./auth.json') == False:
         while True:
             hb_display.display_3lines("Attempting Link","Push Bridge button" ,"Then push this button",11,offset = 15)
-            if(not GPIO.input(21)):
+            pos,pushed = encoder.get_state()
+            if(pushed):
                 break
         hb_display.display_custom("doing a thing...")
         ip = authenticate.search_for_bridge()
@@ -1120,8 +1194,8 @@ def pair_hue_bridge():
 
 def devinfo_screen():
     time.sleep(.25)
-    global pos
-    pos = 0
+    #global pos
+    encoder.pos = 0 #Reset to top menu
     old_display = 0
     exitvar = False
     menudepth = 4
@@ -1132,11 +1206,12 @@ def devinfo_screen():
     ipaddress_0 = os.popen("ifconfig eth0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
     ipaddress_1 = os.popen("ifconfig eth1 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > menudepth):
-            pos = menudepth
+            encoder.pos = menudepth
         elif(pos < 1):
-            pos = 1
-        display = pos
+            encoder.pos = 1
+        display = encoder.pos
 
         #Display Selected Menu
         if (old_display != display or refresh == 1):
@@ -1154,7 +1229,7 @@ def devinfo_screen():
             time.sleep(0.005)
 
         # Poll button press and trigger action based on current display
-        if(not GPIO.input(21)):
+        if(pushed):
             if(display == 1):
                 ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
                 ssid = os.popen("iwconfig wlan0 | grep 'ESSID' | awk '{print $4}' | awk -F\\\" '{print $2}'").read()
@@ -1169,8 +1244,10 @@ def devinfo_screen():
                 time.sleep(0.25)
                 exitvar = True
             refresh = 1
-            pos = display
-            while(not GPIO.input(21)):
+            encoder.pos = display
+            pos,pushed = encoder.get_state()
+            while(pushed):
+                pos,pushed = encoder.get_state()
                 time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
     return
@@ -1185,7 +1262,8 @@ def get_hue_devinfo():
     hb_display.display_3lines("Max Light ID: " + str(maxlightid),"Max Group ID: " + str(maxgroupid) ,"something something",9,offset = 15)
     while True:
         time.sleep(0.01)
-        if(not GPIO.input(21)):
+        pos,pushed = encoder.get_state()
+        if(pushed):
             break
 
 def shutdown_hueberry():
@@ -1201,19 +1279,21 @@ def restart_hueberry():
         time.sleep(1)
 
 def flashlight_mode():
+    pos,pushed = encoder.get_state()
     while True:
-        if(GPIO.input(21)):
+        if(pushed == 0):
             break
     hb_display.draw_flashlight()
     while True:
-        if(not GPIO.input(21)):
+        pos,pushed = encoder.get_state()
+        if(pushed):
             break
         time.sleep(0.1)
 
 def wifi_settings():
     hb_display.display_custom("scanning for wifi...")
-    global pos
-    pos = 0
+    #global pos
+    encoder.pos = 0 #Reset to top menu
     timeout = 0
     os.popen("wpa_cli scan")
     os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
@@ -1226,11 +1306,12 @@ def wifi_settings():
     total = len(ssid_array) - 1
     menudepth = total + 1
     while True:
+        pos,pushed = encoder.get_state()
         if(pos > menudepth):
-            pos = menudepth
+            encoder.pos = menudepth
         elif(pos < 0):
-            pos = 0
-        display = pos
+            encoder.pos = 0
+        display = encoder.pos
 
         #Display Selected Menu
         if(display == 0):
@@ -1241,18 +1322,22 @@ def wifi_settings():
             hb_display.display_2lines("Back to","Settings Menu",17)
 
         # Poll button press and trigger action based on current display
-        if(not GPIO.input(21)):
+        if(pushed):
             if(display <= total and display > 0):
                 timeout = 0
                 hb_display.display_3lines("Connecting To:",str(ssid_array[display-1]) ,"Push WPS button then click ",9,offset = 15)
                 while True:
-                    if(GPIO.input(21)):
+                    pos,pushed = encoder.get_state()
+                    if(pushed == 0):
                         break
+                    time.sleep(0.01)
                 while True:
                     hb_display.display_3lines("Connecting To:",str(ssid_array[display-1]) ,"Push WPS button then click ",9,offset = 15)
-                    if(not GPIO.input(21)):
+                    pos,pushed = encoder.get_state()
+                    if(pushed):
                         time.sleep(0.01)
                         break
+                    time.sleep(0.01)
                 hb_display.display_2lines("Pairing","Please Wait...",15)
                 os.popen("wpa_cli wps_pbc " + str(mac_array[display-1]))
                 # hb_display.display_custom("something")
@@ -1270,7 +1355,8 @@ def wifi_settings():
                     time.sleep(.25)
                     hb_display.display_3lines("Waiting for an IP",". . .","IP: " + str(ipaddress),11,offset = 15)
                     time.sleep(.5)
-                    if(not GPIO.input(21)):
+                    pos,pushed = encoder.get_state()
+                    if(pushed):
                         break
                 if(timeout >= 300):
                     hb_display.display_2lines("Connection failed...","Try again",15)
@@ -1287,19 +1373,21 @@ def wifi_settings():
 
 def settings_menu(g_scenesdir):
     time.sleep(.25)
-    global pos
-    pos = 0
+    #global pos
+    #pos = 0
+    encoder.pos = 0 #Reset to top menu
     old_display = 0
     exitvar = False
     menudepth = 9
     refresh = 1
     scene_refresh = 0
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > menudepth):
-            pos = menudepth
+            encoder.pos = menudepth
         elif(pos < 1):
-            pos = 1
-        display = pos
+            encoder.pos = 1
+        display = encoder.pos
 
         #Display Selected Menu
         if (old_display != display or refresh == 1):
@@ -1327,7 +1415,8 @@ def settings_menu(g_scenesdir):
             time.sleep(0.005)
 
         # Poll button press and trigger action based on current display
-        if(not GPIO.input(21)):
+        #if(not GPIO.input(21)):
+        if(pushed):
             if(display == 1):
                 devinfo_screen()
             elif(display == 2):
@@ -1350,8 +1439,9 @@ def settings_menu(g_scenesdir):
                 time.sleep(0.25)
                 exitvar = True
             refresh = 1
-            pos = display
-            while(not GPIO.input(21)):
+            encoder.pos = display
+            while(pushed):
+                pos,pushed = encoder.get_state()
                 time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
     return scene_refresh
@@ -1363,7 +1453,8 @@ def settings_menu(g_scenesdir):
 
 def long_press(message,pin):
     prev_mills = int(round(time.time() * 1000))
-    while(not GPIO.input(pin)):
+    pos,pushed = encoder.get_state()
+    while(pushed):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         if(millsdiff < 500):
@@ -1371,6 +1462,7 @@ def long_press(message,pin):
         elif(millsdiff >= 500):
             ctmode = 1
             break
+        pos,pushed = encoder.get_state()
 
 def check_wifi_file(maindirectory):
     ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
@@ -1379,14 +1471,16 @@ def check_wifi_file(maindirectory):
         hb_display.display_3lines("Wifi Creds Detected","Loading File...","Click to continue",13,16)
         while True:
             time.sleep(0.01)
-            if(not GPIO.input(21)):
+            pos,pushed = encoder.get_state()
+            if(pushed):
                 break
         ssids = os.popen("cat " + str(ADDWIFIPATH) + " | awk '{print $1}'").read()
         ssid_array = ssids.split('\n')
         hb_display.display_3lines("SSID: " + str(ssid_array[0]),"PSK: " + str(ssid_array[1]),"Continue?",11,offset = 15)
         while True:
             time.sleep(0.01)
-            if(not GPIO.input(21)):
+            pos,pushed = encoder.get_state()
+            if(pushed):
                 break
         with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as myfile:
             myfile.write("\nnetwork={\n\tssid=\"" + str(ssid_array[0]) + "\"\n\tpsk=\"" + str(ssid_array[1]) + "\"\n}\n")
@@ -1403,7 +1497,8 @@ def check_upgrade_file(maindirectory):
         hb_display.display_3lines("New Firmware Detected","Loading File...","Click to continue",13,16)
         while True:
             time.sleep(0.01)
-            if(not GPIO.input(21)):
+            pos,pushed = encoder.get_state()
+            if(pushed):
                 break
         hb_display.display_3lines("Performing","Upgrade","Please Wait...",13,16)
         os.popen("python " + ADDWIFIPATH)
@@ -1411,6 +1506,18 @@ def check_upgrade_file(maindirectory):
             time.sleep(1)
             
 def user_init_upgrade():
+    """
+    2017-02-15 //57
+    Planning on rework for update capability..... 
+    method: 
+        delete current upgrade_hb.py
+        download upgrade_hb.py from github
+        drop control of screen (no running functions)
+        run it. 
+            upgrade.hb.py 
+                load hb_display module
+                
+    """
     hb_display.display_2lines("Checking for","Updates! :)",15)
     #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/wrong.py --output-document=something.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
     wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
@@ -1469,7 +1576,8 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #ex: result = holding_button(500,"hold to activate","activating",21)
     held_down = 0
     prev_mills = int(round(time.time() * 1000))
-    while(not GPIO.input(button_pin)):
+    pos,pushed = encoder.get_state()
+    while(pushed):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         if(millsdiff < holding_time_ms):
@@ -1477,6 +1585,7 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
         elif(millsdiff >= holding_time_ms):
             hb_display.display_custom(display_after)
             held_down = 1
+        pos,pushed = encoder.get_state()
         time.sleep(0.01)
     time.sleep(0.1)
     successvar = held_down
@@ -1485,21 +1594,22 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
 def set_scene_transition_time():
     #placeholder 
     #hb_display.display_custom("doing a thing")
-    global pos
-    pos = 2                 # Start at 40ms
+    #global pos
+    encoder.pos = 2                 # Start at 40ms
     exitvar = False
     max_rot_val = 150       # 30 sec max transition time
-    bri_pre = pos/5.0       # 20ms per rotation
+    bri_pre = encoder.pos/5.0       # 20ms per rotation
     refresh = 1
     prev_mills = 0
     while exitvar == False: 
+        pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
-            pos = max_rot_val
+            encoder.pos = max_rot_val
         elif(pos < 0):
-            pos = 0
+            encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = pos/5.0
+        rot_bri = encoder.pos/5.0
         if(bri_pre != rot_bri or refresh ==  1 ):
             hb_display.display_2lines("Transition Time",'%.2f'%rot_bri + " sec",15)
             refresh = 0
@@ -1514,10 +1624,10 @@ def set_scene_transition_time():
             prev_mills = mills
         elif(millsdiff > 200):
             prev_mills = mills
-        if(not GPIO.input(21)):
+        if(pushed):
             exitvar = True
         time.sleep(0.01)
-    transition_time = pos*2
+    transition_time = encoder.pos*2
     return transition_time
     
 def binarydecision(binary_decision_question_function,answer1,answer2):
@@ -1527,18 +1637,21 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
     #disassemble question dict
     #line1 = question_line1
     #line2 = question_line2
-    global pos
-    pos = 0                 # Start at 0
+    #global pos
+    #pos = 0                 # Start at 0
+    encoder.pos = 0 
     exitvar = False
     max_rot_val = 2       # binar question
     old_pos = 0       # idk
     refresh = 1
     prev_mills = 0
     while exitvar == False: 
+        pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
-            pos = max_rot_val
+            encoder.pos = max_rot_val
         elif(pos < 0):
-            pos = 0
+            encoder.pos = 0
+        pos = encoder.pos
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         if(old_pos != pos or refresh ==  1 ):
@@ -1562,7 +1675,7 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
             else:
                 print("fuck, something went wrong in binary decision")
             refresh = 0
-        if(not GPIO.input(21) and result > 0 ):
+        if(pushed and result > 0 ):
             exitvar = True
         time.sleep(0.01)
     return result
@@ -1586,14 +1699,17 @@ def get_scene_total(g_scenesdir,offset):
 # Main Loop I think
 if debug_argument != 1:
     # Set up GPIO with internal pull-up
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.setmode(GPIO.BCM)
+    #GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #disabled due to new hb_encoder module
+    pass
 elif debug_argument == 1:
-    width = 128
-    height = 64
+    #width = 128
+    #height = 64
+    pass
     #temporary until i figure out how to redirect intput
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.setmode(GPIO.BCM)
+    #GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
  
 #Instantiate the hueberry display object
 if (debug_argument == 0): 
@@ -1624,8 +1740,10 @@ if os.path.isfile('./auth.json') == False:
     time.sleep(5)
     while True:
         hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
-        if(not GPIO.input(21)):
+        pos,pushed = encoder.get_state()
+        if(pushed):
             break
+        time.sleep(0.01)
     hb_display.display_custom("Pairing...")
     ip = authenticate.search_for_bridge()
     authenticate.authenticate('hueBerry',ip)
@@ -1643,24 +1761,29 @@ else:
     time.sleep(0.1)
 
 #----------------- set variables---------------
-global pos
-pos = 0
+#global pos
+#pos = 0
 timeout = 0
 displaytemp = 0
 prev_secs = 0
 old_min = 60
 old_display = 0
 refresh = 1
+pushed = 0
 
 scene_refresh = 1 #Do the initial scene refresh
 
-def callback(way):
-        global pos
-        pos += way
-        #print("pos={}".format(pos))
+#def callback(way):
+#        global pos
+#        pos += way
+#        #print("pos={}".format(pos))
 
-pi = pigpio.pi()
-decoder = rotary_encoder.decoder(pi, 16, 20, callback)
+#pi = pigpio.pi()
+#decoder = rotary_encoder.decoder(pi, 16, 20, callback)
+if (debug_argument == 0): 
+    encoder = hb_encoder.rotary()
+elif (debug_argument == 1):
+    encoder = hb_encoder.rotary(debug = 1)
 
 debugmsg("-----------------------------")
 debugmsg("Starting hueBerry program version " + __file__)
@@ -1673,11 +1796,11 @@ while True:
         scene_refresh = 0
     menudepth = total_plus_offset + post_offset - 1
     # Cycle through different displays
-    if(pos > menudepth):
-        pos = menudepth
-    elif(pos < 0):
-        pos = 0
-    display = pos
+    if(encoder.pos > menudepth):
+        encoder.pos = menudepth
+    elif(encoder.pos < 0):
+        encoder.pos = 0
+    display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down. 
     #Display Selected Menu
     if(display == 0):
         cur_min = int(time.strftime("%M"))
@@ -1721,7 +1844,7 @@ while True:
         prev_secs = secs
         displaytemp = display
     elif(display != 0 and timeout_secs >= menu_timeout):
-        pos = 0
+        encoder.pos = 0
         display_temp = 0
     elif(display == 0):
         displaytemp = display
@@ -1729,12 +1852,14 @@ while True:
     #    print timeout_secs
 
     # Poll button press and trigger action based on current display
-    if(not GPIO.input(21)):
+    #if(not GPIO.input(21)):
+    if (pushed):
         if(display == 0):
             # Toggle between 12/24h format
             time_format =  not time_format
             refresh = 1
-            while(not GPIO.input(21)):
+            while(pushed):
+                pos,pushed = encoder.get_state()
                 time.sleep(0.01)
         elif(display == 1):
             # Turn off all lights
@@ -1790,18 +1915,18 @@ while True:
                 hb_display.display_2lines("Something weird","Happened...",12)
                 time.sleep(5)
         elif(display == (menudepth-2)):
-            pos = 0
+            encoder.pos = 0
             scene_refresh = settings_menu(g_scenesdir)
             #InteliDraw_Test()
             scene_refresh = 1 # lol override. this might be useful lol 
         elif(display == (menudepth-1)):
-            pos = 0
+            encoder.pos = 0
             light_control("l")
         elif(display == (menudepth)):
-            pos = 0
+            encoder.pos = 0
             light_control("g")
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
-        pos = 0
-
+        encoder.pos = 0
+    pos,pushed = encoder.get_state() # after loading everything, get state#
     #time.sleep(0.1)

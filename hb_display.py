@@ -46,7 +46,7 @@ class display(object):
             print("")
             print("          "+str(current_time))
             print("")
-            print("")
+            print("       "+str(current_date))
             print("----------------------------")
             if (self.mirror == 0):
                 return

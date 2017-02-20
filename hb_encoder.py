@@ -67,7 +67,7 @@ class rotary(object):
     def query_console(self):
         #do a thing querying the console. it's fine if it stops everything
         #right now i just want something that works
-        command = raw_input("Enter a command (Left[,][<], Right[.][>], Enter[/]): ")
+        command = raw_input("Enter a command (Scroll Left[,], Scroll Right[.], Button Press[/]) then send with [Enter]: ")
         #print command
         #if left:
         if(command == ','):
