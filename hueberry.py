@@ -122,7 +122,7 @@ def print_usage():
     -d          Sets the program to output and take input from the console 
                 (input does not work yet)
                 
-    -m          Turns on mirror mode. needs '-d' to work. Outputs to the 
+    -m          Turns on mirror mode. Outputs to the 
                 display as well as the terminal. 
                 
     -h,--help   Displays this help text 
@@ -205,7 +205,7 @@ def get_group_names():
     lstate_a = []
     #hb_display.display_2lines("starting","group names",17)
     #debugmsg("starting curl")
-    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
     #debugmsg("finished curl")
     #hb_display.display_2lines("finished","curl",17)
     cmdout = os.popen("cat groups").read()
@@ -221,7 +221,7 @@ def get_group_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
             cmdout = os.popen("cat groups").read()
             retry = retry + 1
     #debugmsg("passed ifstatement")
@@ -240,7 +240,7 @@ def get_group_names():
     return result_array,num_groups,lstate_a,keyvalues
 
 def get_light_names():
-    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
     light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     if not light_names:
         #print "not brite"
@@ -253,7 +253,7 @@ def get_light_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
             retry = retry + 1
     num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
@@ -565,7 +565,7 @@ def light_control(mode):
                         if (huemode == 1):
                             sat_control(keyvalues[display-1],"g")
                         elif(huemode ==0):
-                            hb_display.display_custom("returning from hue...")
+                            hb_display.display_custom("returning from sat...")
 
                     elif(mode == "l"):
                         #print("entering modified ct_control")
@@ -603,12 +603,19 @@ def light_control(mode):
                             sat_control(num_lights[display-1],"l")
                         elif(huemode ==0):
                             hb_display.display_custom("returning...")
+                    #finished with sat for l or g
+                    pos,pushed = encoder.get_state()
+                    while(pushed):
+                        hb_display.display_custom("returning...")
+                        time.sleep(0.01)
+                        pos,pushed = encoder.get_state()
                 if(mode == "g"):
                     name_array,total,lstate_a,keyvalues = get_group_names()
                 elif(mode == "l"):
                     name_array,num_lights,lstate_a,total = get_light_names()
                 refresh = 1
                 encoder.pos = display
+                
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -618,13 +625,15 @@ def light_control(mode):
 
         
 def l_control(light):
-    brite = get_huejson_value("l",light,"bri")
+    brite,wholejson = get_huejson_value("l",light,"bri")
     if(brite == -1):
         #print "No lights avaliable"
         return
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
+    if (wholejson['state']['on'] == False):
+        brite = 0
     brite = brite/10        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     #global pos
@@ -663,7 +672,7 @@ def l_control(light):
 
         
 def g_control(group):
-    brite = get_huejson_value("g",group,"bri")
+    brite,wholejson = get_huejson_value("g",group,"bri")
     if(brite == -1):
         #print "No lights avaliable"
         return
@@ -672,6 +681,8 @@ def g_control(group):
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
+    if (wholejson['state']['any_on'] == False):
+        brite = 0
     brite = brite/10.16        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     #global pos
@@ -712,7 +723,7 @@ def g_control(group):
         millsdiff = mills - prev_mills
         if(millsdiff > 5000):
             #If 5.0 seconds have passed and nothing has happened, go and refresh the display and reset the miliseconds
-            rot_bri = get_huejson_value("g",group,"bri")
+            rot_bri,wholejson = get_huejson_value("g",group,"bri")
             #print "the rot bri is: "+str(rot_bri)
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
             prev_mills = mills
@@ -757,7 +768,7 @@ def get_huejson_value(g_or_l,num,type):
             hb_display.display_2lines("No devices","in groups",17)
         time.sleep(3)
         value = -1
-    return value
+    return value,wholejson
     
 
 #------------------------------------------------------------------------------------
@@ -841,13 +852,11 @@ def ct_to_hue_sat(ct):
 #       Group or Light ID and current CT level in Kelvin
 #------------------------------------------------------------------------------------
 def ct_control(device,mode):
-    brite = get_huejson_value(mode,device,"ct")
-    type = get_huejson_value(mode,device,"type")
+    brite,wholejson = get_huejson_value(mode,device,"ct")
+    type = wholejson['type']
     #print type
-    if (not brite and type != "Color light"):
-        print "not brite"
-        hb_display.display_2lines("No capable","devices available",12)
-        time.sleep(3)
+    if (brite == -1 and type != "Color light"):
+        #print "not brite"
         return
     elif(type == "Color light"):
        print("color light was found") 
@@ -935,17 +944,9 @@ def hue_control(device,mode):
         hb_display.display_custom("loading hue...")
         pos,pushed = encoder.get_state()
         time.sleep(0.01)
-    #if (mode == "g"):
-    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
-    #elif (mode == "l"):
-    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
-    #brite = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    #os.popen("rm brite")
-    brite = get_huejson_value(mode,device,"hue")
-    if not brite:
+    brite,wholejson = get_huejson_value(mode,device,"hue")
+    if brite == -1:
         #print "not brite"
-        hb_display.display_2lines("No devices","in group",17)
-        time.sleep(3)
         return
     bri_length = len(brite)
     print bri_length
@@ -1008,16 +1009,8 @@ def sat_control(device,mode):
         hb_display.display_custom("loading sat...")
         pos,pushed = encoder.get_state()
         time.sleep(0.01)
-    #if (mode == "g"):
-    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
-    #elif (mode == "l"):
-    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
-    #brite = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    #os.popen("rm brite")
-    brite = get_huejson_value(mode,device,"sat")
-    if not brite:
-        #print "not brite"
-        hb_display.display_2lines("No devices","in group",17)
+    brite,wholejson = get_huejson_value(mode,device,"sat")
+    if brite == -1:
         time.sleep(3)
         return
     bri_length = len(brite)
@@ -1041,6 +1034,7 @@ def sat_control(device,mode):
     refresh = 1
     prev_mills = 0
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
             encoder.pos = max_rot_val
         elif(pos < 0):
@@ -1629,7 +1623,10 @@ elif (debug_argument == 1):
     elif (mirror_mode == 1):
         hb_display = hb_display.display(console = 1,mirror = 1)
 """
-hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
+if(mirror_mode == 1):
+    hb_display = hb_display.display(console = 1,mirror = mirror_mode)
+else:
+    hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
 
 #--------------------------------------------------
 prev_millis = 0
@@ -1776,18 +1773,18 @@ while True:
             # Turn off all lights
             hb_display.display_2lines("Turning all","lights OFF slowly",12)
             #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
+            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
             #print(debug)
             time.sleep(1)
             debugmsg("turning all lights off")
         elif(display == 2):
             # Turn on NIGHT lights dim (groups 1,2,3)
             hb_display.display_2lines("Turning specific","lights on DIM",12)
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/1/action").read()
+            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/1/action").read()
             hue_lights(lnum = "8",lon = "true",lbri = "1",lsat = "1",lx = "-1",ly = "-1",ltt = "4", lct = "400")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/2/action").read()
+            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/2/action").read()
             hue_lights(lnum = "5",lon = "true",lbri = "1",lsat = "200",lx = "0.5015",ly = "0.4153",ltt = "4", lct = "-1")
-            debug = os.popen("curl -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/3/action").read()
+            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/3/action").read()
             hue_groups(lnum = "6",lon = "true",lbri = "1",lsat = "200",lx = "-1",ly = "-1",ltt = "4",lct = "400")
             # Turn off front door light
             #print(debug)
