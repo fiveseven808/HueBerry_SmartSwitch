@@ -26,6 +26,12 @@ what i also want to do is auto update the brightness level i.e. if the brightnes
 2017-02-19 //57
 o shit... i fucked up 
 this is on the dev branch, not the other one... gotta fix this shit... hold on gonna backup everything... wish me luck 
+----
+okay, looks like crisis aveted... i did none of the above stuff... instead, what i did was make a "real value" indicator for the light brightnesses (polls after 5 seconds of inactivity)
+it's not a pretty result, but it is accurate and kind of neat. 
+i reworked the method to pull values from a centralized thing... much nicer 
+it looks like it's working, just gotta implement it everywhere. 
+
 
 
 v042
@@ -89,50 +95,6 @@ Extra bigass update. Just like Windows 10, skipping a few versions to get to v04
 
 By the way, all of this except for the new_scene_creator() function has been tested! 
 
-
-v037
-2017-02-04 2319 //57
-bunch of tweaks here and there. biggest thing is that scene creation now has adjustable transition time :D that's cool :)
-thinking about making the menu system a generic function.... pass it a bunch of things like names of functions to display shit or something
-then give it a dict to build the menu from... idk... 
-to "start" this effort, i've made a generic/filler funtion called binarydecision() which currently does nothing inttentionally
-    the idea behind this function is to put a "yes or no" decision anywhere I want to without hard coding it in. 
-    just give pass it a "question" in the form of a display_nlines function, and it'll return whether or not the person
-    clicked yes or no. it wont be pretty, but it should be pretty functional. 
-
-v036
-2017-02-03 0958 //57
-Tweaked the debugmsg string input for WPBack's new method. 
-Added easy to turn off global variable for debugmsg: debug_state
-Implemented WPBack's new function to enable CT for "Color Lights" as well as calculate and send back hue/sat to a group after 0.5s to look for color wobble 
-Cleaned up ct_control a little bit. 
-UNTESTED (but runs without any obvious errors) 
-
-2017-02-03 //WPBack
-Added the method ct_to_hue_sat that converts color-temperatures into hue and saturation-values scaled for the Hue-system.
-For use with the old LED-strip and other lights that doesn't support CT-settings.
-Not implemeted anywhere yet though, and not tested enough
-
-v035
-2017 0202
-Tried to fix the 1g light strips and livingcolors bug where you can't control hue.
-added fix in the CT and light_control functions
-
-also tried to fix the CT group and adjusting 1g lightstrips and livingcolors bug, where you adjusting the CT of a group with one of the light strips or living colors in it will not update them.
-new algorithm: wait until 0.5 second has passed since the knob was last touched.
-*should* work but it's untested as of now
-13:32
-
-22:20
-so.... the ct group thing doesn't work, but i'm saving it. it turns out that the time it takes for the bridge to convert a value to HSV or XY is too long and varies too much.
-i'm keeping this for now becuase it's kind of nice to have, but it really shouldn't be merged into prod.
-daniel brought up that hue + sat is actually HSV. python has a built in RGB to HSV conversion function. python kelvin to RGB module exists.
-need to merge the two.... will probably worki on the CT+lightcontrol issue first.
-
-2226
-gonna attempt to fix the individual CT bit where it should go straght to hue...
-2243
-looks like i fixed the CT issue. i had quit the CT function too early in my last error handling. it shoul dbe a lot better now... i think there's an else statement somewhere in there that doesn't need to be... i put some markers just in case it gets called....
 
 --------------------
 How to run:
@@ -516,6 +478,7 @@ def light_control(mode):
                 ctmode = 0
                 huemode = 0
                 prev_mills = int(round(time.time() * 1000))
+                pos,pushed = encoder.get_state()
                 while(pushed):
                     mills = int(round(time.time() * 1000))
                     millsdiff = mills - prev_mills
@@ -532,6 +495,7 @@ def light_control(mode):
                     if(mode == "g"):
                         g_control(keyvalues[display-1])
                         prev_mills = int(round(time.time() * 1000))
+                        pos,pushed = encoder.get_state()
                         while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
@@ -542,7 +506,7 @@ def light_control(mode):
                                 break
                             pos,pushed = encoder.get_state()
                         if (ctmode ==0):
-                            hb_display.display_custom("returning...")
+                            hb_display.display_custom("returning from ct...")
                         else:
                             while(pushed):
                                 hb_display.display_custom("entering ct...")
@@ -550,6 +514,7 @@ def light_control(mode):
                     elif(mode == "l"):
                         l_control(num_lights[display-1])
                         prev_mills = int(round(time.time() * 1000))
+                        pos,pushed = encoder.get_state()
                         while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
@@ -560,7 +525,7 @@ def light_control(mode):
                                 break
                             pos,pushed = encoder.get_state()
                         if (ctmode ==0):
-                            hb_display.display_custom("returning...")
+                            hb_display.display_custom("returning from ct...")
                         else:
                             while(pushed):
                                 hb_display.display_custom("entering ct...")
@@ -571,6 +536,7 @@ def light_control(mode):
                     if(mode == "g"):
                         ct_control(keyvalues[display-1],"g")
                         prev_mills = int(round(time.time() * 1000))
+                        pos,pushed = encoder.get_state()
                         while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
@@ -586,6 +552,7 @@ def light_control(mode):
                         elif(huemode ==0):
                             hb_display.display_custom("returning...")
                         prev_mills = int(round(time.time() * 1000))
+                        pos,pushed = encoder.get_state()
                         while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
@@ -598,7 +565,7 @@ def light_control(mode):
                         if (huemode == 1):
                             sat_control(keyvalues[display-1],"g")
                         elif(huemode ==0):
-                            hb_display.display_custom("returning...")
+                            hb_display.display_custom("returning from hue...")
 
                     elif(mode == "l"):
                         #print("entering modified ct_control")
@@ -606,6 +573,7 @@ def light_control(mode):
                         ct_control(num_lights[display-1],"l")
                         prev_mills = int(round(time.time() * 1000))
                         if (huemode == 0):
+                            pos,pushed = encoder.get_state()
                             while(pushed):
                                 mills = int(round(time.time() * 1000))
                                 millsdiff = mills - prev_mills
@@ -621,6 +589,7 @@ def light_control(mode):
                         elif(huemode ==0):
                             hb_display.display_custom("returning...")
                         prev_mills = int(round(time.time() * 1000))
+                        pos,pushed = encoder.get_state()
                         while(pushed):
                             mills = int(round(time.time() * 1000))
                             millsdiff = mills - prev_mills
@@ -647,7 +616,7 @@ def light_control(mode):
             #prev_millis = int(round(time.time() * 1000))
     return
 
-    
+        
 def l_control(light):
     brite = get_huejson_value("l",light,"bri")
     if(brite == -1):
@@ -658,21 +627,22 @@ def l_control(light):
         brite = 10
     brite = brite/10        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
-    global pos
-    pos = brite
+    #global pos
+    encoder.pos = brite
     exitvar = False
     max_rot_val = 25
-    bri_pre = pos * 10
+    bri_pre = encoder.pos * 10
     refresh = 1
     prev_mills = 0
     while exitvar == False:
+        pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
-            pos = max_rot_val
+            encoder.pos = max_rot_val
         elif(pos < 0):
-            pos = 0
+            encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        rot_bri = pos * 10
+        rot_bri = encoder.pos * 10
         if(bri_pre != rot_bri or refresh == 1 ):
             hb_display.display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
             refresh = 0
@@ -687,7 +657,7 @@ def l_control(light):
             prev_mills = mills
         elif(millsdiff > 100):
             prev_mills = mills
-        if(not GPIO.input(21)):
+        if(pushed):
             exitvar = True
         time.sleep(0.01)
 
@@ -727,13 +697,13 @@ def g_control(group):
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.54)) + "%",17)
             refresh = 0
         if rot_bri <= 0 and rot_bri != bri_pre:
-            print"turning off?"
+            #print"turning off?"
             #hue_groups(lnum = group,lon = "false",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
             bri_pre = rot_bri
         elif(rot_bri != bri_pre and millsdiff > 200):
-            print"millsdiff > 200"
+            #print"millsdiff > 200"
             #hue_groups(lnum = group,lon = "true",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
@@ -743,7 +713,7 @@ def g_control(group):
         if(millsdiff > 5000):
             #If 5.0 seconds have passed and nothing has happened, go and refresh the display and reset the miliseconds
             rot_bri = get_huejson_value("g",group,"bri")
-            print "the rot bri is: "+str(rot_bri)
+            #print "the rot bri is: "+str(rot_bri)
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
             prev_mills = mills
         if(pushed):
@@ -871,25 +841,9 @@ def ct_to_hue_sat(ct):
 #       Group or Light ID and current CT level in Kelvin
 #------------------------------------------------------------------------------------
 def ct_control(device,mode):
-    #hb_display.display_custom("loading ct...")
-    #if (mode == "g"):
-    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
-    #elif (mode == "l"):
-    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
     brite = get_huejson_value(mode,device,"ct")
     type = get_huejson_value(mode,device,"type")
-    #whole_json = os.popen("cat brite").read()
-    #wat = json.loads(whole_json)
-    #brite = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    #os.popen("rm brite")
-    #type = wat['type']
-    print type
-    #if (type == "Color light"):
-    #    #print("color light")
-    #    hb_display.display_custom("Light " + str(device) + " will Hue instead")
-    #    skip_to_hue = 1
-    #    time.sleep(.5)
-    #    return skip_to_hue
+    #print type
     if (not brite and type != "Color light"):
         print "not brite"
         hb_display.display_2lines("No capable","devices available",12)
@@ -981,12 +935,13 @@ def hue_control(device,mode):
         hb_display.display_custom("loading hue...")
         pos,pushed = encoder.get_state()
         time.sleep(0.01)
-    if (mode == "g"):
-        os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
-    elif (mode == "l"):
-        os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
-    brite = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    os.popen("rm brite")
+    #if (mode == "g"):
+    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
+    #elif (mode == "l"):
+    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
+    #brite = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    #os.popen("rm brite")
+    brite = get_huejson_value(mode,device,"hue")
     if not brite:
         #print "not brite"
         hb_display.display_2lines("No devices","in group",17)
@@ -1053,12 +1008,13 @@ def sat_control(device,mode):
         hb_display.display_custom("loading sat...")
         pos,pushed = encoder.get_state()
         time.sleep(0.01)
-    if (mode == "g"):
-        os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
-    elif (mode == "l"):
-        os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
-    brite = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    os.popen("rm brite")
+    #if (mode == "g"):
+    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(device) + " > brite")
+    #elif (mode == "l"):
+    #    os.popen("curl -H \"Accept: application/json\" -X GET " + api_url + "/lights/" + str(device) + " > brite")
+    #brite = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+    #os.popen("rm brite")
+    brite = get_huejson_value(mode,device,"sat")
     if not brite:
         #print "not brite"
         hb_display.display_2lines("No devices","in group",17)
@@ -1116,55 +1072,7 @@ def sat_control(device,mode):
             exitvar = True
         time.sleep(0.01)
 
-def l_control(light):
-    hb_display.display_custom("loading brightness...")
-    os.popen("curl -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(light) + " > brite")
-    brite = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    os.popen("rm brite")
-    if not brite:
-        #print "not brite"
-        hb_display.display_2lines("No devices","in lights",17)
-        time.sleep(3)
-        return
-    brite = int(brite)      #make integer
-    if brite < 10 and brite >= 0:
-        brite = 10
 
-    brite = brite/10        #trim it down to 25 values
-    brite = int(brite)      #convert the float down to int agian
-    #global pos
-    encoder.pos = brite
-    exitvar = False
-    max_rot_val = 25
-    bri_pre = encoder.pos * 10
-    refresh = 1
-    prev_mills = 0
-    while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > max_rot_val):
-            encoder.pos = max_rot_val
-        elif(pos < 0):
-            encoder.pos = 0
-        mills = int(round(time.time() * 1000))
-        millsdiff = mills - prev_mills
-        rot_bri = encoder.pos * 10
-        if(bri_pre != rot_bri or refresh == 1 ):
-            hb_display.display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
-            refresh = 0
-        if rot_bri <= 0 and rot_bri != bri_pre:
-            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':light,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            huecmd.start()
-            bri_pre = rot_bri
-        elif(rot_bri != bri_pre and millsdiff > 100):
-            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':light,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            huecmd.start()
-            bri_pre = rot_bri
-            prev_mills = mills
-        elif(millsdiff > 100):
-            prev_mills = mills
-        if(pushed):
-            exitvar = True
-        time.sleep(0.01)
 #-------------------------------------------------------------------
 #---------------Settings Menu and stuff-----------------------------
 #-------------------------------------------------------------------
@@ -1712,6 +1620,7 @@ elif debug_argument == 1:
     #GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
  
 #Instantiate the hueberry display object
+"""
 if (debug_argument == 0): 
     hb_display = hb_display.display()
 elif (debug_argument == 1):
@@ -1719,6 +1628,8 @@ elif (debug_argument == 1):
         hb_display = hb_display.display(console = 1)
     elif (mirror_mode == 1):
         hb_display = hb_display.display(console = 1,mirror = 1)
+"""
+hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
 
 #--------------------------------------------------
 prev_millis = 0
