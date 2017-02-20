@@ -1,5 +1,33 @@
 #!/usr/bin/env python
 """
+v043
+2017-02-18 //57
+Starting work on "Guest mode" or "Single Room mode"
+how it will work?
+    idea 1:
+        pick a room for guest mode by going into groups, and holding for 5 seconds? 
+    idea 2;
+        go into settings, click on guest mode, then select a room
+    single room mode:
+        will replace the clock, with a clock + room brightness control
+            blind brightness?
+                + adjust without changing what lights are on
+                + incremental
+                - no brightness value displayable i think...
+                - cannot turn the light off... 
+                    - if the light turns off, cannot turn on just that light again
+                + can do like a dimmer mode? push to on off? 
+                    + then dial is brightness, like guest mode? 
+        can break out to control rest of house if desired
+            + i.e. activate scenes?
+            * how to break out to ontrol rest of house? 
+what i also want to do is auto update the brightness level i.e. if the brightness changes, while in the brightness mode, i want it to auto update... somehow...
+
+2017-02-19 //57
+o shit... i fucked up 
+this is on the dev branch, not the other one... gotta fix this shit... hold on gonna backup everything... wish me luck 
+
+
 v042
 2017-02-13 1041 //57
 gonna attempt to pull everything into the hueberry_api display modules
