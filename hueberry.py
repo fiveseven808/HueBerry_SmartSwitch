@@ -32,6 +32,11 @@ it's not a pretty result, but it is accurate and kind of neat.
 i reworked the method to pull values from a centralized thing... much nicer 
 it looks like it's working, just gotta implement it everywhere. 
 
+2017-02-20 //57
+finally put to use that holding_button function i made a while back
+went and optimized the light_control function a little bit... light control can really be cleaned up...
+but first g_control and l_control need to be reworked into one function. 
+
 
 
 v042
