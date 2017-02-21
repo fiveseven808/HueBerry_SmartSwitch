@@ -1514,36 +1514,19 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 #------------------------------------------------------------------------------------------------------------------------------
-# Main Loop I think
-if debug_argument != 1:
-    # Set up GPIO with internal pull-up
-    #GPIO.setmode(GPIO.BCM)
-    #GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    #disabled due to new hb_encoder module
-    pass
-elif debug_argument == 1:
-    #width = 128
-    #height = 64
-    pass
-    #temporary until i figure out how to redirect intput
-    #GPIO.setmode(GPIO.BCM)
-    #GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
- 
+# Main Loop I think 
 #Instantiate the hueberry display object
-"""
-if (debug_argument == 0): 
-    hb_display = hb_display.display()
-elif (debug_argument == 1):
-    if (mirror_mode == 0):
-        hb_display = hb_display.display(console = 1)
-    elif (mirror_mode == 1):
-        hb_display = hb_display.display(console = 1,mirror = 1)
-"""
+# Create Display Object
 if(mirror_mode == 1):
     hb_display = hb_display.display(console = 1,mirror = mirror_mode)
 else:
     hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
 
+# Create Encoder Object
+if (debug_argument == 0): 
+    encoder = hb_encoder.rotary()
+elif (debug_argument == 1):
+    encoder = hb_encoder.rotary(debug = 1)
 #--------------------------------------------------
 prev_millis = 0
 display = 0
@@ -1597,17 +1580,7 @@ pushed = 0
 
 scene_refresh = 1 #Do the initial scene refresh
 
-#def callback(way):
-#        global pos
-#        pos += way
-#        #print("pos={}".format(pos))
 
-#pi = pigpio.pi()
-#decoder = rotary_encoder.decoder(pi, 16, 20, callback)
-if (debug_argument == 0): 
-    encoder = hb_encoder.rotary()
-elif (debug_argument == 1):
-    encoder = hb_encoder.rotary(debug = 1)
 
 debugmsg("-----------------------------")
 debugmsg("Starting hueBerry program version " + __file__)
