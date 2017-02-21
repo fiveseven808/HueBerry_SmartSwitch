@@ -1554,18 +1554,18 @@ if os.path.isfile('./auth.json') == False:
     hb_display.display_custom("Pairing...")
     ip = authenticate.search_for_bridge()
     authenticate.authenticate('hueBerry',ip)
-    authenticate.load_creds()
-    api_key = authenticate.api_key
-    bridge_ip = authenticate.bridge_ip
+    #authenticate.load_creds()
+    #api_key = authenticate.api_key
+    #bridge_ip = authenticate.bridge_ip
     hb_display.display_2lines("Link Successful!",bridge_ip,12)
-    time.sleep(1)
-else:
-    authenticate.load_creds()
-    api_key = authenticate.api_key
-    bridge_ip = authenticate.bridge_ip
-    api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
-    hb_display.display_2lines("Link Established",bridge_ip,12)
-    time.sleep(0.1)
+    #time.sleep(1)
+#After a credential file exists 
+authenticate.load_creds()
+api_key = authenticate.api_key
+bridge_ip = authenticate.bridge_ip
+api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
+hb_display.display_2lines("Link Established!",bridge_ip,12)
+time.sleep(0.5)
 
 #----------------- set variables---------------
 #global pos
