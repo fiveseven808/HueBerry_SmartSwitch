@@ -477,128 +477,43 @@ def light_control(mode):
             if(display <= total):
                 ctmode = 0
                 huemode = 0
-                prev_mills = int(round(time.time() * 1000))
-                pos,pushed = encoder.get_state()
-                while(pushed):
-                    mills = int(round(time.time() * 1000))
-                    millsdiff = mills - prev_mills
-                    if(millsdiff < 500):
-                        hb_display.display_custom("hold for ct...")
-                    elif(millsdiff >= 500):
-                        ctmode = 1
-                        break
-                    pos,pushed = encoder.get_state()
-                while(pushed):
-                    hb_display.display_custom("entering ct...")
-                    pos,pushed = encoder.get_state()
+                ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
                 if(ctmode == 0):
                     if(mode == "g"):
                         g_control(keyvalues[display-1])
-                        prev_mills = int(round(time.time() * 1000))
-                        pos,pushed = encoder.get_state()
-                        while(pushed):
-                            mills = int(round(time.time() * 1000))
-                            millsdiff = mills - prev_mills
-                            if(millsdiff < 500):
-                                hb_display.display_custom("hold for ct...")
-                            elif(millsdiff >= 500):
-                                ctmode = 1
-                                break
-                            pos,pushed = encoder.get_state()
+                        ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
                         if (ctmode ==0):
                             hb_display.display_custom("returning from ct...")
-                        else:
-                            while(pushed):
-                                hb_display.display_custom("entering ct...")
-                                pos,pushed = encoder.get_state()
                     elif(mode == "l"):
                         l_control(num_lights[display-1])
-                        prev_mills = int(round(time.time() * 1000))
-                        pos,pushed = encoder.get_state()
-                        while(pushed):
-                            mills = int(round(time.time() * 1000))
-                            millsdiff = mills - prev_mills
-                            if(millsdiff < 500):
-                                hb_display.display_custom("hold for ct...")
-                            elif(millsdiff >= 500):
-                                ctmode = 1
-                                break
-                            pos,pushed = encoder.get_state()
+                        ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
                         if (ctmode ==0):
                             hb_display.display_custom("returning from ct...")
-                        else:
-                            while(pushed):
-                                hb_display.display_custom("entering ct...")
-                                pos,pushed = encoder.get_state()
-
 
                 if(ctmode == 1):
                     if(mode == "g"):
                         ct_control(keyvalues[display-1],"g")
-                        prev_mills = int(round(time.time() * 1000))
-                        pos,pushed = encoder.get_state()
-                        while(pushed):
-                            mills = int(round(time.time() * 1000))
-                            millsdiff = mills - prev_mills
-                            if(millsdiff < 500):
-                                hb_display.display_custom("hold for hue...")
-                            elif(millsdiff >= 500):
-                                huemode = 1
-                                break
-                            pos,pushed = encoder.get_state()
+                        huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
                         if (huemode == 1):
                             hue_control(keyvalues[display-1],"g")
                             huemode = 0
                         elif(huemode ==0):
                             hb_display.display_custom("returning...")
-                        prev_mills = int(round(time.time() * 1000))
-                        pos,pushed = encoder.get_state()
-                        while(pushed):
-                            mills = int(round(time.time() * 1000))
-                            millsdiff = mills - prev_mills
-                            if(millsdiff < 500):
-                                hb_display.display_custom("hold for sat...")
-                            elif(millsdiff >= 500):
-                                huemode = 1
-                                break
-                            pos,pushed = encoder.get_state()
+                        huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
                         if (huemode == 1):
                             sat_control(keyvalues[display-1],"g")
                         elif(huemode ==0):
                             hb_display.display_custom("returning from sat...")
 
                     elif(mode == "l"):
-                        #print("entering modified ct_control")
-                        #no you're not lol
                         ct_control(num_lights[display-1],"l")
-                        prev_mills = int(round(time.time() * 1000))
-                        if (huemode == 0):
-                            pos,pushed = encoder.get_state()
-                            while(pushed):
-                                mills = int(round(time.time() * 1000))
-                                millsdiff = mills - prev_mills
-                                if(millsdiff < 500):
-                                    hb_display.display_custom("hold for hue...")
-                                elif(millsdiff >= 500):
-                                    huemode = 1
-                                    break
-                                pos,pushed = encoder.get_state()
+                        huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
                         if (huemode == 1):
                             hue_control(num_lights[display-1],"l")
                             huemode = 0
                         elif(huemode ==0):
                             hb_display.display_custom("returning...")
-                        prev_mills = int(round(time.time() * 1000))
-                        pos,pushed = encoder.get_state()
-                        while(pushed):
-                            mills = int(round(time.time() * 1000))
-                            millsdiff = mills - prev_mills
-                            if(millsdiff < 500):
-                                hb_display.display_custom("hold for sat...")
-                            elif(millsdiff >= 500):
-                                huemode = 1
-                                break
-                            pos,pushed = encoder.get_state()
+                        huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
                         if (huemode == 1):
                             sat_control(num_lights[display-1],"l")
                         elif(huemode ==0):
@@ -853,6 +768,8 @@ def ct_to_hue_sat(ct):
 #------------------------------------------------------------------------------------
 def ct_control(device,mode):
     brite,wholejson = get_huejson_value(mode,device,"ct")
+    hb_display.display_custom("loading ct...")
+    encoder.wait_for_button_release()
     type = wholejson['type']
     #print type
     if (brite == -1 and type != "Color light"):
@@ -939,12 +856,9 @@ def ct_control(device,mode):
         time.sleep(0.01)
 
 def hue_control(device,mode):
-    pos,pushed = encoder.get_state()
-    while(pushed):
-        hb_display.display_custom("loading hue...")
-        pos,pushed = encoder.get_state()
-        time.sleep(0.01)
     brite,wholejson = get_huejson_value(mode,device,"hue")
+    hb_display.display_custom("loading hue...")
+    encoder.wait_for_button_release()
     if brite == -1:
         #print "not brite"
         return
@@ -1004,12 +918,9 @@ def hue_control(device,mode):
         time.sleep(0.01)
 
 def sat_control(device,mode):
-    pos,pushed = encoder.get_state()
-    while(pushed):
-        hb_display.display_custom("loading sat...")
-        pos,pushed = encoder.get_state()
-        time.sleep(0.01)
     brite,wholejson = get_huejson_value(mode,device,"sat")
+    hb_display.display_custom("loading sat...")
+    encoder.wait_for_button_release()
     if brite == -1:
         time.sleep(3)
         return

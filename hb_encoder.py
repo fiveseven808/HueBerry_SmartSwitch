@@ -3,6 +3,7 @@ import curses
 import RPi.GPIO as GPIO
 import pigpio
 import rotary_encoder
+import time
 
 
 """
@@ -78,9 +79,13 @@ class rotary(object):
         #if enter: 
         if(command == '/'):
             self.pushed = 1
-        """
-        pass
-        """
+        
+    def wait_for_button_release(self):
+        while(self.pushed):
+            #just wait lol
+            self.get_state()
+            time.sleep(0.01)
+        return
 
         
 class control(object):
