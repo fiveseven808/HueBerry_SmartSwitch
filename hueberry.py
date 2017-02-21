@@ -885,7 +885,7 @@ def hue_control(device,mode):
     encoder.pos = brite
     exitvar = False
     max_rot_val = 50
-    bri_pre = brite
+    bri_pre = encoder.pos * 1310
     refresh = 1
     prev_mills = 0
     while exitvar == False:
@@ -946,7 +946,7 @@ def sat_control(device,mode):
     encoder.pos = brite
     exitvar = False
     max_rot_val = 25
-    bri_pre = brite
+    bri_pre = encoder.pos * 10
     refresh = 1
     prev_mills = 0
     while exitvar == False:
