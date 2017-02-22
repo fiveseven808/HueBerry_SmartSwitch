@@ -1376,12 +1376,12 @@ def user_init_upgrade():
         #Do a blind upgrade lol don't even check
         #upgrader.check_modules_exist()
         upgrader.download_all_modules()
-        upgrader.display_exit_msg()
         upgrader.out_with_the_old()
+        upgrader.display_exit_msg()
         hb_display.display_2lines("Upgrade Finished!","Rebooting...",13)
-        time.sleep(1)
-        #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
-        #os.popen("sudo shutdown -r now")
+        #time.sleep(1)
+        print("Upgrade Finished! hueBerry is now rebooting to complete the installation.")
+        os.popen("sudo shutdown -r now")
     return
 
 def debugmsg(message):

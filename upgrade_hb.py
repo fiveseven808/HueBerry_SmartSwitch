@@ -103,19 +103,19 @@ class upgrader(object):
                 self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n")
-                self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
+                self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
             if x == 'hb_encoder':
                 print("Installing " +str(x))
                 self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n")
-                self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
+                self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
             if x == 'hueberry':
                 print("Installing " +str(x))
                 self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n")
-                self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
+                self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
         #print baremetal
 
     def out_with_the_old(self):
@@ -138,7 +138,7 @@ class upgrader(object):
             wiping the files and redownloading them. Easiest way to get shit done right
             now without having to do anything complicated diffs on existing files.
         """
-        self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
+        #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
 
 if __name__ == "__main__":
