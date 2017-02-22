@@ -17,7 +17,7 @@ import hb_display
 
 class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0):
-        req_modules = ['hb_display','hb_encoder','hueberry']
+        self.req_modules = ['hb_display','hb_encoder','hueberry']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -52,6 +52,7 @@ class upgrader(object):
         from http://blog.kagesenshi.org/2008/02/teeing-python-subprocesspopen-output.html
         """
         if (self.simulate == 1):
+            print("Simulating command: "+cmd)
             return
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout = []
@@ -75,7 +76,7 @@ class upgrader(object):
         UNDERLINE = '\033[4m'
 
     def check_modules_exist(self):
-        print(bcolors.BOLD+"Checking required modules. Please wait..."+bcolors.ENDC)
+        print(self.bcolors.BOLD+"Checking required modules. Please wait..."+self.bcolors.ENDC)
         self.hb_display.display_max_text("Checking required modules. \nPlease wait...")
         n2install = []
         #Go and check if things exist althouhg.... not really using it right now lol
@@ -84,7 +85,7 @@ class upgrader(object):
                 new_module = __import__(x)
                 found = True
             except ImportError:
-                print("    " + bcolors.YLO + str(x) + bcolors.ENDC + bcolors.RED + " module not found!"+bcolors.ENDC)
+                print("    " + self.bcolors.YLO + str(x) + self.bcolors.ENDC + self.bcolors.RED + " module not found!"+self.bcolors.ENDC)
                 n2install.append(x)
         print("\r")
         #n2install would be returned, but i don't really care about this right now...
@@ -98,21 +99,29 @@ class upgrader(object):
                 print("Installing " +str(x))
                 self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
-                print("Done installing " +str(x)+"\n\n")
+                print("Done installing " +str(x)+"\n")
                 self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hb_encoder':
                 print("Installing " +str(x))
                 self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
-                print("Done installing " +str(x)+"\n\n")
+                print("Done installing " +str(x)+"\n")
                 self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hueberry':
                 print("Installing " +str(x))
                 self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
-                print("Done installing " +str(x)+"\n\n")
+                print("Done installing " +str(x)+"\n")
                 self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
         #print baremetal
+
+    def out_with_the_old(self):
+        self.myrun("sudo mv upgrade_hb.py upgrade_hb_old.py")
+        self.myrun("sudo mv new_upgrade_hb.py upgrade_hb.py")
+        self.myrun("sudo chown pi upgrade_hb.py")
+        self.myrun("sudo chown pi upgrade_hb_old.py")
+        #self.hb_display.display_2lines("Upgrade Finished!","Rebooting...",13)
+
 
     def display_exit_msg(self):
         finalreadme = """
@@ -142,6 +151,8 @@ if __name__ == "__main__":
         if arg in ("-h","--help"):
             disp_help = 1
     upgrader = upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
-    upgrader.check_modules_exist()
+    #Do a blind upgrade lol don't even check
+    #upgrader.check_modules_exist()
     upgrader.download_all_modules()
     upgrader.display_exit_msg()
+    upgrader.out_with_the_old()

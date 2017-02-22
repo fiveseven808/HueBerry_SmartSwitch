@@ -1363,15 +1363,16 @@ def user_init_upgrade():
         decision_result = binarydecision(lambda: hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
         if (decision_result != 1):
             hb_display.display_2lines("Canceling...","Returning...",15)
-            #os.popen("rm new_upgrade_hb.py")
+            os.popen("rm new_upgrade_hb.py")
             time.sleep(1)
             return
         hb_display.display_2lines("Upgrading!!!","Please wait...",15)
-        os.popen("sudo mv upgrade_hb.py upgrade_hb_old.py")
-        os.popen("sudo mv new_upgrade_hb.py upgrade_hb.py")
-        #lol this probably isn't very secure... but if you have access to the pi then you have issues already
-        os.popen("sudo chown pi upgrade_hb.py")
-        os.popen("sudo chown pi upgrade_hb_old.py")
+        upgrader = upgrade_hb.upgrader(mirror = 1,simulate = 1)
+        #Do a blind upgrade lol don't even check
+        #upgrader.check_modules_exist()
+        upgrader.download_all_modules()
+        upgrader.display_exit_msg()
+        upgrader.out_with_the_old()
         hb_display.display_2lines("Upgrade Finished!","Rebooting...",13)
         #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
         os.popen("sudo shutdown -r now")
