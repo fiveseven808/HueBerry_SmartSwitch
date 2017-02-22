@@ -95,11 +95,11 @@ class upgrader(object):
         #Just go and delete and re-download everything in self.req_modules LOL
         for x in self.req_modules:
             if x == 'hb_display':
-                download_hb_module(x)
+                self.download_hb_module(x)
             if x == 'hb_encoder':
-                download_hb_module(x)
+                self.download_hb_module(x)
             if x == 'hueberry':
-                download_hb_module(x)
+                self.download_hb_module(x)
         #print baremetal
 
     def download_hb_module(self,module):
