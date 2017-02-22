@@ -25,12 +25,12 @@ class upgrader(object):
         if (self.help == 1):
             self.print_usage()
             sys.exit()
-        if(mirror_mode == 1):
+        if(self.mirror_mode == 1):
             #If mirror mode, then console is implied, otherwise, it would be straight display
-            hb_display = hb_display.display(console = 1,mirror = self.mirror_mode)
+            self.hb_display = hb_display.display(console = 1,mirror = self.mirror_mode)
         else:
             #If mirror mode was not selected, then you can do whatever you want
-            hb_display = hb_display.display(console = self.debug_argument,mirror = self.mirror_mode)
+            self.hb_display = hb_display.display(console = self.debug_argument,mirror = self.mirror_mode)
 
     def print_usage(self):
         usage = """
@@ -76,7 +76,7 @@ class upgrader(object):
 
     def check_modules_exist(self):
         print(bcolors.BOLD+"Checking required modules. Please wait..."+bcolors.ENDC)
-        hb_display.display_max_text("Checking required modules. \nPlease wait...")
+        self.hb_display.display_max_text("Checking required modules. \nPlease wait...")
         n2install = []
         #Go and check if things exist althouhg.... not really using it right now lol
         for x in self.req_modules:
@@ -96,22 +96,22 @@ class upgrader(object):
         for x in self.req_modules:
             if x == 'hb_display':
                 print("Installing " +str(x))
-                hb_display.display_max_text("Installing " +str(x))
+                self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n\n")
-                hb_display.display_max_text("Done installing " +str(x)+"\n\n")
+                self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hb_encoder':
                 print("Installing " +str(x))
-                hb_display.display_max_text("Installing " +str(x))
+                self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n\n")
-                hb_display.display_max_text("Done installing " +str(x)+"\n\n")
+                self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hueberry':
                 print("Installing " +str(x))
-                hb_display.display_max_text("Installing " +str(x))
+                self.hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n\n")
-                hb_display.display_max_text("Done installing " +str(x)+"\n\n")
+                self.hb_display.display_max_text("Done installing " +str(x)+"\n\n")
         #print baremetal
 
     def display_exit_msg(self):
