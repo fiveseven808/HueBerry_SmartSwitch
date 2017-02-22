@@ -294,7 +294,7 @@ class display(object):
         lines,tmp,h,total_h = self.IntelliDraw(self.draw,text,self.font,self.width)
         j = 0
         self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
-        offset = ((h/2)*-1)*pos
+        offset = 0
         j = 0
         for i in lines:
             #Line Centering code
@@ -306,10 +306,14 @@ class display(object):
             j = j + 1
         if (self.console == 1):
             os.system('clear')
+            line_count = 0
             print("      Display Max Text")
             print("----------------------------")
             for i in lines:
+                if line_count > 5:
+                    break
                 print i
+                line_count = line_count++
             print("----------------------------")
         if (self.console == 0 or self.mirror == 1):
             self.disp.image(self.image)
