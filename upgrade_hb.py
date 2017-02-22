@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 """
 Python upgrader for hueberry.
-v001
-//57
-    Initial upgrade test. Everytime this gets updated, the hueberry should
-    detect that an upgrade is avaliable, and follow the instructions here by
-    wiping the files and redownloading them. Easiest way to get shit done right
-    now without having to do anything complicated diffs on existing files.
 """
 #import os
 #import shutil
@@ -132,12 +126,11 @@ class upgrader(object):
 
     def display_exit_msg(self):
         finalreadme = """
-        \rUpgrade level: v043-20170221-2207
+        \rUpgrade level: v044-20170222-1158
         //57
-            Initial upgrade test. Everytime this gets updated, the hueberry should
-            detect that an upgrade is avaliable, and follow the instructions here by
-            wiping the files and redownloading them. Easiest way to get shit done right
-            now without having to do anything complicated diffs on existing files.
+            Added Unicode Support
+                Scenes now are generated properly with unicode light names
+            Unicode Display support currently untested
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
