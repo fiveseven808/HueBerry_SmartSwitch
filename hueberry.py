@@ -1431,7 +1431,7 @@ def set_scene_transition_time():
         millsdiff = mills - prev_mills
         rot_bri = encoder.pos/5.0
         if(bri_pre != rot_bri or refresh ==  1 ):
-            if(rot_bri == 2):
+            if(encoder.pos == 2):
                 hb_display.display_2lines("Transition Time",'%.2f'%rot_bri + "* sec",15)
             else:
                 hb_display.display_2lines("Transition Time",'%.2f'%rot_bri + " sec",15)

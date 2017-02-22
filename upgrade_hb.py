@@ -126,7 +126,7 @@ class upgrader(object):
         # Instead of dumping out some text to the screen
         # Maybe I should download a change.log or something
         # Then I could just cat that onto the screen, and there'd be a
-        # local copy for whomever to look at later.... 
+        # local copy for whomever to look at later....
         finalreadme = """
     \rUpgrade level: v044-20170222-1233
     //57
@@ -137,13 +137,18 @@ class upgrader(object):
 
         20170222-1233
         Final Readme is now easier to read
+
+        20170222-1330
+        0.40s Transition time now has no transition time (so it can be used with
+        other programs that just turn on lights)
+        upgrade_hb.py's updater now updates itself or at least tries to.
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
 
 if __name__ == "__main__":
-    import upgrade_hb
     import sys
+    import os
     debug_argument = 0
     mirror_mode = 0
     simulate_arg = 0
@@ -157,7 +162,47 @@ if __name__ == "__main__":
             simulate_arg = 1
         if arg in ("-h","--help"):
             disp_help = 1
-    upgrader = upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
+    wget_results = os.popen("sudo rm new_upgrade_hb.py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/upgrade_hb.py --output-document=new_upgrade_hb.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    if wget_results:
+        print("Could not download the file for whatever reason")
+        print("Returning to previous state")
+        print("There are no changes or upgrades avaliable")
+        #hb_display.display_2lines("Could not connect","to server :(",13)
+        time.sleep(2)
+        sys.exit()
+    else:
+        print("File Downloaded Successfully! Comparing...")
+        #hb_display.display_2lines("Comparing","Versions...",15)
+    #Change this to an upgrade only file. Smaller, easier and quicker to check if it just contains a version number and a changelog
+    if os.path.isfile('./upgrade_hb.py') == False:
+        #Make sure to make some noise if this is a much older version.
+        diff_result = 1
+    else:
+        diff_result = os.popen("diff upgrade_hb.py new_upgrade_hb.py").read()
+    #diff_result = os.popen("diff upgrade_hb.py upgrade_hb.py").read()
+    if not diff_result:
+        print("There are no changes or upgrades avaliable")
+        #hb_display.display_2lines("You are","up to date! :)",15)
+        time.sleep(2)
+        sys.exit()
+    else:
+        print("It looks like there are changes avaliable. Installing...")
+        decision_result = 1
+        #Answering Yes automatically
+        if (decision_result != 1):
+            #hb_display.display_2lines("Canceling...","Returning...",15)
+            os.popen("rm new_upgrade_hb.py")
+            time.sleep(1)
+            sys.exit()
+        #hb_display.display_2lines("Upgrading!!!","Please wait...",15)
+        import new_upgrade_hb
+        #import upgrade_hb
+        #upgrader = new_upgrade_hb.upgrader(simulate = 1)
+        if diff_result == 1:
+            #Legacy switch, currently does nothing...
+            upgrader = new_upgrade_hb.upgrader(legacy = 1)
+        else:
+            upgrader = new_upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
     #Do a blind upgrade lol don't even check
     #upgrader.check_modules_exist()
     upgrader.download_all_modules()
