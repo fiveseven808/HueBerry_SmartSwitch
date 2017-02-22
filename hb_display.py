@@ -101,7 +101,7 @@ class display(object):
             timeheight = 10
             self.draw.line((0, timeheight, self.width, timeheight), fill=255)
             # Set font type and size
-            font = ImageFont.truetype('BMW_naa.ttf', size)
+            font = ImageFont.truetype('BMW_naa.ttf', size, encoding = "unic")
             x_pos = (self.width/2)-(self.string_width(font,line1)/2)
             y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
             self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
@@ -143,7 +143,8 @@ class display(object):
             timeheight = 10
             self.draw.line((0, timeheight, self.width, timeheight), fill=255)
             # Set font type and size
-            font = ImageFont.truetype('BMW_naa.ttf', size)
+            #font = ImageFont.truetype('BMW_naa.ttf', size)
+            font = ImageFont.truetype('BMW_naa.ttf', size, encoding = "unic")
             x_pos = (self.width/2)-(self.string_width(font,line1)/2)
             y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
             self.draw.text((x_pos, y_pos), line1, font=font, fill=255)

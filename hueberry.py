@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 """
+v044
+2012-02-22 //57
+Update function rewritten entirely
+Updater is now a seperate file/class and even uses the display library (which means it needs to be up to date lol)
+Keeping this API/library level for encoder and display for now. Future updater modules will not use any extended functions.
+FULL update required
+Oh, and unicode support has been added to support scene creation
+Need a unicode font to display on screen though. 
+
+
 v043
 2017-02-18 //57
 Starting work on "Guest mode" or "Single Room mode"
@@ -70,35 +80,6 @@ need to figure out where it goes.
 seperate hueberry_api module is now avaliable! need to integrate it into hueberry.py
     all major display_* functions have been transferred to that module.
     runs independently to test all functions. fuck yeah!
-
-
-v040
-2017-02-10 1610 //57
-Extra bigass update. Just like Windows 10, skipping a few versions to get to v040. I'm pretty sure I made a whole bunch of little updates and just didn't push them to git. Will do my best to document all of them.
- * Changing the working directory structure for hueBerry
-  * Now using /boot/hueBerry/ for upgrade and wifi settings
-  * Now using /boot/hueBerry/scenes/ for scene files!
-  * Psuedo Global variable used (passed around a lot lol)
-  * "Should" automatically create the directories if they don't exist already
- * Changed get_house_scene_by_light's parameter to selected_filendirect because I'm now passing it a full path name of a file
-  * Can be optimizied a little bit. I'm duplicating the variable right now lol
- * Made a new_scene_creator function that will generate a new scene with a new number based on the amount of scenes that already exist
-  * i.e. if 5 scenes exist, regardless of name, the next scene will be named 6_scene.sh
- * Added new scene creation to the settings menu so the main menu is less cluttered. I can't imagine many scenes being created once the inital setup is done by the user
- * check_wifi_file and check_upgrade_file now use the new p-global directory variable
- * get_scene_total now properly queries the p-global scenes directory instead of replying back with static values
-  * Also sorts the scenes alphabetically so the user can now order things
- * Adjusted the main menu to properly execute the right script from the new directories (I think?)
- * Files can now be managed by Windows!
-  * Power off the hueBerry
-  * Stick the SD card into the Windows machine
-  * Navigate to Boot:\hueBerry\scenes\
-  * Sort by Name
-  * Rename files however you please
-  * The order represented by the name sort is the order they will appear on the hueBerry
-  * You are free to delete ones you don't use anymore
-
-By the way, all of this except for the new_scene_creator() function has been tested!
 
 
 --------------------
@@ -371,7 +352,8 @@ def get_house_scene_by_light(selected_filendirect,ltt):
         #hb_display.display_2lines("Writing","Lights " + str(index + 1) + " of " + str(len(result_array)),15)
         print(scenecmd)
         groupnum = index + 1
-        sceneobj.write("#echo \"Set Lights " + str(keyvalues[index]) + " = " + str(result_array[index]) + "\"\n")
+        # Writes to file in UTF-8 vs using str() as ASCII. This prevents errors I think
+        sceneobj.write("#echo \"Set Lights " + keyvalues[index].encode('utf-8') + " = " + result_array[index].encode('utf-8') + "\"\n")
         sceneobj.write(scenecmd + "\n")
         index += 1
     sceneobj.close
@@ -1376,7 +1358,7 @@ def user_init_upgrade():
         #import upgrade_hb
         #upgrader = new_upgrade_hb.upgrader(simulate = 1)
         if diff_result == 1:
-            #Legacy switch, currently does nothing... 
+            #Legacy switch, currently does nothing...
             upgrader = new_upgrade_hb.upgrader(legacy = 1)
         else:
             upgrader = new_upgrade_hb.upgrader()
