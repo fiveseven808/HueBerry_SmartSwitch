@@ -12,13 +12,14 @@ import time
 import sys
 
 class upgrader(object):
-    def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0 ):
+    def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
         self.req_modules = ['hb_display','hb_encoder','hueberry']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
         self.simulate = simulate
         self.legacy = legacy
+        self.branch = branch
         if (self.help == 1):
             self.print_usage()
             sys.exit()
@@ -94,24 +95,20 @@ class upgrader(object):
         #Just go and delete and re-download everything in self.req_modules LOL
         for x in self.req_modules:
             if x == 'hb_display':
-                print("Installing " +str(x))
-                self.hb_display.display_max_text("Installing " +str(x))
-                self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
-                print("Done installing " +str(x)+"\n")
-                self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
+                download_hb_module(x)
             if x == 'hb_encoder':
-                print("Installing " +str(x))
-                self.hb_display.display_max_text("Installing " +str(x))
-                self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
-                print("Done installing " +str(x)+"\n")
-                self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
+                download_hb_module(x)
             if x == 'hueberry':
-                print("Installing " +str(x))
-                self.hb_display.display_max_text("Installing " +str(x))
-                self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
-                print("Done installing " +str(x)+"\n")
-                self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
+                download_hb_module(x)
         #print baremetal
+
+    def download_hb_module(self,module):
+        x = module
+        print("Installing " +str(x))
+        self.hb_display.display_max_text("Installing " +str(x))
+        self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/"+str(self.branch)+"/"+str(x)+".py")
+        print("Done installing " +str(x)+"\n")
+        self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
 
     def out_with_the_old(self):
         self.myrun("sudo mv upgrade_hb.py upgrade_hb_old.py")
