@@ -1370,6 +1370,7 @@ def user_init_upgrade():
         hb_display.display_2lines("Upgrading!!!","Please wait...",15)
         import new_upgrade_hb
         #import upgrade_hb
+        #upgrader = new_upgrade_hb.upgrader(simulate = 1)
         upgrader = new_upgrade_hb.upgrader()
         #upgrader = upgrade_hb.upgrader(simulate = 1)
         #Do a blind upgrade lol don't even check
