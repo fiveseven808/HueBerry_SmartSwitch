@@ -18,12 +18,13 @@ import time
 import sys
 
 class upgrader(object):
-    def __init__(self,console=0,mirror = 0,help = 0,simulate = 0):
+    def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0 ):
         self.req_modules = ['hb_display','hb_encoder','hueberry']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
         self.simulate = simulate
+        self.legacy = legacy
         if (self.help == 1):
             self.print_usage()
             sys.exit()

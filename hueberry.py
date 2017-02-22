@@ -1350,7 +1350,11 @@ def user_init_upgrade():
         print("File Downloaded Successfully! Comparing...")
         hb_display.display_2lines("Comparing","Versions...",15)
     #Change this to an upgrade only file. Smaller, easier and quicker to check if it just contains a version number and a changelog
-    diff_result = os.popen("diff upgrade_hb.py new_upgrade_hb.py").read()
+    if os.path.isfile('./upgrade_hb.py') == False:
+        #Make sure to make some noise if this is a much older version.
+        diff_result = 1
+    else:
+        diff_result = os.popen("diff upgrade_hb.py new_upgrade_hb.py").read()
     #diff_result = os.popen("diff upgrade_hb.py upgrade_hb.py").read()
     if not diff_result:
         print("There are no changes or upgrades avaliable")
@@ -1371,7 +1375,11 @@ def user_init_upgrade():
         import new_upgrade_hb
         #import upgrade_hb
         #upgrader = new_upgrade_hb.upgrader(simulate = 1)
-        upgrader = new_upgrade_hb.upgrader()
+        if diff_result == 1:
+            #Legacy switch, currently does nothing... 
+            upgrader = new_upgrade_hb.upgrader(legacy = 1)
+        else:
+            upgrader = new_upgrade_hb.upgrader()
         #upgrader = upgrade_hb.upgrader(simulate = 1)
         #Do a blind upgrade lol don't even check
         #upgrader.check_modules_exist()
