@@ -14,6 +14,8 @@ v001
 import subprocess
 #import shlex
 import hb_display
+import time
+import sys
 
 class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0):
@@ -53,6 +55,7 @@ class upgrader(object):
         """
         if (self.simulate == 1):
             print("Simulating command: "+cmd)
+            time.sleep(1)
             return
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout = []
