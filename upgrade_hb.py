@@ -16,11 +16,12 @@ import subprocess
 import hb_display
 
 class upgrader(object):
-    def __init__(self,console=0,mirror = 0,help = 0):
+    def __init__(self,console=0,mirror = 0,help = 0,simulate = 0):
         req_modules = ['hb_display','hb_encoder','hueberry']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
+        self.simulate = simulate
         if (self.help == 1):
             self.print_usage()
             sys.exit()
@@ -34,10 +35,13 @@ class upgrader(object):
     def print_usage(self):
         usage = """
         How to run:
-            sudo python ugprade_hb.py [-m] [-h,--help]
+            sudo python ugprade_hb.py [-m] [-s] [-h,--help]
 
         -m          Turns on mirror mode. Outputs to the
                     display as well as the terminal.
+                    
+        -s          Simulates the upgrade without actually
+                    downloading and overwriting files
 
         -h,--help   Displays this help text
         """
@@ -47,6 +51,8 @@ class upgrader(object):
         """
         from http://blog.kagesenshi.org/2008/02/teeing-python-subprocesspopen-output.html
         """
+        if (self.simulate == 1):
+            return
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout = []
         while True:
@@ -124,15 +130,18 @@ if __name__ == "__main__":
     import sys
     debug_argument = 0
     mirror_mode = 0
+    simulate_arg = 0
     disp_help = 0
     for arg in sys.argv:
         if arg == '-d':
             debug_argument = 1
         if arg == '-m':
             mirror_mode = 1
+        if arg == '-s':
+            simulate_arg = 1
         if arg in ("-h","--help"):
             disp_help = 1
-    upgrader = upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help)
+    upgrader = upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
     upgrader.check_modules_exist()
     upgrader.download_all_modules()
     upgrader.display_exit_msg()
