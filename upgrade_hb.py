@@ -39,7 +39,7 @@ class upgrader(object):
 
         -m          Turns on mirror mode. Outputs to the
                     display as well as the terminal.
-                    
+
         -s          Simulates the upgrade without actually
                     downloading and overwriting files
 
@@ -97,19 +97,19 @@ class upgrader(object):
             if x == 'hb_display':
                 print("Installing " +str(x))
                 hb_display.display_max_text("Installing " +str(x))
-                self.myrun("rm "+str(x)".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)".py")")
+                self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n\n")
                 hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hb_encoder':
                 print("Installing " +str(x))
                 hb_display.display_max_text("Installing " +str(x))
-                self.myrun("rm "+str(x)".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)".py")")
+                self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n\n")
                 hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hueberry':
                 print("Installing " +str(x))
                 hb_display.display_max_text("Installing " +str(x))
-                self.myrun("rm "+str(x)".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)".py")
+                self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)+".py")
                 print("Done installing " +str(x)+"\n\n")
                 hb_display.display_max_text("Done installing " +str(x)+"\n\n")
         #print baremetal
