@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 Python upgrader for hueberry.
+Readme for current version is in display_exit_msg()
 """
 #import os
 #import shutil
@@ -122,12 +123,20 @@ class upgrader(object):
 
 
     def display_exit_msg(self):
+        # Instead of dumping out some text to the screen
+        # Maybe I should download a change.log or something
+        # Then I could just cat that onto the screen, and there'd be a
+        # local copy for whomever to look at later.... 
         finalreadme = """
-        \rUpgrade level: v044-20170222-1158
-        //57
-            Added Unicode Support
-                Scenes now are generated properly with unicode light names
-            Unicode Display support currently untested
+    \rUpgrade level: v044-20170222-1233
+    //57
+        20170222-1158
+        Added Unicode Support
+            Scenes now are generated properly with unicode light names
+        Unicode Display support currently untested
+
+        20170222-1233
+        Final Readme is now easier to read
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
