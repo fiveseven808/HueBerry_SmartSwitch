@@ -128,13 +128,14 @@ class upgrader(object):
 
     def display_exit_msg(self):
         finalreadme = """
-        \rUpgrade level: v043-20170221-1527
+        \rUpgrade level: v043-20170221-2207
         //57
             Initial upgrade test. Everytime this gets updated, the hueberry should
             detect that an upgrade is avaliable, and follow the instructions here by
             wiping the files and redownloading them. Easiest way to get shit done right
             now without having to do anything complicated diffs on existing files.
         """
+        self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
 
 if __name__ == "__main__":

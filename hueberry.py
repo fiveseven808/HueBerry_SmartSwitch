@@ -1336,8 +1336,9 @@ def user_init_upgrade():
                 load hb_display module
 
     """
+
     hb_display.display_2lines("Checking for","Updates! :)",15)
-    wget_results = os.popen("sudo rm upgrade_hb.py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/upgrade_hb.py --output-document=new_upgrade_hb.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    wget_results = os.popen("sudo rm new_upgrade_hb.py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/upgrade_hb.py --output-document=new_upgrade_hb.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
     if wget_results:
         print("Could not download the file for whatever reason")
         print("Returning to previous state")
@@ -1358,8 +1359,8 @@ def user_init_upgrade():
         return
     else:
         print("It looks like there are changes avaliable. Installing...")
-        answer1 = "Upgrade Now!"
-        answer2 = "Cancel"
+        answer1 = "[ Yes! ]"
+        answer2 = "[ Cancel ]"
         decision_result = binarydecision(lambda: hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
         if (decision_result != 1):
             hb_display.display_2lines("Canceling...","Returning...",15)
@@ -1367,15 +1368,19 @@ def user_init_upgrade():
             time.sleep(1)
             return
         hb_display.display_2lines("Upgrading!!!","Please wait...",15)
-        upgrader = upgrade_hb.upgrader(mirror = 1,simulate = 1)
+        import new_upgrade_hb
+        #import upgrade_hb
+        upgrader = new_upgrade_hb.upgrader()
+        #upgrader = upgrade_hb.upgrader(simulate = 1)
         #Do a blind upgrade lol don't even check
         #upgrader.check_modules_exist()
         upgrader.download_all_modules()
         upgrader.display_exit_msg()
         upgrader.out_with_the_old()
         hb_display.display_2lines("Upgrade Finished!","Rebooting...",13)
+        time.sleep(1)
         #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
-        os.popen("sudo shutdown -r now")
+        #os.popen("sudo shutdown -r now")
     return
 
 def debugmsg(message):
