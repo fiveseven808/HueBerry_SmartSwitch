@@ -11,7 +11,7 @@ class display(object):
     # This is a bundle of shit, but it's my bundle of shit
     # Will work to integrate this into hueberry.py soon
     # For now, this is just a proof of concept
-    
+
     def __init__(self,console=0,mirror = 0):
         self.console = console
         self.mirror = mirror
@@ -28,7 +28,7 @@ class display(object):
             #Adafruit OLED library standard width for string calculation
             self.width = 128
         self.time_format = True
-        
+
     def display_time(self):
         # Collect current time and date
         if(self.time_format):
@@ -121,7 +121,7 @@ class display(object):
             print("")
             print("----------------------------")
             return
-            
+
     def display_3lines(self,line1,line2,line3,size,offset):
         if(self.time_format):
             current_time = time.strftime("%-I:%M")
@@ -193,7 +193,7 @@ class display(object):
             print("")
             print("----------------------------")
             return
-            
+
     def draw_flashlight(self):
         if (self.console == 0 or self.mirror == 1):
             self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=1)
@@ -210,20 +210,20 @@ class display(object):
             print("############################")
             print("----------------------------")
             return
-            
+
     def string_width(self,fontType,string):
         string_width = 0
         for i, c in enumerate(string):
             char_width, char_height = self.draw.textsize(c, font=fontType)
             string_width += char_width
         return string_width
-        
+
     def IntelliDraw(self,drawer,text,font,containerWidth):
         # Modified and stolen from https://mail.python.org/pipermail/image-sig/2004-December/003064.html
         # I'm not using it yet but this is some good inspiration
-        words = text.split()  
+        words = text.split()
         lines = [] # prepare a return argument
-        lines.append(words) 
+        lines.append(words)
         finished = False
         line = 0
         while not finished:
@@ -235,7 +235,7 @@ class display(object):
                 if drawer.textsize(' '.join(thistext),font)[0] > containerWidth:
                     # this is the heart of the algorithm: we pop words off the current
                     # sentence until the width is ok, then in the next outer loop
-                    # we move on to the next sentence. 
+                    # we move on to the next sentence.
                     newline.insert(0,thistext.pop(-1))
                 else:
                     innerFinished = True
@@ -244,15 +244,17 @@ class display(object):
                 line = line + 1
             else:
                 finished = True
-        tmp = []        
+        tmp = []
         for i in lines:
             tmp.append( ' '.join(i) )
         lines = tmp
-        (width,height) = drawer.textsize(lines[0],font)            
+        (width,height) = drawer.textsize(lines[0],font)
         total_height = len(lines)*(height+1)
         return (lines,width,height,total_height)
 
     def InteliDraw_Test(self):
+        #import hb_encoder
+        #encoder = hb_encoder.rotary()
         global pos
         pos = 0
         text = 'One very extremely long string that cannot possibly fit \
@@ -271,13 +273,13 @@ class display(object):
         #self.disp.display()
         #time.sleep(5)
         #draw.rectangle((0,0,width,height), outline=0, fill=0)
-        while(not GPIO.input(21)):  
+        while(not GPIO.input(21)):
             time.sleep(0.01)
         time.sleep(0.5)
         while GPIO.input(21):
             self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
             offset = ((h/2)*-1)*pos
-            j = 0 
+            j = 0
             for i in lines:
                 #Line Centering code
                 x_pos = (self.width/2) - (self.string_width(self.font,i)/2)
@@ -288,9 +290,34 @@ class display(object):
             time.sleep(0.01)
         time.sleep(1)
 
+    def display_max_text(self,text,centered=0):
+        lines,tmp,h,total_h = IntelliDraw(self.draw,text,self.font,self.width)
+        j = 0
+        self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
+        offset = ((h/2)*-1)*pos
+        j = 0
+        for i in lines:
+            #Line Centering code
+            if(centered == 1):
+                x_pos = (self.width/2) - (self.string_width(self.font,i)/2)
+            else:
+                x_pos = 0
+            self.draw.text( (x_pos,offset+(j*h)), i , font=self.font, fill=255)
+            j = j + 1
+        if (self.console == 1):
+            os.system('clear')
+            print("      Display Max Text")
+            print("----------------------------")
+            for i in lines:
+                print i
+            print("----------------------------")
+        if (self.console == 0 or self.mirror == 1):
+            self.disp.image(self.image)
+            self.disp.display()
 
 
-        
+
+
 if __name__ == "__main__":
     import time
     import hb_display
@@ -302,5 +329,10 @@ if __name__ == "__main__":
     test.display_2lines("omg","it's working",17)
     time.sleep(1)
     test.display_3lines("for real","it's working","praise cheese",13,15)
-    
-    
+    time.sleep(1)
+    text = 'One very extremely long string that cannot possibly fit \
+    into a small number of pixels of horizontal width, and the idea \
+    is to break this text up into multiple lines that can be placed like \
+    a paragraph into our image'
+    test.display_max_test(text)
+    time.sleep(1)

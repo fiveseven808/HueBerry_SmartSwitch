@@ -5,7 +5,7 @@ v043
 Starting work on "Guest mode" or "Single Room mode"
 how it will work?
     idea 1:
-        pick a room for guest mode by going into groups, and holding for 5 seconds? 
+        pick a room for guest mode by going into groups, and holding for 5 seconds?
     idea 2;
         go into settings, click on guest mode, then select a room
     single room mode:
@@ -14,28 +14,28 @@ how it will work?
                 + adjust without changing what lights are on
                 + incremental
                 - no brightness value displayable i think...
-                - cannot turn the light off... 
+                - cannot turn the light off...
                     - if the light turns off, cannot turn on just that light again
-                + can do like a dimmer mode? push to on off? 
-                    + then dial is brightness, like guest mode? 
+                + can do like a dimmer mode? push to on off?
+                    + then dial is brightness, like guest mode?
         can break out to control rest of house if desired
             + i.e. activate scenes?
-            * how to break out to ontrol rest of house? 
+            * how to break out to ontrol rest of house?
 what i also want to do is auto update the brightness level i.e. if the brightness changes, while in the brightness mode, i want it to auto update... somehow...
 
 2017-02-19 //57
-o shit... i fucked up 
-this is on the dev branch, not the other one... gotta fix this shit... hold on gonna backup everything... wish me luck 
+o shit... i fucked up
+this is on the dev branch, not the other one... gotta fix this shit... hold on gonna backup everything... wish me luck
 ----
 okay, looks like crisis aveted... i did none of the above stuff... instead, what i did was make a "real value" indicator for the light brightnesses (polls after 5 seconds of inactivity)
-it's not a pretty result, but it is accurate and kind of neat. 
-i reworked the method to pull values from a centralized thing... much nicer 
-it looks like it's working, just gotta implement it everywhere. 
+it's not a pretty result, but it is accurate and kind of neat.
+i reworked the method to pull values from a centralized thing... much nicer
+it looks like it's working, just gotta implement it everywhere.
 
 2017-02-20 //57
 finally put to use that holding_button function i made a while back
 went and optimized the light_control function a little bit... light control can really be cleaned up...
-but first g_control and l_control need to be reworked into one function. 
+but first g_control and l_control need to be reworked into one function.
 
 
 
@@ -47,10 +47,10 @@ gonna attempt to pull everything into the hueberry_api display modules
 completed! looks good to me! haven't tested it out on actual hardware yet, but i'm liking it so far... gonna do a console interface spinoff just to see what happens
 
 2021 //57
-console display mode and mirror mode now a thing. still no controls. try them out! very cool stuff! 
+console display mode and mirror mode now a thing. still no controls. try them out! very cool stuff!
 console mode = redirect all output to console. (but can't control it LOL can control it with hueberry though LOL (but no lcd))
-mirror mode = see exactly what's going on on the screen on the hueberry in the console! emulation!!! 
-added a little routine in the beginning to go and download the new hueberry_api.py 
+mirror mode = see exactly what's going on on the screen on the hueberry in the console! emulation!!!
+added a little routine in the beginning to go and download the new hueberry_api.py
 
 2017-02-13 1041 //57
 Seperating classes into their own modules per WPBack's suggestion
@@ -61,26 +61,26 @@ v041
 binarydecision() is finished!
 Pass it a function for the first thing, then a word or so for the "answers"
 We can now cancel scene creation!
-Also added a user initiated update function! it'll go and pull the latest file down from github and compare before installing! Then it'll ask the user based on the binarydecision function! 
+Also added a user initiated update function! it'll go and pull the latest file down from github and compare before installing! Then it'll ask the user based on the binarydecision function!
 Lots of goodies today!
 
 2017-02-12 //57
 Implemeneted InteliDraw with InteliDraw_Test. Word wrap and scrolling is now a thing!
-need to figure out where it goes. 
+need to figure out where it goes.
 seperate hueberry_api module is now avaliable! need to integrate it into hueberry.py
-    all major display_* functions have been transferred to that module. 
+    all major display_* functions have been transferred to that module.
     runs independently to test all functions. fuck yeah!
 
 
 v040
 2017-02-10 1610 //57
-Extra bigass update. Just like Windows 10, skipping a few versions to get to v040. I'm pretty sure I made a whole bunch of little updates and just didn't push them to git. Will do my best to document all of them. 
+Extra bigass update. Just like Windows 10, skipping a few versions to get to v040. I'm pretty sure I made a whole bunch of little updates and just didn't push them to git. Will do my best to document all of them.
  * Changing the working directory structure for hueBerry
   * Now using /boot/hueBerry/ for upgrade and wifi settings
   * Now using /boot/hueBerry/scenes/ for scene files!
-  * Psuedo Global variable used (passed around a lot lol) 
+  * Psuedo Global variable used (passed around a lot lol)
   * "Should" automatically create the directories if they don't exist already
- * Changed get_house_scene_by_light's parameter to selected_filendirect because I'm now passing it a full path name of a file 
+ * Changed get_house_scene_by_light's parameter to selected_filendirect because I'm now passing it a full path name of a file
   * Can be optimizied a little bit. I'm duplicating the variable right now lol
  * Made a new_scene_creator function that will generate a new scene with a new number based on the amount of scenes that already exist
   * i.e. if 5 scenes exist, regardless of name, the next scene will be named 6_scene.sh
@@ -88,7 +88,7 @@ Extra bigass update. Just like Windows 10, skipping a few versions to get to v04
  * check_wifi_file and check_upgrade_file now use the new p-global directory variable
  * get_scene_total now properly queries the p-global scenes directory instead of replying back with static values
   * Also sorts the scenes alphabetically so the user can now order things
- * Adjusted the main menu to properly execute the right script from the new directories (I think?) 
+ * Adjusted the main menu to properly execute the right script from the new directories (I think?)
  * Files can now be managed by Windows!
   * Power off the hueBerry
   * Stick the SD card into the Windows machine
@@ -98,14 +98,14 @@ Extra bigass update. Just like Windows 10, skipping a few versions to get to v04
   * The order represented by the name sort is the order they will appear on the hueBerry
   * You are free to delete ones you don't use anymore
 
-By the way, all of this except for the new_scene_creator() function has been tested! 
+By the way, all of this except for the new_scene_creator() function has been tested!
 
 
 --------------------
 How to run:
 sudo python hueberry.py [-d]
-http://www.diveintopython.net/scripts_and_streams/command_line_arguments.html 
-this is probably a good reference on how to program this in the future 
+http://www.diveintopython.net/scripts_and_streams/command_line_arguments.html
+this is probably a good reference on how to program this in the future
 --------------------
 bug:
 --------------------
@@ -120,17 +120,17 @@ nothing found?
 """
 
 def print_usage():
-    usage = """ 
+    usage = """
     How to run:
         sudo python hueberry.py [-d] [-h,--help]
-    
-    -d          Sets the program to output and take input from the console 
+
+    -d          Sets the program to output and take input from the console
                 (input does not work yet)
-                
-    -m          Turns on mirror mode. Outputs to the 
-                display as well as the terminal. 
-                
-    -h,--help   Displays this help text 
+
+    -m          Turns on mirror mode. Outputs to the
+                display as well as the terminal.
+
+    -h,--help   Displays this help text
     """
     print(usage)
 
@@ -147,12 +147,12 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 #   os.popen("rm hueberry_api.py") # Remove old libraries
 #   os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
 #os.popen("wget SOMETHING AWESOME GOES HERE LIKE AN UPGRADER FILER")
-#THEN later in the code where the upgrade code is, reference the upgrader file insead 
+#THEN later in the code where the upgrade code is, reference the upgrader file insead
 print "Finished! hopefully this will work!"
 
 import sys
 debug_argument = 0
-mirror_mode = 0 
+mirror_mode = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -189,12 +189,12 @@ debug_state = 1
 
 menu_timeout = 30 #seconds
 print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
-#Create Required directories if they do not exist. 
+#Create Required directories if they do not exist.
 maindirectory = "/boot/hueBerry/"
 if (os.path.isdir(maindirectory) == False):
     os.popen("sudo mkdir /boot/hueBerry")
     print "Created Directory: " + str(maindirectory)
-    
+
 g_scenesdir = str(maindirectory) + "scenes/"
 if (os.path.isdir(g_scenesdir) == False):
     os.popen("sudo mkdir /boot/hueBerry/scenes")
@@ -294,7 +294,7 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     cmdout = os.popen("cat lights").read()
     #os.popen("cat scene_template.py >> custom_scene" + selected_filendirect + ".py" )
     wat = json.loads(cmdout)
-    #Just trying to figure out how to sort this and make it a little nicer... bleh 
+    #Just trying to figure out how to sort this and make it a little nicer... bleh
     #test_wat = sorted(wat.items())
     #pprint.pprint(test_wat)
     #hb_display.display_custom("used jsonloads")
@@ -395,7 +395,7 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
         return
     print(result)
     return result
-    
+
 def new_scene_creator(g_scenesdir):
     #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
     total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset = 0)
@@ -407,7 +407,7 @@ def new_scene_creator(g_scenesdir):
     debugmsg("ran NEW scene by individual creation with result = " + result)
     #THIS FUNCTION IS NOT TESTED
     return
-    
+
 
 
 def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
@@ -535,7 +535,7 @@ def light_control(mode):
                     name_array,num_lights,lstate_a,total = get_light_names()
                 refresh = 1
                 encoder.pos = display
-                
+
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -543,7 +543,7 @@ def light_control(mode):
             #prev_millis = int(round(time.time() * 1000))
     return
 
-        
+
 def l_control(light):
     brite,wholejson = get_huejson_value("l",light,"bri")
     if(brite == -1):
@@ -590,7 +590,7 @@ def l_control(light):
             exitvar = True
         time.sleep(0.01)
 
-        
+
 def g_control(group):
     brite,wholejson = get_huejson_value("g",group,"bri")
     if(brite == -1):
@@ -650,7 +650,7 @@ def g_control(group):
         if(pushed):
             exitvar = True
         time.sleep(0.01)
-        
+
 def get_huejson_value(g_or_l,num,type):
     #g_or_l:
     #   Provide "l" if looking up a Light value
@@ -668,7 +668,7 @@ def get_huejson_value(g_or_l,num,type):
         os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
     if(g_or_l == "l"):
         os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
-    wholejson = os.popen("cat brite").read() #in case i wana do something properly lol 
+    wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
     wholejson = json.loads(wholejson)
     if(type == "bri"):
         value = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
@@ -689,7 +689,7 @@ def get_huejson_value(g_or_l,num,type):
         time.sleep(3)
         value = -1
     return value,wholejson
-    
+
 
 #------------------------------------------------------------------------------------
 #Method to convert color temperature into hue and saturation scaled for the Hue-system
@@ -781,8 +781,8 @@ def ct_control(device,mode):
         #print "not brite"
         return
     elif(type == "Color light"):
-       print("color light was found") 
-       brite = 500         #Start at warmest color as to not shock eyes lol 
+       print("color light was found")
+       brite = 500         #Start at warmest color as to not shock eyes lol
     #brite = wat['action']['ct']
     print("THIS IS " +str(brite))
     brite = int(brite)      #make integer
@@ -840,8 +840,8 @@ def ct_control(device,mode):
             millsdiff = mills - prev_mills
             prev_xy = 1
         if(mode == "g" and prev_xy != new_xy and millsdiff > 1000):
-            #   as of 2/19 the main bit of this function huecmd.start() 
-            #   has been dsiabled so even though it calculates, it does not send 
+            #   as of 2/19 the main bit of this function huecmd.start()
+            #   has been dsiabled so even though it calculates, it does not send
             #print("inside of the new groupxy function")
             #this function introduces color wobble, but it's good for testing so i'm gonna leave it in lol
             #hb_display.display_custom("setting group via hue")
@@ -1322,24 +1322,22 @@ def check_upgrade_file(maindirectory):
         os.popen("python " + ADDWIFIPATH)
         while True:
             time.sleep(1)
-            
+
 def user_init_upgrade():
     """
     2017-02-15 //57
-    Planning on rework for update capability..... 
-    method: 
+    Planning on rework for update capability.....
+    method:
         delete current upgrade_hb.py
         download upgrade_hb.py from github
         drop control of screen (no running functions)
-        run it. 
-            upgrade.hb.py 
+        run it.
+            upgrade.hb.py
                 load hb_display module
-                
+
     """
     hb_display.display_2lines("Checking for","Updates! :)",15)
-    #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/wrong.py --output-document=something.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
-    wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
-    #wget_results = os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/master/hueberry.py --output-document=new_hueberry.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
+    wget_results = os.popen("sudo rm upgrade_hb.py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/upgrade_hb.py --output-document=new_upgrade_hb.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
     if wget_results:
         print("Could not download the file for whatever reason")
         print("Returning to previous state")
@@ -1351,8 +1349,8 @@ def user_init_upgrade():
         print("File Downloaded Successfully! Comparing...")
         hb_display.display_2lines("Comparing","Versions...",15)
     #Change this to an upgrade only file. Smaller, easier and quicker to check if it just contains a version number and a changelog
-    diff_result = os.popen("diff hueberry.py new_hueberry.py").read()
-    #diff_result = os.popen("diff hueberry.py hueberry.py").read()
+    diff_result = os.popen("diff upgrade_hb.py new_upgrade_hb.py").read()
+    #diff_result = os.popen("diff upgrade_hb.py upgrade_hb.py").read()
     if not diff_result:
         print("There are no changes or upgrades avaliable")
         hb_display.display_2lines("You are","up to date! :)",15)
@@ -1365,15 +1363,15 @@ def user_init_upgrade():
         decision_result = binarydecision(lambda: hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
         if (decision_result != 1):
             hb_display.display_2lines("Canceling...","Returning...",15)
-            #os.popen("rm new_hueberry.py")
+            #os.popen("rm new_upgrade_hb.py")
             time.sleep(1)
             return
         hb_display.display_2lines("Upgrading!!!","Please wait...",15)
-        os.popen("sudo mv hueberry.py hueberry_old.py")
-        os.popen("sudo mv new_hueberry.py hueberry.py")
-        #lol this probably isn't very secure... but if you have access to the pi then you have issues already 
-        os.popen("sudo chown pi hueberry.py")
-        os.popen("sudo chown pi hueberry_old.py")
+        os.popen("sudo mv upgrade_hb.py upgrade_hb_old.py")
+        os.popen("sudo mv new_upgrade_hb.py upgrade_hb.py")
+        #lol this probably isn't very secure... but if you have access to the pi then you have issues already
+        os.popen("sudo chown pi upgrade_hb.py")
+        os.popen("sudo chown pi upgrade_hb_old.py")
         hb_display.display_2lines("Upgrade Finished!","Rebooting...",13)
         #print("Upgrade Finished! Please reboot your hueBerry to complete the installation.")
         os.popen("sudo shutdown -r now")
@@ -1408,9 +1406,9 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     time.sleep(0.1)
     successvar = held_down
     return successvar
-    
+
 def set_scene_transition_time():
-    #placeholder 
+    #placeholder
     #hb_display.display_custom("doing a thing")
     #global pos
     encoder.pos = 2                 # Start at 40ms
@@ -1419,7 +1417,7 @@ def set_scene_transition_time():
     bri_pre = encoder.pos/5.0       # 20ms per rotation
     refresh = 1
     prev_mills = 0
-    while exitvar == False: 
+    while exitvar == False:
         pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
             encoder.pos = max_rot_val
@@ -1447,23 +1445,23 @@ def set_scene_transition_time():
         time.sleep(0.01)
     transition_time = encoder.pos*2
     return transition_time
-    
+
 def binarydecision(binary_decision_question_function,answer1,answer2):
     #def binarydecision(displayfunction,messagedict,)
-    #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get hb_display.display_3lines(something) passed to it, and then run it as pos == 0 or something... 
+    #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get hb_display.display_3lines(something) passed to it, and then run it as pos == 0 or something...
     #as of now 2/4/17 this is just a placeholder stolen from the function above. not called, and no functionality has been implemented
     #disassemble question dict
     #line1 = question_line1
     #line2 = question_line2
     #global pos
     #pos = 0                 # Start at 0
-    encoder.pos = 0 
+    encoder.pos = 0
     exitvar = False
     max_rot_val = 2       # binar question
     old_pos = 0       # idk
     refresh = 1
     prev_mills = 0
-    while exitvar == False: 
+    while exitvar == False:
         pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
             encoder.pos = max_rot_val
@@ -1514,7 +1512,7 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 #------------------------------------------------------------------------------------------------------------------------------
-# Main Loop I think 
+# Main Loop I think
 #Instantiate the hueberry display object
 # Create Display Object
 if(mirror_mode == 1):
@@ -1523,7 +1521,7 @@ else:
     hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
 
 # Create Encoder Object
-if (debug_argument == 0): 
+if (debug_argument == 0):
     encoder = hb_encoder.rotary()
 elif (debug_argument == 1):
     encoder = hb_encoder.rotary(debug = 1)
@@ -1559,7 +1557,7 @@ if os.path.isfile('./auth.json') == False:
     #bridge_ip = authenticate.bridge_ip
     hb_display.display_2lines("Link Successful!",bridge_ip,12)
     #time.sleep(1)
-#After a credential file exists 
+#After a credential file exists
 authenticate.load_creds()
 api_key = authenticate.api_key
 bridge_ip = authenticate.bridge_ip
@@ -1587,7 +1585,7 @@ debugmsg("Starting hueBerry program version " + __file__)
 
 offset = 5 #clock (0) + 4 presets
 post_offset = 3 #settings, light, group menu after scenes)
-while True:    
+while True:
     if (scene_refresh == 1):
         total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
         scene_refresh = 0
@@ -1597,7 +1595,7 @@ while True:
         encoder.pos = menudepth
     elif(encoder.pos < 0):
         encoder.pos = 0
-    display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down. 
+    display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
     #Display Selected Menu
     if(display == 0):
         cur_min = int(time.strftime("%M"))
@@ -1715,7 +1713,7 @@ while True:
             encoder.pos = 0
             scene_refresh = settings_menu(g_scenesdir)
             #InteliDraw_Test()
-            scene_refresh = 1 # lol override. this might be useful lol 
+            scene_refresh = 1 # lol override. this might be useful lol
         elif(display == (menudepth-1)):
             encoder.pos = 0
             light_control("l")
