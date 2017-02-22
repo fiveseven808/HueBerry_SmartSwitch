@@ -264,7 +264,7 @@ class display(object):
         #draw = ImageDraw.Draw(OurImagePreviouslyDefined)
         #font = fontpath = ImageFont.truetype('/usr/local/share/fonts/ttf/times.ttf',26)
         #pixelWidth = 500 # pixels
-        lines,tmp,h,total_h = IntelliDraw(self.draw,text,self.font,self.width)
+        lines,tmp,h,total_h = self.IntelliDraw(self.draw,text,self.font,self.width)
         j = 0
         #for i in lines:
         #    draw.text( (0,0+j*h), i , font=font, fill=255)
@@ -291,7 +291,7 @@ class display(object):
         time.sleep(1)
 
     def display_max_text(self,text,centered=0):
-        lines,tmp,h,total_h = IntelliDraw(self.draw,text,self.font,self.width)
+        lines,tmp,h,total_h = self.IntelliDraw(self.draw,text,self.font,self.width)
         j = 0
         self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
         offset = ((h/2)*-1)*pos
@@ -321,7 +321,7 @@ class display(object):
 if __name__ == "__main__":
     import time
     import hb_display
-    test = hb_display.display()
+    test = hb_display.display(console = 1, mirror = 1)
     test.display_time()
     time.sleep(1)
     test.display_custom("holy shit")
@@ -334,5 +334,5 @@ if __name__ == "__main__":
     into a small number of pixels of horizontal width, and the idea \
     is to break this text up into multiple lines that can be placed like \
     a paragraph into our image'
-    test.display_max_test(text)
+    test.display_max_text(text)
     time.sleep(1)
