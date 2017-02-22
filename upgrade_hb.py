@@ -69,7 +69,8 @@ class upgrader(object):
         UNDERLINE = '\033[4m'
 
     def check_modules_exist(self):
-        print(bcolors.BOLD+"Checking required modules. Please wait..."+bcolors.ENDC
+        print(bcolors.BOLD+"Checking required modules. Please wait..."+bcolors.ENDC)
+        hb_display.display_max_text("Checking required modules. \nPlease wait...")
         n2install = []
         #Go and check if things exist althouhg.... not really using it right now lol
         for x in self.req_modules:
@@ -89,16 +90,22 @@ class upgrader(object):
         for x in self.req_modules:
             if x == 'hb_display':
                 print("Installing " +str(x))
+                hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)".py")")
                 print("Done installing " +str(x)+"\n\n")
+                hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hb_encoder':
                 print("Installing " +str(x))
+                hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)".py")")
                 print("Done installing " +str(x)+"\n\n")
+                hb_display.display_max_text("Done installing " +str(x)+"\n\n")
             if x == 'hueberry':
                 print("Installing " +str(x))
+                hb_display.display_max_text("Installing " +str(x))
                 self.myrun("rm "+str(x)".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/"+str(x)".py")
                 print("Done installing " +str(x)+"\n\n")
+                hb_display.display_max_text("Done installing " +str(x)+"\n\n")
         #print baremetal
 
     def display_exit_msg(self):
@@ -115,15 +122,17 @@ class upgrader(object):
 if __name__ == "__main__":
     import upgrade_hb
     import sys
+    debug_argument = 0
+    mirror_mode = 0
+    disp_help = 0
     for arg in sys.argv:
         if arg == '-d':
             debug_argument = 1
         if arg == '-m':
             mirror_mode = 1
         if arg in ("-h","--help"):
-            self.print_usage()
-            sys.exit()
-    upgrader = upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = help)
+            disp_help = 1
+    upgrader = upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help)
     upgrader.check_modules_exist()
     upgrader.download_all_modules()
     upgrader.display_exit_msg()

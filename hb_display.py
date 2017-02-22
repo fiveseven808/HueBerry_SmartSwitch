@@ -313,7 +313,7 @@ class display(object):
                 if line_count > 5:
                     break
                 print i
-                line_count = line_count++
+                line_count += 1
             print("----------------------------")
         if (self.console == 0 or self.mirror == 1):
             self.disp.image(self.image)
