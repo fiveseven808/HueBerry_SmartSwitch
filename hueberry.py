@@ -391,20 +391,6 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     print(result)
     return result
 
-def new_scene_creator(g_scenesdir):
-    #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
-    total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset = 0)
-    new_scene_number = total_scenes + 1
-    new_scene_name = str(g_scenesdir) + str(new_scene_number) + "_scene.sh"
-    print "New scene will be: " + str(new_scene_name)
-    ltt = set_scene_transition_time()
-    result = get_house_scene_by_light(new_scene_name,ltt)
-    debugmsg("ran NEW scene by individual creation with result = " + result)
-    #THIS FUNCTION IS NOT TESTED
-    return
-
-
-
 def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     debugmsg("entering hue groups")
     if ('hue' in options):
@@ -1248,6 +1234,8 @@ def settings_menu(g_scenesdir):
             elif(display == 8):
                 new_scene_creator(g_scenesdir)
                 scene_refresh = 1
+            #elif(display == 9):
+            #    scene_explorer(g_scenesdir)
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -1259,6 +1247,76 @@ def settings_menu(g_scenesdir):
 #----------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------
+
+def new_scene_creator(g_scenesdir):
+    #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
+    total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset = 0)
+    new_scene_number = total_scenes + 1
+    new_scene_name = str(g_scenesdir) + str(new_scene_number) + "_scene.sh"
+    print "New scene will be: " + str(new_scene_name)
+    ltt = set_scene_transition_time()
+    result = get_house_scene_by_light(new_scene_name,ltt)
+    debugmsg("ran NEW scene by individual creation with result = " + result)
+    return
+
+def scene_explorer(g_scenesdir):
+    #This function will act like a browser so you can delete or rename certain scenes?
+    #if(display >= offset and display <= (total_plus_offset-1)):
+    display = 0
+    offset = 0 #or 1? for like... instructions so you know where you are?
+    scene_refresh = 1
+    encoder.pos = 0
+    post_offset = 1 # idk what this is
+    old_display = -1
+    exitvar = False
+    while exitvar == False:
+        # Display the current scene
+        if (scene_refresh == 1):
+            total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
+            scene_refresh = 0
+        menudepth = total_plus_offset + post_offset - 1
+        # Cycle through different displays
+        if(encoder.pos > menudepth):
+            encoder.pos = menudepth
+        elif(encoder.pos < 0):
+            encoder.pos = 0
+        display = encoder.pos
+        if (old_display != display):
+            if (display >= offset and display <= (total_plus_offset-1)):
+                hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Manage?",15)
+            else:
+                hb_display.display_2lines("Back to","Settings Menu",17)
+            old_display = display
+        pos,pushed = encoder.get_state()
+        if(pushed):
+            if(display >= offset and display < total_plus_offset):
+                #print display, offset
+                selected_scenenumber = display-offset+1
+                #print selected_scenenumber
+                result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+                selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                if result == 0:
+                    hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
+                    print "running the below thing"
+                    #os.popen("\"" + str(selected_file) + "\"")
+                    print(str(selected_file))
+                    time.sleep(1)
+                    #debugmsg("Running: " + str(scene_files[display-offset]))
+                elif result == 1:
+                    print "result == 1"
+                    #ltt = set_scene_transition_time()
+                    #result = get_house_scene_by_light(selected_file,ltt)
+                    #debugmsg("Ran scene editing by group with result = " + result)
+                else:
+                    hb_display.display_2lines("Something weird","Happened...",12)
+                    time.sleep(5)
+            else:
+                time.sleep(0.25)
+                exitvar = True
+            scene_refresh = 1
+            old_display = -1 #to refresh
+        time.sleep(0.01)
+    return
 
 def check_wifi_file(maindirectory):
     ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
@@ -1389,9 +1447,9 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         if(millsdiff < holding_time_ms):
-            hb_display.display_custom(display_before)
+            hb_display.display_max_text(display_before,centered = 1,offset = 2)
         elif(millsdiff >= holding_time_ms):
-            hb_display.display_custom(display_after)
+            hb_display.display_max_text(display_after,centered = 1, offset = 2)
             held_down = 1
         pos,pushed = encoder.get_state()
         time.sleep(0.01)
@@ -1626,9 +1684,6 @@ while True:
             hb_display.display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
         #begin scene selection
         elif(display >= offset and display <= (total_plus_offset-1)):
-            #print(display, offset, total_plus_offset, menudepth)
-            #print(scene_files)
-            #print (display-offset)
             hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
         elif(display == (menudepth-2)):
             hb_display.display_2lines(str(display) + ". Settings", "Menu",13)
@@ -1725,7 +1780,8 @@ while True:
             light_control("l")
         elif(display == (menudepth)):
             encoder.pos = 0
-            light_control("g")
+            light_control("g") #temp for test lol
+            #scene_explorer(g_scenesdir)
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
         encoder.pos = 0

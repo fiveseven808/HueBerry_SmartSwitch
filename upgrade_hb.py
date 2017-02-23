@@ -158,7 +158,12 @@ class upgrader(object):
         bug fixes
 
         2003
-        changed house toggle from 3s to 1.5s 
+        changed house toggle from 3s to 1.5s
+
+        2233
+        added scene explorer function template. not yet linked
+        also modified hb_display. gave the auto resize function an offset
+        integrated the holding button thing to use that new thing instead of custom
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
