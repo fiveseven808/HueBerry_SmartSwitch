@@ -1195,7 +1195,6 @@ def settings_menu(g_scenesdir):
     refresh = 1
     scene_refresh = 0
     while exitvar == False:
-        pos,pushed = encoder.get_state()
         if(pos > menudepth):
             encoder.pos = menudepth
         elif(pos < 1):
@@ -1229,6 +1228,7 @@ def settings_menu(g_scenesdir):
 
         # Poll button press and trigger action based on current display
         #if(not GPIO.input(21)):
+        pos,pushed = encoder.get_state()
         if(pushed):
             if(display == 1):
                 devinfo_screen()
@@ -1253,29 +1253,12 @@ def settings_menu(g_scenesdir):
                 exitvar = True
             refresh = 1
             encoder.pos = display
-            while(pushed):
-                pos,pushed = encoder.get_state()
-                time.sleep(0.01)
-            #prev_millis = int(round(time.time() * 1000))
+            encoder.wait_for_button_release()
     return scene_refresh
 
 #----------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------
-
-
-def long_press(message,pin):
-    prev_mills = int(round(time.time() * 1000))
-    pos,pushed = encoder.get_state()
-    while(pushed):
-        mills = int(round(time.time() * 1000))
-        millsdiff = mills - prev_mills
-        if(millsdiff < 500):
-            hb_display.display_custom("hold for ct...")
-        elif(millsdiff >= 500):
-            ctmode = 1
-            break
-        pos,pushed = encoder.get_state()
 
 def check_wifi_file(maindirectory):
     ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
@@ -1402,7 +1385,8 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #ex: result = holding_button(500,"hold to activate","activating",21)
     held_down = 0
     prev_mills = int(round(time.time() * 1000))
-    pos,pushed = encoder.get_state()
+    #pos,pushed = encoder.get_state()
+    pushed = 1
     while(pushed):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
@@ -1675,6 +1659,7 @@ while True:
 
     # Poll button press and trigger action based on current display
     #if(not GPIO.input(21)):
+    pos,pushed = encoder.get_state() # after loading everything, get state#
     if (pushed):
         if(display == 0):
             time_format = clock_sub_menu(time_format)
@@ -1746,5 +1731,4 @@ while True:
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
         encoder.pos = 0
-    pos,pushed = encoder.get_state() # after loading everything, get state#
     #time.sleep(0.1)
