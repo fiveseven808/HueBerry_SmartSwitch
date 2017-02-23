@@ -138,10 +138,14 @@ class upgrader(object):
         20170222-1233
         Final Readme is now easier to read
 
-        20170222-1330
+        1330
         0.40s Transition time now has no transition time (so it can be used with
         other programs that just turn on lights)
         upgrade_hb.py's updater now updates itself or at least tries to.
+        
+        1609
+        bug fixes for the 0.40s transition time. Apparently the bridge now responds
+        to on=false and other things. or maybe it always did... idk.
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
