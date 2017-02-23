@@ -152,6 +152,10 @@ class upgrader(object):
         Mash the button for 1.5 seconds and it will toggle all the lights in the house
         Not sure how useful this is for people with rooms they don't always use
         But it was a requested feature.
+
+        1754
+        Button routines optimized for console
+        bug fixes
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

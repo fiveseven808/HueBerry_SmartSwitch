@@ -1195,9 +1195,9 @@ def settings_menu(g_scenesdir):
     refresh = 1
     scene_refresh = 0
     while exitvar == False:
-        if(pos > menudepth):
+        if(encoder.pos > menudepth):
             encoder.pos = menudepth
-        elif(pos < 1):
+        elif(encoder.pos < 1):
             encoder.pos = 1
         display = encoder.pos
 
