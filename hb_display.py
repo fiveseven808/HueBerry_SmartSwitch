@@ -29,8 +29,9 @@ class display(object):
             self.width = 128
         self.time_format = True
 
-    def display_time(self):
+    def display_time(self,time_format):
         # Collect current time and date
+        self.time_format = time_format
         if(self.time_format):
             current_time = time.strftime("%-I:%M")
         else:

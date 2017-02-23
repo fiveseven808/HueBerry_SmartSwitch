@@ -1518,6 +1518,21 @@ def get_scene_total(g_scenesdir,offset):
     #allscenes_dict = ["Scene 1","Scene 2","Scene 3"]   #Static value
     return total_scenes,total_plus_offset,scene_files
 
+def clock_sub_menu(time_format):
+    # Toggle between 12/24h format
+    result = holding_button(3000,"Toggle 24 hr","Toggle ALL lights",21)
+    if (result == 0):
+        time_format =  not time_format
+    else:
+        #get light state
+        lights_on,wholejson = get_huejson_value("g",0,"any_on")
+        if(lights_on == True):
+            print("lights were on. not now")
+            #hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+        else:
+            print("lights were off. not now")
+            #hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+    return time_format
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
 #Instantiate the hueberry display object
@@ -1607,7 +1622,7 @@ while True:
     if(display == 0):
         cur_min = int(time.strftime("%M"))
         if(old_min != cur_min or refresh == 1):
-            hb_display.display_time()
+            hb_display.display_time(time_format)
             old_min = cur_min
             refresh = 0
         timeout = 0
@@ -1657,12 +1672,8 @@ while True:
     #if(not GPIO.input(21)):
     if (pushed):
         if(display == 0):
-            # Toggle between 12/24h format
-            time_format =  not time_format
+            time_format = clock_sub_menu(time_format)
             refresh = 1
-            while(pushed):
-                pos,pushed = encoder.get_state()
-                time.sleep(0.01)
         elif(display == 1):
             # Turn off all lights
             hb_display.display_2lines("Turning all","lights OFF slowly",12)
