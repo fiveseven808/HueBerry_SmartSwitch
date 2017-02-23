@@ -156,6 +156,9 @@ class upgrader(object):
         1754
         Button routines optimized for console
         bug fixes
+
+        2003
+        changed house toggle from 3s to 1.5s 
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

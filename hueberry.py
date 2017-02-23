@@ -1312,9 +1312,7 @@ def user_init_upgrade():
         run it.
             upgrade.hb.py
                 load hb_display module
-
     """
-
     hb_display.display_2lines("Checking for","Updates! :)",15)
     wget_results = os.popen("sudo rm new_upgrade_hb.py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/upgrade_hb.py --output-document=new_upgrade_hb.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
     if wget_results:
@@ -1510,7 +1508,7 @@ def get_scene_total(g_scenesdir,offset):
 
 def clock_sub_menu(time_format):
     # Toggle between 12/24h format
-    result = holding_button(3000,"Toggle 24 hr","Toggle ALL lights",21)
+    result = holding_button(1500,"Toggle 24 hr","Toggle ALL lights",21)
     if (result == 0):
         time_format =  not time_format
     else:
