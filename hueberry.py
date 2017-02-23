@@ -13,6 +13,12 @@ Need a unicode font to display on screen though.
 Making 0.4s a special time for the hueberry scene creator
 Will not specify a transition time so that other thihngs can work
 
+1725 //57
+Rearranged the clock thing... it now does stuff! :D
+Mash the button for 1.5 seconds and it will toggle all the lights in the house
+Not sure how useful this is for people with rooms they don't always use
+But it was a requested feature.
+
 
 v043
 2017-02-18 //57
@@ -1524,14 +1530,13 @@ def clock_sub_menu(time_format):
     if (result == 0):
         time_format =  not time_format
     else:
-        #get light state
-        lights_on,wholejson = get_huejson_value("g",0,"any_on")
-        if(lights_on == True):
-            print("lights were on. not now")
-            #hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+        discard,wholejson = get_huejson_value("g",0,"bri")
+        if(wholejson['state']['any_on'] == True):
+            #print("lights were on. not now")
+            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
         else:
-            print("lights were off. not now")
-            #hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+            #print("lights were off. not now")
+            hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
     return time_format
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think

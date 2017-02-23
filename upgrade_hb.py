@@ -142,10 +142,16 @@ class upgrader(object):
         0.40s Transition time now has no transition time (so it can be used with
         other programs that just turn on lights)
         upgrade_hb.py's updater now updates itself or at least tries to.
-        
+
         1609
         bug fixes for the 0.40s transition time. Apparently the bridge now responds
         to on=false and other things. or maybe it always did... idk.
+
+        1725
+        Rearranged the clock thing... it now does stuff! :D
+        Mash the button for 1.5 seconds and it will toggle all the lights in the house
+        Not sure how useful this is for people with rooms they don't always use
+        But it was a requested feature.
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
