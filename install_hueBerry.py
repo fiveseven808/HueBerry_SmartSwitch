@@ -53,11 +53,11 @@ if(num_groups != 4):
     print(bcolors.RED+"This OS is not Raspbian. It does not meet the directory structure requirements of this installer. Exiting"+bcolors.ENDC)
     sys.exit()
 else:
-    print(bcolors.GRN+"Looks like you're running Rasbian! Good start!"+bcolors.ENDC)   
+    print(bcolors.GRN+"Looks like you're running Rasbian! Good start!"+bcolors.ENDC)
 #shutil.copy(pythondaemon.py,/home/pi/pythondaemon.py)
 
 print(bcolors.BOLD+"Checking required modules. Please wait..."+bcolors.ENDC)
-req_modules = ['pigpio','authenticate','Adafruit_SSD1306','RPi','rotary_encoder','wat']
+req_modules = ['pigpio','authenticate','Adafruit_SSD1306','RPi','rotary_encoder','PIL']
 n2install = []
 for x in req_modules:
     try:
@@ -71,7 +71,7 @@ for x in req_modules:
 print("\r")
 #p = subprocess.Popen('htop')
 #p.wait()
-        
+
 if len(n2install) > 0:
     #something wrong with this function... can't initiate apt-get update for some reason
     print("Looks like we have some requirements! Updating system repo!\n")
@@ -82,7 +82,7 @@ if len(n2install) > 0:
     myrun("apt-get -q update")
     #myrun("apt-get -y -V -q dist-upgrade")
     print("Finished updating system repository\n\n")
-    
+
 #print "test finished"
 #sys.exit()
 
@@ -105,31 +105,36 @@ for x in n2install:
         myrun("sudo pip install RPi.GPIO")
     if x == 'rotary_encoder':
         print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC + "\n\n")
+    if x == 'PIL':
+        try:
+            import PIL
+        except ImportError:
+            myrun("sudo apt-get -y install python-PIL")
         #myrun("echo ididathing && echo doing another thing && echo doing a third thing").read()
         baremetal = baremetal + 1
 
-#print baremetal    
+#print baremetal
 if baremetal > 0:
     print("" + bcolors.BOLD + "Downloading dev branch of hueBerry" + bcolors.ENDC)
     myrun("git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git")
     print("Cloned Repo lol")
-    
 
-finalreadme = """ 
+
+finalreadme = """
 \rHow to run:
     Ensure that I2c is enabled and that the display and rotary encoder are wired up properly
     [Optional] Increase I2c bus
-    [Optional] Disable X and decrease GPU mem to minimum 
+    [Optional] Disable X and decrease GPU mem to minimum
     [Optional] Overclock SD card
     Then run the following commands:
-    
+
     cd HueBerry_SmartSwitch
     sudo pigpiod (if not PiGPIOd is not running already)
     sudo python hueberry.py [&]
 
-&           Sets the program to run in the background 
+&           Sets the program to run in the background
             (You can see more debug messages if you omit this)
-            
-Enjoy! 
+
+Enjoy!
 """
 print(finalreadme)

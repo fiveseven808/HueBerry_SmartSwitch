@@ -19,6 +19,10 @@ Mash the button for 1.5 seconds and it will toggle all the lights in the house
 Not sure how useful this is for people with rooms they don't always use
 But it was a requested feature.
 
+2012-02-24 //57
++ hueberry now works on WSL!
+- Installer doesn't work for WSL yet
++ Added a couple of switches for WSL and no bridge testing
 
 v043
 2017-02-18 //57
@@ -58,43 +62,7 @@ went and optimized the light_control function a little bit... light control can 
 but first g_control and l_control need to be reworked into one function.
 
 
-
-v042
-2017-02-13 1041 //57
-gonna attempt to pull everything into the hueberry_api display modules
-
-1403 //57
-completed! looks good to me! haven't tested it out on actual hardware yet, but i'm liking it so far... gonna do a console interface spinoff just to see what happens
-
-2021 //57
-console display mode and mirror mode now a thing. still no controls. try them out! very cool stuff!
-console mode = redirect all output to console. (but can't control it LOL can control it with hueberry though LOL (but no lcd))
-mirror mode = see exactly what's going on on the screen on the hueberry in the console! emulation!!!
-added a little routine in the beginning to go and download the new hueberry_api.py
-
-2017-02-13 1041 //57
-Seperating classes into their own modules per WPBack's suggestion
-
-
-v041
-2017-02-11 2233 //57
-binarydecision() is finished!
-Pass it a function for the first thing, then a word or so for the "answers"
-We can now cancel scene creation!
-Also added a user initiated update function! it'll go and pull the latest file down from github and compare before installing! Then it'll ask the user based on the binarydecision function!
-Lots of goodies today!
-
-2017-02-12 //57
-Implemeneted InteliDraw with InteliDraw_Test. Word wrap and scrolling is now a thing!
-need to figure out where it goes.
-seperate hueberry_api module is now avaliable! need to integrate it into hueberry.py
-    all major display_* functions have been transferred to that module.
-    runs independently to test all functions. fuck yeah!
-
-
 --------------------
-How to run:
-sudo python hueberry.py [-d]
 http://www.diveintopython.net/scripts_and_streams/command_line_arguments.html
 this is probably a good reference on how to program this in the future
 --------------------
@@ -113,13 +81,17 @@ nothing found?
 def print_usage():
     usage = """
     How to run:
-        sudo python hueberry.py [-d] [-h,--help]
+        sudo python hueberry.py [-d] [-m] [-nb] [-wsl] [-h,--help]
 
     -d          Sets the program to output and take input from the console
                 (input does not work yet)
 
     -m          Turns on mirror mode. Outputs to the
                 display as well as the terminal.
+
+    -nb         No Bridge mode. Run this if debugging with no bridge
+
+    -wsl        Disables weird logging (quick fix for Windows Subsystem for Linux)
 
     -h,--help   Displays this help text
     """
@@ -142,13 +114,20 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 print "Finished! hopefully this will work!"
 
 import sys
+#Defaults
 debug_argument = 0
 mirror_mode = 0
+bridge_present = 1
+wsl_env = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
     if arg == '-m':
         mirror_mode = 1
+    if arg == "-nb":
+        bridge_present = 0
+    if arg == '-wsl':
+        wsl_env = 1
     if arg in ("-h","--help"):
         print_usage()
         sys.exit()
@@ -173,7 +152,10 @@ import hb_encoder
 
 
 global logfile
-logfile = "/home/pi/hueberry.log"
+if wsl_env == 0:
+    logfile = "/home/pi/hueberry.log"
+else:
+    logfile = "~/hueberry.log"
 
 global debug_state
 debug_state = 1
@@ -1429,12 +1411,13 @@ def user_init_upgrade():
 def debugmsg(message):
     global logfile
     global debug_state
-    if debug_state == 1:
-        current_time = time.strftime("%m / %d / %Y %-H:%M")
-        with open(logfile, "a") as myfile:
-            myfile.write(current_time + " " + message + "\n")
-    else:
-        return
+    if wsl_env == 0:
+        if debug_state == 1:
+            current_time = time.strftime("%m / %d / %Y %-H:%M")
+            with open(logfile, "a") as myfile:
+                myfile.write(current_time + " " + message + "\n")
+        else:
+            return
 
 def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #If this function is activated, then we're checking for the button being held
@@ -1609,27 +1592,36 @@ check_wifi_file(maindirectory)
 #Search to see if an api key exists, if not, get it.
 if os.path.isfile('./auth.json') == False:
     hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
-    time.sleep(5)
-    while True:
-        hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
-        pos,pushed = encoder.get_state()
-        if(pushed):
-            break
-        time.sleep(0.01)
-    hb_display.display_custom("Pairing...")
-    ip = authenticate.search_for_bridge()
-    authenticate.authenticate('hueBerry',ip)
-    #authenticate.load_creds()
-    #api_key = authenticate.api_key
-    #bridge_ip = authenticate.bridge_ip
-    hb_display.display_2lines("Link Successful!",bridge_ip,12)
-    #time.sleep(1)
-#After a credential file exists
-authenticate.load_creds()
-api_key = authenticate.api_key
-bridge_ip = authenticate.bridge_ip
-api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
-hb_display.display_2lines("Link Established!",bridge_ip,12)
+    if bridge_present == 1:
+        time.sleep(5)
+        while True:
+            hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
+            pos,pushed = encoder.get_state()
+            if(pushed):
+                break
+            time.sleep(0.01)
+        hb_display.display_custom("Pairing...")
+        ip = authenticate.search_for_bridge()
+        authenticate.authenticate('hueBerry',ip)
+        #authenticate.load_creds()
+        #api_key = authenticate.api_key
+        #bridge_ip = authenticate.bridge_ip
+        hb_display.display_2lines("Link Successful!",bridge_ip,12)
+        #time.sleep(1)
+    else:
+        time.sleep(1)
+if bridge_present == 1:
+    #After a credential file exists
+    authenticate.load_creds()
+    api_key = authenticate.api_key
+    bridge_ip = authenticate.bridge_ip
+    api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
+    hb_display.display_2lines("Link Established!",bridge_ip,12)
+else:
+    api_key = "null"
+    bridge_ip = "127.0.0.1"
+    api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
+    hb_display.display_2lines("FAKE Link Established!",bridge_ip,12)
 time.sleep(0.5)
 
 #----------------- set variables---------------

@@ -1,4 +1,3 @@
-import Adafruit_SSD1306
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -16,6 +15,7 @@ class display(object):
         self.console = console
         self.mirror = mirror
         if (self.console == 0 or self.mirror == 1):
+            import Adafruit_SSD1306
             self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
             self.disp.begin()
             self.width = self.disp.width

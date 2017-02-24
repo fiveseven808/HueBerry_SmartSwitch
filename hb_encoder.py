@@ -1,17 +1,13 @@
-import curses
-
-import RPi.GPIO as GPIO
-import pigpio
-import rotary_encoder
+#import curses
 import time
 
 
 """
-All this class does is instantiate an instance of rotary_encoder 
-so that all other hueBerry functions can reference this instance 
-and check the pos variable. This avoids globals becuase the pos 
-variable is specific to the object, and cannot be changed via 
-other means. 
+All this class does is instantiate an instance of rotary_encoder
+so that all other hueBerry functions can reference this instance
+and check the pos variable. This avoids globals becuase the pos
+variable is specific to the object, and cannot be changed via
+other means.
 
 
 Maybe I want it so that I have something like
@@ -32,22 +28,25 @@ class rotary(object):
         self.enc_button = enc_button
         #Set the debug level
         self.debug = debug
-        self.pos = 0 
+        self.pos = 0
         self.pushed = 0
         if (self.debug == 0):
+            import RPi.GPIO as GPIO
+            import pigpio
+            import rotary_encoder
             #Setup the rotary encoder module (lol idk what it does)
             self.pi = pigpio.pi()
             self.decoder = rotary_encoder.decoder(self.pi, self.enc_plus, self.enc_minus, self.callback)
             #Set the GPIO parameters for the push switch pin
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.enc_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    
+
     def callback(self,way):
         #This function updates object scoped variables
         self.pos += way
         if (self.debug == 1):
             print("pos={}".format(self.pos))
-    
+
     def get_state(self):
         #This function updates object scoped variables
         self.pushed = 0
@@ -56,15 +55,15 @@ class rotary(object):
         if (self.debug == 0):
             self.pushed = self.gpio_input()
         return self.pos,self.pushed
-    
+
     def gpio_input(self):
         if (not GPIO.input(self.enc_button)):
             #The button is pushed
             pushed = 1
         elif (GPIO.input(self.enc_button)):
-            pushed = 0 
+            pushed = 0
         return pushed
-    
+
     def query_console(self):
         #do a thing querying the console. it's fine if it stops everything
         #right now i just want something that works
@@ -76,10 +75,10 @@ class rotary(object):
         #if right:
         if(command == '.'):
             self.callback(1)
-        #if enter: 
+        #if enter:
         if(command == '/'):
             self.pushed = 1
-        
+
     def wait_for_button_release(self):
         while(self.pushed):
             #just wait lol
@@ -87,7 +86,7 @@ class rotary(object):
             time.sleep(0.01)
         return
 
-        
+
 class control(object):
     def __init__(self):
         # get the curses screen window
@@ -108,10 +107,10 @@ class control(object):
             #screen.addstr(0, 0, 'right')
             return "right"
         elif char == curses.KEY_LEFT:
-            #screen.addstr(0, 0, 'left ')  
+            #screen.addstr(0, 0, 'left ')
             return "left"
         elif char == curses.KEY_UP:
-            #screen.addstr(0, 0, 'up   ') 
+            #screen.addstr(0, 0, 'up   ')
             return "up"
         elif char == curses.KEY_DOWN:
             #screen.addstr(0, 0, 'down ')
@@ -119,8 +118,8 @@ class control(object):
         elif char == curses.KEY_ENTER:
             #screen.addstr(0, 0, 'enter ')
             return "enter"
-            
-            
+
+
 if __name__ == "__main__":
     import time
     import hb_encoder
