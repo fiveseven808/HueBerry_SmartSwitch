@@ -29,8 +29,9 @@ class display(object):
             self.width = 128
         self.time_format = True
 
-    def display_time(self):
+    def display_time(self,time_format):
         # Collect current time and date
+        self.time_format = time_format
         if(self.time_format):
             current_time = time.strftime("%-I:%M")
         else:
@@ -291,12 +292,11 @@ class display(object):
             time.sleep(0.01)
         time.sleep(1)
 
-    def display_max_text(self,text,centered=0):
+    def display_max_text(self,text,centered=0,offset = 0):
         lines,tmp,h,total_h = self.IntelliDraw(self.draw,text,self.font,self.width)
-        j = 0
+        j = offset
         self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
         offset = 0
-        j = 0
         for i in lines:
             #Line Centering code
             if(centered == 1):
