@@ -7,6 +7,7 @@ Updater is now a seperate file/class and even uses the display library (which me
 Keeping this API/library level for encoder and display for now. Future updater modules will not use any extended functions.
 FULL update required
 Oh, and unicode support has been added to support scene creation
+
 Need a unicode font to display on screen though.
 
 1313 //57
@@ -18,6 +19,9 @@ Rearranged the clock thing... it now does stuff! :D
 Mash the button for 1.5 seconds and it will toggle all the lights in the house
 Not sure how useful this is for people with rooms they don't always use
 But it was a requested feature.
+
+Need a unicode font to display on screen though. 
+
 
 
 v043
@@ -1441,6 +1445,7 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #ex: result = holding_button(500,"hold to activate","activating",21)
     held_down = 0
     prev_mills = int(round(time.time() * 1000))
+
     #pos,pushed = encoder.get_state()
     pushed = 1
     while(pushed):
