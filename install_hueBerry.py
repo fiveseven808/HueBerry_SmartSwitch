@@ -3,10 +3,9 @@ Python installer for hueberry. Probably not the best thing in the world...
 """
 import sys
 import os
-import shutil
+#import shutil
 #import imp
 import subprocess
-import shlex
 
 def myrun(cmd):
     """from http://blog.kagesenshi.org/2008/02/teeing-python-subprocesspopen-output.html
@@ -21,17 +20,8 @@ def myrun(cmd):
             break
     return ''.join(stdout)
 
-def run_command(command):
-    process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-    while True:
-        output = process.stdout.readline()
-        if output == '' and process.poll() is not None:
-            break
-        if output:
-            print output.strip()
-    rc = process.poll()
-    return rc
 
+#Installer shold be self contained so don't import this. Just create it here
 class bcolors:
     PRPL = '\033[95m'
     BLU = '\033[94m'

@@ -14,7 +14,7 @@ import sys
 
 class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
-        self.req_modules = ['hb_display','hb_encoder','hueberry']
+        self.req_modules = ['hb_display','hb_encoder','hueberry','console_colors']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -101,6 +101,8 @@ class upgrader(object):
                 self.download_hb_module(x)
             if x == 'hueberry':
                 self.download_hb_module(x)
+            if x == 'console_colors':
+                self.download_hb_module(x)
         #print baremetal
 
     def download_hb_module(self,module):
@@ -136,6 +138,8 @@ class upgrader(object):
             + Added a couple of switches for WSL and no bridge testing
         1403 //57
             + Fixed the updater function and display libraries to work in console mode better (doesn't affect prod)
+            + Bug fixes. hb_encoder was a bit broken, now autodetects OS and loads appropriately (win vs linux)
+            + Created a console_colors class so I can add it everywhere without having to write all of that in 
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

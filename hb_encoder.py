@@ -1,6 +1,23 @@
 #import curses
 import time
+import os
+import console_colors
+import sys
+bcolors = console_colors.bcolors
 
+#Check if Raspbian
+temp = os.popen("cat /etc/os-release | grep raspbian").read()
+result_array = temp.split('\n')
+num_groups = len(result_array) - 1
+if(num_groups != 4):
+    print(bcolors.RED+"This OS is not Raspbian. RPi specific modules will not be loaded."+bcolors.ENDC)
+    time.sleep(1)
+    #sys.exit()
+else:
+    print(bcolors.GRN+"Looks like you're running Rasbian! Loading RPi specific modules!"+bcolors.ENDC)
+    import RPi.GPIO as GPIO
+    import pigpio
+    import rotary_encoder
 
 """
 All this class does is instantiate an instance of rotary_encoder
@@ -31,9 +48,6 @@ class rotary(object):
         self.pos = 0
         self.pushed = 0
         if (self.debug == 0):
-            import RPi.GPIO as GPIO
-            import pigpio
-            import rotary_encoder
             #Setup the rotary encoder module (lol idk what it does)
             self.pi = pigpio.pi()
             self.decoder = rotary_encoder.decoder(self.pi, self.enc_plus, self.enc_minus, self.callback)
@@ -67,7 +81,7 @@ class rotary(object):
     def query_console(self):
         #do a thing querying the console. it's fine if it stops everything
         #right now i just want something that works
-        command = raw_input("Enter a command (Scroll Left[,], Scroll Right[.], Button Press[/]) then send with [Enter]: ")
+        command = raw_input("Enter a command | Exit with: [q]\nScroll Left[,] Scroll Right[.] Button Press[/]\nThen send with [Enter]: ")
         #print command
         #if left:
         if(command == ','):
@@ -78,6 +92,9 @@ class rotary(object):
         #if enter:
         if(command == '/'):
             self.pushed = 1
+        #if q:
+        if(command == 'q'):
+            sys.exit()
 
     def wait_for_button_release(self):
         while(self.pushed):
