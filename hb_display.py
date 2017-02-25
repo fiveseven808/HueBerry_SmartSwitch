@@ -20,13 +20,14 @@ class display(object):
             self.disp.begin()
             self.width = self.disp.width
             self.height = self.disp.height
-            self.image = Image.new('1', (self.width, self.height))
-            self.font = ImageFont.load_default()
-            self.draw = ImageDraw.Draw(self.image)
         else:
             #console specific initiation goes here
             #Adafruit OLED library standard width for string calculation
             self.width = 128
+            self.height = 64
+        self.image = Image.new('1', (self.width, self.height))
+        self.font = ImageFont.load_default()
+        self.draw = ImageDraw.Draw(self.image)
         self.time_format = True
 
     def display_time(self,time_format):

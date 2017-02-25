@@ -130,40 +130,12 @@ class upgrader(object):
         finalreadme = """
     \rUpgrade level: v044-20170222-1233
     //57
-        20170222-1158
-        Added Unicode Support
-            Scenes now are generated properly with unicode light names
-        Unicode Display support currently untested
-
-        20170222-1233
-        Final Readme is now easier to read
-
-        1330
-        0.40s Transition time now has no transition time (so it can be used with
-        other programs that just turn on lights)
-        upgrade_hb.py's updater now updates itself or at least tries to.
-
-        1609
-        bug fixes for the 0.40s transition time. Apparently the bridge now responds
-        to on=false and other things. or maybe it always did... idk.
-
-        1725
-        Rearranged the clock thing... it now does stuff! :D
-        Mash the button for 1.5 seconds and it will toggle all the lights in the house
-        Not sure how useful this is for people with rooms they don't always use
-        But it was a requested feature.
-
-        1754
-        Button routines optimized for console
-        bug fixes
-
-        2003
-        changed house toggle from 3s to 1.5s
-
-        2233
-        added scene explorer function template. not yet linked
-        also modified hb_display. gave the auto resize function an offset
-        integrated the holding button thing to use that new thing instead of custom
+        2012-02-24 //57
+            + hueberry now works on WSL!
+            - Installer doesn't work for WSL yet
+            + Added a couple of switches for WSL and no bridge testing
+        1403 //57
+            + Fixed the updater function and display libraries to work in console mode better (doesn't affect prod)
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

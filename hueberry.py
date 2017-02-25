@@ -20,9 +20,11 @@ Not sure how useful this is for people with rooms they don't always use
 But it was a requested feature.
 
 2012-02-24 //57
-+ hueberry now works on WSL!
-- Installer doesn't work for WSL yet
-+ Added a couple of switches for WSL and no bridge testing
+    + hueberry now works on WSL!
+    - Installer doesn't work for WSL yet
+    + Added a couple of switches for WSL and no bridge testing
+1403 //57
+    + Fixed the updater function and display libraries to work in console mode better (doesn't affect prod)
 
 v043
 2017-02-18 //57
@@ -81,19 +83,21 @@ nothing found?
 def print_usage():
     usage = """
     How to run:
-        sudo python hueberry.py [-d] [-m] [-nb] [-wsl] [-h,--help]
+        sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [-h,--help]
 
-    -d          Sets the program to output and take input from the console
-                (input does not work yet)
+    -d              Sets the program to output and take input from the console
+                    (input does not work yet)
 
-    -m          Turns on mirror mode. Outputs to the
-                display as well as the terminal.
+    -m              Turns on mirror mode. Outputs to the
+                    display as well as the terminal.
 
-    -nb         No Bridge mode. Run this if debugging with no bridge
+    -s,--simulate   Set the updater to simulate mode ( no changes made )
 
-    -wsl        Disables weird logging (quick fix for Windows Subsystem for Linux)
+    -nb             No Bridge mode. Run this if debugging with no bridge
 
-    -h,--help   Displays this help text
+    -wsl            Disables weird logging (quick fix for Windows Subsystem for Linux)
+
+    -h,--help       Displays this help text
     """
     print(usage)
 
@@ -119,6 +123,7 @@ debug_argument = 0
 mirror_mode = 0
 bridge_present = 1
 wsl_env = 0
+simulation_arg = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -128,6 +133,8 @@ for arg in sys.argv:
         bridge_present = 0
     if arg == '-wsl':
         wsl_env = 1
+    if arg in ("-s","--simulate"):
+        simulation_arg = 1
     if arg in ("-h","--help"):
         print_usage()
         sys.exit()
@@ -1395,7 +1402,7 @@ def user_init_upgrade():
             #Legacy switch, currently does nothing...
             upgrader = new_upgrade_hb.upgrader(legacy = 1)
         else:
-            upgrader = new_upgrade_hb.upgrader()
+            upgrader = new_upgrade_hb.upgrader(console = debug_argument,simulate = simulation_arg)
         #upgrader = upgrade_hb.upgrader(simulate = 1)
         #Do a blind upgrade lol don't even check
         #upgrader.check_modules_exist()
