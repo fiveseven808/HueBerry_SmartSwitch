@@ -62,3 +62,9 @@ Temporary Items
 
 #Python Complied files
 *.pyc
+
+#hueBerry files
+auth.json
+groups
+lights
+*.log

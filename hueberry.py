@@ -1610,11 +1610,6 @@ if os.path.isfile('./auth.json') == False:
         hb_display.display_custom("Pairing...")
         ip = authenticate.search_for_bridge()
         authenticate.authenticate('hueBerry',ip)
-        #authenticate.load_creds()
-        #api_key = authenticate.api_key
-        #bridge_ip = authenticate.bridge_ip
-        hb_display.display_2lines("Link Successful!",bridge_ip,12)
-        #time.sleep(1)
     else:
         time.sleep(1)
 if bridge_present == 1:
