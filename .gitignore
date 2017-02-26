@@ -64,7 +64,7 @@ Temporary Items
 *.pyc
 
 #hueBerry files
-auth.json
+auth.*
 groups
 lights
 *.log

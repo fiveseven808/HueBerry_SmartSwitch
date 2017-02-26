@@ -139,7 +139,10 @@ class upgrader(object):
         1403 //57
             + Fixed the updater function and display libraries to work in console mode better (doesn't affect prod)
             + Bug fixes. hb_encoder was a bit broken, now autodetects OS and loads appropriately (win vs linux)
-            + Created a console_colors class so I can add it everywhere without having to write all of that in 
+            + Created a console_colors class so I can add it everywhere without having to write all of that in
+        2012-02-26 //57
+            + Flashlight_mode now works again
+            - WSL running Ubuntu 14.04 confirmed not working with requests module... need cURL implementation
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

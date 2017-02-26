@@ -74,7 +74,7 @@ class rotary(object):
         if (not GPIO.input(self.enc_button)):
             #The button is pushed
             pushed = 1
-        elif (GPIO.input(self.enc_button)):
+        else:
             pushed = 0
         return pushed
 

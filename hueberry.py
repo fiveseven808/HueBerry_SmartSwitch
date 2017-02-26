@@ -1069,6 +1069,7 @@ def restart_hueberry():
 def flashlight_mode():
     pos,pushed = encoder.get_state()
     while True:
+        pos,pushed = encoder.get_state()
         if(pushed == 0):
             break
     hb_display.draw_flashlight()
