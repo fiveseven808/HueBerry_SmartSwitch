@@ -68,3 +68,4 @@ auth.json
 groups
 lights
 *.log
+new_upgrade_hb.py
