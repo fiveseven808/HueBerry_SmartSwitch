@@ -149,7 +149,10 @@ if debug_argument != 1:
 
 import threading
 import time
-import authenticate
+
+#import authenticate
+import authenticate_c
+
 import json
 import colorsys
 import math
@@ -1597,23 +1600,34 @@ check_wifi_file(maindirectory)
 
 
 #--------------------------------------------------
+authenticate = authenticate_c.authenticate()
 #Search to see if an api key exists, if not, get it.
 if os.path.isfile('./auth.json') == False:
     hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
     if bridge_present == 1:
         time.sleep(5)
-        while True:
-            hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
-            pos,pushed = encoder.get_state()
-            if(pushed):
-                break
-            time.sleep(0.01)
-        hb_display.display_custom("Pairing...")
+        msg = "Searching for hue Bridges"
+        hb_display.display_max_text(msg,centered = 1,offset = 2)
         ip = authenticate.search_for_bridge()
-        authenticate.authenticate('hueBerry',ip)
+        if not ip:
+            msg = "No Bridges found. Continuing in HB Utility Mode"
+            print(msg)
+            hb_display.display_max_text(msg,centered = 1,offset = 1)
+            hbutil = 1
+            time.sleep(5)
+        else:
+            hbutil = 0
+            while True:
+                hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
+                pos,pushed = encoder.get_state()
+                if(pushed):
+                    break
+                time.sleep(0.01)
+            hb_display.display_custom("Pairing...")
+            authenticate.authenticate('hueBerry',ip)
     else:
         time.sleep(1)
-if bridge_present == 1:
+if bridge_present == 1 and hbutil == 0:
     #After a credential file exists
     authenticate.load_creds()
     api_key = authenticate.api_key
