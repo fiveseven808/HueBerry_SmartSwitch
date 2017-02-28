@@ -14,7 +14,7 @@ import sys
 
 class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
-        self.req_modules = ['hb_display','hb_encoder','hueberry','console_colors']
+        self.req_modules = ['hb_display','hb_encoder','hueberry','console_colors','authenticate']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -103,6 +103,8 @@ class upgrader(object):
                 self.download_hb_module(x)
             if x == 'console_colors':
                 self.download_hb_module(x)
+            if x == 'authenticate':
+                self.download_hb_module(x)
         #print baremetal
 
     def download_hb_module(self,module):
@@ -130,7 +132,7 @@ class upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v044-20170222-1233
+    \rUpgrade level: v044-20170228
     //57
         2012-02-24 //57
             + hueberry now works on WSL!
@@ -143,6 +145,12 @@ class upgrader(object):
         2012-02-26 //57
             + Flashlight_mode now works again
             - WSL running Ubuntu 14.04 confirmed not working with requests module... need cURL implementation
+        02-28 //57
+            + authenticate.py is now a class, and can be called by itself
+            + Minimum requirements for authenticate.py have been identified and noted
+            + Bridge detection code has been sorted out. hueBerry will go into an unfinished "Utility Mode"
+                If no bridge has been detected on boot. This means that the hueberry can function without an
+                auth.json file. 
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
