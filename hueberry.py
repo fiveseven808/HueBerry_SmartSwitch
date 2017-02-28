@@ -1601,6 +1601,7 @@ check_wifi_file(maindirectory)
 #--------------------------------------------------
 authenticate = authenticate.authenticate()
 #Search to see if an api key exists, if not, get it.
+hbutil = 0
 if os.path.isfile('./auth.json') == False:
     hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
     if bridge_present == 1:

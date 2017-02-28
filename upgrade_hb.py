@@ -150,7 +150,8 @@ class upgrader(object):
             + Minimum requirements for authenticate.py have been identified and noted
             + Bridge detection code has been sorted out. hueBerry will go into an unfinished "Utility Mode"
                 If no bridge has been detected on boot. This means that the hueberry can function without an
-                auth.json file. 
+                auth.json file.
+            + 1000 bug fix
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
