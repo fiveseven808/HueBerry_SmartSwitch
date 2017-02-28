@@ -83,7 +83,7 @@ nothing found?
 def print_usage():
     usage = """
     How to run:
-        sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [-h,--help]
+        sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [util] [-h,--help]
 
     -d              Sets the program to output and take input from the console
                     (input does not work yet)
@@ -96,6 +96,9 @@ def print_usage():
     -nb             No Bridge mode. Run this if debugging with no bridge
 
     -wsl            Disables weird logging (quick fix for Windows Subsystem for Linux)
+
+    -util           Turns on HB-Utility mode. No hue related options avaliable.
+                    Faster boot time too
 
     -h,--help       Displays this help text
     """
@@ -133,6 +136,9 @@ for arg in sys.argv:
         bridge_present = 0
     if arg == '-wsl':
         wsl_env = 1
+    if arg == '-util':
+        wsl_env = 1
+        bridge_present = 0
     if arg in ("-s","--simulate"):
         simulation_arg = 1
     if arg in ("-h","--help"):
@@ -958,29 +964,45 @@ def sat_control(device,mode):
 #-------------------------------------------------------------------
 #---------------Settings Menu and stuff-----------------------------
 #-------------------------------------------------------------------
-def pair_hue_bridge():
-    pos = 0
+#Search to see if an api key exists, if not, get it.
+def pair_hue_bridge(bridge_present = 1,hbutil = 0):
     if os.path.isfile('./auth.json') == False:
-        while True:
-            hb_display.display_3lines("Attempting Link","Push Bridge button" ,"Then push this button",11,offset = 15)
-            pos,pushed = encoder.get_state()
-            if(pushed):
-                break
-        hb_display.display_custom("doing a thing...")
-        ip = authenticate.search_for_bridge()
-        authenticate.authenticate('hueBerry',ip)
-        authenticate.load_creds()
-        api_key = authenticate.api_key
-        bridge_ip = authenticate.bridge_ip
-        hb_display.display_2lines("Link Successful",bridge_ip,12)
-        time.sleep(1)
-    else:
+        hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
+        if bridge_present == 1:
+            time.sleep(5)
+            msg = "Searching for hue Bridges"
+            hb_display.display_max_text(msg,centered = 1,offset = 2)
+            ip = authenticate.search_for_bridge()
+            if not ip:
+                msg = "No Bridges found. Continuing in HB Utility Mode"
+                print(msg)
+                hb_display.display_max_text(msg,centered = 1,offset = 1)
+                hbutil = 1
+                time.sleep(5)
+            else:
+                hbutil = 0
+                while True:
+                    hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
+                    pos,pushed = encoder.get_state()
+                    if(pushed):
+                        break
+                    time.sleep(0.01)
+                hb_display.display_custom("Pairing...")
+                authenticate.authenticate('hueBerry',ip)
+    if bridge_present == 1 and hbutil == 0:
+        #After a credential file exists
         authenticate.load_creds()
         api_key = authenticate.api_key
         bridge_ip = authenticate.bridge_ip
         api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
-        hb_display.display_2lines("Already Paired!",bridge_ip,12)
-        time.sleep(1)
+        hb_display.display_2lines("Link Established!",bridge_ip,12)
+    else:
+        api_key = "null"
+        bridge_ip = "127.0.0.1"
+        api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
+        hb_display.display_2lines("FAKE Link Established!",bridge_ip,12)
+    time.sleep(0.5)
+    return api_url,bridge_ip
 
 def devinfo_screen():
     time.sleep(.25)
@@ -1045,6 +1067,10 @@ def devinfo_screen():
 def get_hue_devinfo():
     hb_display.display_custom("loading groups...")
     name_array,total,lstate_a,keyvalues = get_group_names()
+    if not keyvalues:
+        hb_display.display_max_text("Looks like you aren't connected to a bridge...           Returning...",offset = 1)
+        time.sleep(1)
+        return
     maxgroupid = keyvalues[total-1]
     hb_display.display_custom("loading lights...")
     name_array,num_lights,lstate_a,total = get_light_names()
@@ -1600,46 +1626,9 @@ check_wifi_file(maindirectory)
 
 #--------------------------------------------------
 authenticate = authenticate.authenticate()
-#Search to see if an api key exists, if not, get it.
-hbutil = 0
-if os.path.isfile('./auth.json') == False:
-    hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
-    if bridge_present == 1:
-        time.sleep(5)
-        msg = "Searching for hue Bridges"
-        hb_display.display_max_text(msg,centered = 1,offset = 2)
-        ip = authenticate.search_for_bridge()
-        if not ip:
-            msg = "No Bridges found. Continuing in HB Utility Mode"
-            print(msg)
-            hb_display.display_max_text(msg,centered = 1,offset = 1)
-            hbutil = 1
-            time.sleep(5)
-        else:
-            hbutil = 0
-            while True:
-                hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
-                pos,pushed = encoder.get_state()
-                if(pushed):
-                    break
-                time.sleep(0.01)
-            hb_display.display_custom("Pairing...")
-            authenticate.authenticate('hueBerry',ip)
-    else:
-        time.sleep(1)
-if bridge_present == 1 and hbutil == 0:
-    #After a credential file exists
-    authenticate.load_creds()
-    api_key = authenticate.api_key
-    bridge_ip = authenticate.bridge_ip
-    api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
-    hb_display.display_2lines("Link Established!",bridge_ip,12)
-else:
-    api_key = "null"
-    bridge_ip = "127.0.0.1"
-    api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
-    hb_display.display_2lines("FAKE Link Established!",bridge_ip,12)
-time.sleep(0.5)
+
+
+api_url,bridge_ip = pair_hue_bridge(bridge_present = bridge_present)
 
 #----------------- set variables---------------
 #global pos
