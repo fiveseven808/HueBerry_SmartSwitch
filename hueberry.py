@@ -150,8 +150,7 @@ if debug_argument != 1:
 import threading
 import time
 
-#import authenticate
-import authenticate_c
+import authenticate
 
 import json
 import colorsys
@@ -1600,7 +1599,7 @@ check_wifi_file(maindirectory)
 
 
 #--------------------------------------------------
-authenticate = authenticate_c.authenticate()
+authenticate = authenticate.authenticate()
 #Search to see if an api key exists, if not, get it.
 if os.path.isfile('./auth.json') == False:
     hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
