@@ -38,7 +38,7 @@ If the debug variable wasn't set then it'll just pull the pos value from the obj
     It'll go and then immediately check if the button is being pushed
 """
 class rotary(object):
-    def __init__(self,debug = 0,enc_plus = 16, enc_minus = 20,enc_button = 21):
+    def __init__(self,debug = 0,enc_plus = 16, enc_minus = 20,enc_button = 21,no_encoder = 0):
         #Set the encoder + and - pins and push switch pin
         self.enc_plus = enc_plus
         self.enc_minus = enc_minus
@@ -47,6 +47,7 @@ class rotary(object):
         self.debug = debug
         self.pos = 0
         self.pushed = 0
+        self.noencoder = no_encoder
         if (self.debug == 0):
             #Setup the rotary encoder module (lol idk what it does)
             self.pi = pigpio.pi()
@@ -64,10 +65,13 @@ class rotary(object):
     def get_state(self):
         #This function updates object scoped variables
         self.pushed = 0
-        if (self.debug == 1):
-            self.query_console()
-        if (self.debug == 0):
-            self.pushed = self.gpio_input()
+        if no_encoder == 0:
+            if (self.debug == 1):
+                self.query_console()
+            if (self.debug == 0):
+                self.pushed = self.gpio_input()
+        elif no_encoder == 1:
+            self.query_3_buttons()
         return self.pos,self.pushed
 
     def gpio_input(self):
@@ -95,6 +99,16 @@ class rotary(object):
         #if q:
         if(command == 'q'):
             sys.exit()
+
+    def query_3_buttons(self):
+        if (not GPIO.input(self.undefinedvalue_down)):
+            self.callback(-1)
+        #if right:
+        if (not GPIO.input(self.undefinedvalue_up)):
+            self.callback(1)
+        #if enter:
+        if (not GPIO.input(self.undefinedvalue_pushed)):
+            self.pushed = 1
 
     def wait_for_button_release(self):
         while(self.pushed):
