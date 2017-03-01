@@ -70,7 +70,7 @@ class rotary(object):
                 self.query_console()
             if (self.debug == 0):
                 self.pushed = self.gpio_input()
-        elif no_encoder == 1:
+        elif self.no_encoder == 1:
             self.query_3_buttons()
         return self.pos,self.pushed
 
