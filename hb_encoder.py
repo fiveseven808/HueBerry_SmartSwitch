@@ -47,7 +47,7 @@ class rotary(object):
         self.debug = debug
         self.pos = 0
         self.pushed = 0
-        self.noencoder = no_encoder
+        self.no_encoder = no_encoder
         if (self.debug == 0):
             #Setup the rotary encoder module (lol idk what it does)
             self.pi = pigpio.pi()
@@ -65,7 +65,7 @@ class rotary(object):
     def get_state(self):
         #This function updates object scoped variables
         self.pushed = 0
-        if no_encoder == 0:
+        if self.no_encoder == 0:
             if (self.debug == 1):
                 self.query_console()
             if (self.debug == 0):
