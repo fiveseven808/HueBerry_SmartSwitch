@@ -15,6 +15,7 @@ class HueAPI(object):
         #Set the debug level
         self.debug = debug
         self.fakeauth = fakeauth
+        self.errorlevel = 0 # Reset errorlevel to success which is 0
         if (self.debug == 0):
             pass
 
@@ -68,11 +69,9 @@ class HueAPI(object):
         os.popen("rm brite")
         if not value:
             if(g_or_l == "l"):
-                #hb_display.display_2lines("No devices","in lights",17)
-                pass
+                self.errorlevel = "GHV_ND_L"
             if(g_or_l == "g"):
-                #hb_display.display_2lines("No devices","in groups",17)
-                pass
+                self.errorlevel = "GHV_ND_G"
             #time.sleep(3)
             value = -1
         return value,wholejson
@@ -92,8 +91,8 @@ class HueAPI(object):
             retry = 1
             while not cmdout:
                 if retry >= 3:
-                    #hb_display.display_2lines("An error in ","get_group_name",15)
                     self.debugmsg("error in get_group_names probably lost connection to hub")
+                    self.errorlevel = "GGN_nocmdout"
                     time.sleep(2)
                     return 0,0,0,0
                     break
@@ -258,6 +257,26 @@ class HueAPI(object):
             print(current_time + " " + message + "\n")
         else:
             return
+
+    def error_handler(self):
+        #interpret self.errorlevel and print out a statement.
+        #This will be a template for other programs that want to
+        #interpret the Hue_API error level and act on them
+        for x in self.errorlevel:
+            if self.errorlevel == 0:
+                #Do nothing since there is no error
+                pass
+            if self.errorlevel == "GHV_ND_L":
+                #hb_display.display_2lines("No devices","in lights",17)
+                print("Errror: No devices in Lights")
+            if self.errorlevel == "GHV_ND_G":
+                #hb_display.display_2lines("No devices","in groups",17)
+                print("Errror: No devices in Groups")
+            if self.errorlevel == "GGN_nocmdout":
+                #hb_display.display_2lines("An error in ","get_group_name",15)
+                print("Error: in get_group_names. Probably lost connection to hub")
+        self.errorlevel_old = self.errorlevel
+        self.errorlevel = 0 # Reset Error level
 
 if __name__ == "__main__":
     import hb_hue
