@@ -40,7 +40,7 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
   * pigpio library
   * SSD1306 compatible display (128x64 resolution)
   * Rotary encoder switch thing
-  * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hC ld2env4vI/edit?usp=sharing)
+  * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hCld2env4vI/edit?usp=sharing)
 
 ## Instructions as of 2/7/17
 
@@ -69,6 +69,9 @@ The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY recor
     * If API key doesn't work on boot, self troubleshoot and see if communication to bridge is bad or API key is bad?
   * Multiple bridge support (looks like the N-UPnP discovery method supports it)
     * Whole house scenes spanning multiple bridges (for those lucky enough to have that problem lol)
+  * This project will be shortly branched into a general toolkit and IoT menu platform for Raspberry Pi Zeros (although all Pis can make use of it)
+    * The plan involves creating a custom distribution with all of the required files preloaded so that you can get a pi connected to WiFi with just a screen and a rotary encoder. No HDMI tv or USB widget fussing around necessary!
+    * This is particularly useful if you find yourself in a situation where you don't have a computer to get started, but you own a smartphone and have an SSH or VNC app on it!
 
 
 
