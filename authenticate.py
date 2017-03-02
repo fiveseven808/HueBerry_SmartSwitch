@@ -8,7 +8,7 @@ import json
 import os
 import requests
 
-class authenticate(object):
+class Authenticate(object):
     def __init__(self,authfile = None):
         self.USERNAME_SAVE_PATH = authfile or 'auth.json'
         self.api_key = ""

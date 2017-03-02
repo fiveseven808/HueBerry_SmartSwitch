@@ -28,7 +28,7 @@ other means.
 
 
 Maybe I want it so that I have something like
-rotary = hb_encoder.rotary(debug = 1)
+rotary = hb_encoder.RotaryClass(debug = 1)
 And then in every function I'll have it check to see if a state has changed by doing
 pos,pushed = rotary.get_state()
 
@@ -37,7 +37,7 @@ If the debug variable was set then it'll go and pull a value from the console
 If the debug variable wasn't set then it'll just pull the pos value from the object scope variable
     It'll go and then immediately check if the button is being pushed
 """
-class rotary(object):
+class RotaryClass(object):
     def __init__(self,debug = 0,enc_plus = 16, enc_minus = 20,enc_button = 21,no_encoder = 0):
         #Set the encoder + and - pins and push switch pin
         self.enc_plus = enc_plus
@@ -154,7 +154,7 @@ class control(object):
 if __name__ == "__main__":
     import time
     import hb_encoder
-    test = hb_encoder.rotary(debug = 1)
+    test = hb_encoder.RotaryClass(debug = 1)
     test.callback(1)
     time.sleep(.5)
     test.callback(1)

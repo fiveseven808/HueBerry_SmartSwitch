@@ -1608,9 +1608,9 @@ else:
 
 # Create Encoder Object
 if (debug_argument == 0):
-    encoder = hb_encoder.rotary()
+    encoder = hb_encoder.RotaryClass()
 elif (debug_argument == 1):
-    encoder = hb_encoder.rotary(debug = 1)
+    encoder = hb_encoder.RotaryClass(debug = 1)
 #--------------------------------------------------
 prev_millis = 0
 display = 0
@@ -1625,7 +1625,7 @@ check_wifi_file(maindirectory)
 
 
 #--------------------------------------------------
-authenticate = authenticate.authenticate()
+authenticate = authenticate.Authenticate()
 
 
 api_url,bridge_ip = pair_hue_bridge(bridge_present = bridge_present)

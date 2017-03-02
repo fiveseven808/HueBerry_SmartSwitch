@@ -2,27 +2,39 @@ import time
 import os
 import console_colors
 import sys
+import math
+import colorsys
 bcolors = console_colors.bcolors
 
 """
 This class contains all of the hue api calls that I've written for the hueberry project! :D
 
 """
-class hueapi(object):
-    def __init__(self,debug = 0,authenticate = 0,):
+class HueAPI(object):
+    def __init__(self,debug = 0,fakeauth = 0):
         #Set the debug level
         self.debug = debug
+        self.fakeauth = fakeauth
         if (self.debug == 0):
             pass
 
     def load_creds_from_authenticate(self):
-        import authenticate
-        #Loads from ./auth.json in the format from authenticate
-        authenticate.load_creds()
-        self.api_key = authenticate.api_key
-        self.bridge_ip = authenticate.bridge_ip
-        self.api_url = 'http://%s/api/%s' % (bridge_ip,api_key)
+        if self.fakeauth == 0:
+            import authenticate
+            authenticate = authenticate.Authenticate()
+            #Loads from ./auth.json in the format from authenticate
+            authenticate.load_creds()
+            self.api_key = authenticate.api_key
+            self.bridge_ip = authenticate.bridge_ip
+            self.api_url = 'http://%s/api/%s' % (self.bridge_ip,self.api_key)
+            self.debugmsg(self.api_url)
+        elif self.fakeauth == 1:
+            self.api_key = "null"
+            self.bridge_ip = "127.0.0.1"
+            self.api_url = 'http://%s/api/%s' % (self.bridge_ip,self.api_key)
+            self.debugmsg("FAKE Link Established! "+ self.bridge_ip)
         return self.api_url
+
 
     def get_huejson_value(self,g_or_l,num,type):
         #g_or_l:
@@ -38,9 +50,9 @@ class hueapi(object):
         #This function returns -1 if there is nothing returned when the bridge is queried
         #hb_display.display_custom("Loading "+str(type)+"...")
         if(g_or_l == "g"):
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
+            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + self.api_url + "/groups/" + str(num) + " > brite")
         if(g_or_l == "l"):
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
+            os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ self.api_url + "/lights/" + str(num) + " > brite")
         wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
         wholejson = json.loads(wholejson)
         if(type == "bri"):
@@ -69,27 +81,27 @@ class hueapi(object):
         result_array = []
         lstate_a = []
         #hb_display.display_2lines("starting","group names",17)
-        #debugmsg("starting curl")
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
-        #debugmsg("finished curl")
+        self.debugmsg("starting curl")
+        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + self.api_url + "/groups   > groups")
+        self.debugmsg("finished curl")
         #hb_display.display_2lines("finished","curl",17)
         cmdout = os.popen("cat groups").read()
-        #debugmsg(cmdout)
+        self.debugmsg(cmdout)
         if not cmdout:
             #print "not brite"
             retry = 1
             while not cmdout:
                 if retry >= 3:
-                    hb_display.display_2lines("An error in ","get_group_name",15)
-                    debugmsg("error in get_group_names probably lost connection to hub")
+                    #hb_display.display_2lines("An error in ","get_group_name",15)
+                    self.debugmsg("error in get_group_names probably lost connection to hub")
                     time.sleep(2)
                     return 0,0,0,0
                     break
-                hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-                os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+                #hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
+                os.popen("curl --silent -H \"Accept: application/json\" -X GET " + self.api_url + "/groups  > groups")
                 cmdout = os.popen("cat groups").read()
                 retry = retry + 1
-        #debugmsg("passed ifstatement")
+        #self.debugmsg("passed ifstatement")
         #print cmdout
         #os.popen("rm groups")
         wat = json.loads(cmdout)
@@ -105,20 +117,20 @@ class hueapi(object):
         return result_array,num_groups,lstate_a,keyvalues
 
     def get_light_names(self):
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + self.api_url + "/lights  > lights")
         light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
         if not light_names:
             #print "not brite"
             retry = 1
             while not light_names:
                 if retry == 3:
-                    hb_display.display_2lines("An error in ","get_light_names",15)
-                    debugmsg("error in get_light_names probably lost connection to hub")
+                    #hb_display.display_2lines("An error in ","get_light_names",15)
+                    self.debugmsg("error in get_light_names probably lost connection to hub")
                     time.sleep(2)
                     return 0,0,0,0
                     break
-                hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-                os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+                #hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
+                os.popen("curl --silent -H \"Accept: application/json\" -X GET " + self.api_url + "/lights  > lights")
                 light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
                 retry = retry + 1
         num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
@@ -131,38 +143,38 @@ class hueapi(object):
         return name_array,num_array,lstate_a,total
 
     def hue_lights(self,lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
-        debugmsg("entering hue lights")
+        self.debugmsg("entering hue lights")
         if ('hue' in options):
-            result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+            result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + self.api_url + "/lights/" + str(lnum) + "/state" ).read()
         else:
-            result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
-        debugmsg(result)
+            result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + self.api_url + "/lights/" + str(lnum) + "/state" ).read()
+        self.debugmsg(result)
         if not result:
             #print "not brite"
-            hb_display.display_2lines("An error in ","hue_lights",17)
+            #hb_display.display_2lines("An error in ","hue_lights",17)
             time.sleep(2)
             return
         print(result)
         return result
 
-    def hue_groups(self,lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
-        debugmsg("entering hue groups")
+    def hue_groups(self,lnum,lon = "true",lbri = -1,lsat = -1,lx = -1,ly = -1,lct = -1,ltt = -1,**options):
+        self.debugmsg("entering hue groups")
         if ('hue' in options):
-            #debugmsg("hue and before result")
-            result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
-            #debugmsg("hue and after result")
+            #self.debugmsg("hue and before result")
+            result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + self.api_url + "/groups/" + str(lnum) + "/action" ).read()
+            #self.debugmsg("hue and after result")
         else:
-            #debugmsg("everything else and before result")
-            result = os.popen("curl -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
-            #debugmsg("everything else and after result")
-        debugmsg(result)
+            #self.debugmsg("everything else and before result")
+            result = os.popen("curl -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + self.api_url + "/groups/" + str(lnum) + "/action").read()
+            #self.debugmsg("everything else and after result")
+        self.debugmsg(result)
         if not result:
             #print "not brite"
-            hb_display.display_2lines("An error in ","hue_groups",17)
+            #hb_display.display_2lines("An error in ","hue_groups",17)
             time.sleep(2)
             return
         #print(result)
-        #debugmsg("printed result")
+        #self.debugmsg("printed result")
         return result
 
     #------------------------------------------------------------------------------------
@@ -171,7 +183,7 @@ class hueapi(object):
     #------------------------------------------------------------------------------------
     def ct_to_hue_sat(self,ct):
         #Method from http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
-        debugmsg("converting ct " + str(ct) + "into Hue and Saturation")
+        self.debugmsg("converting ct " + str(ct) + "into Hue and Saturation")
         #check range
         print ct
         if (ct < 1000):
@@ -229,13 +241,37 @@ class hueapi(object):
         #Convert to Hue, Saturation and Value
         print(red,green,blue)
         h, s, v = colorsys.rgb_to_hsv(red/255.0, green/255.0, blue/255.0)
-        #debugmsg("raw hue: " + str(360*h) + "saturation: " + str(s*100) + "value: " + str(v))
+        #self.debugmsg("raw hue: " + str(360*h) + "saturation: " + str(s*100) + "value: " + str(v))
         h = int(h * 65535)
         s = int(s * 254)
         #h = h + 910
-        debugmsg("hue: " + str(h) + "saturation: " + str(s) + "value: " + str(v))
+        self.debugmsg("hue: " + str(h) + "saturation: " + str(s) + "value: " + str(v))
         return h, s
 
+    def debugmsg(self,message):
+        #global logfile
+        debug_state = self.debug
+        if debug_state == 1:
+            current_time = time.strftime("%m / %d / %Y %-H:%M")
+            #with open(logfile, "a") as myfile:
+            #    myfile.write(current_time + " " + message + "\n")
+            print(current_time + " " + message + "\n")
+        else:
+            return
 
 if __name__ == "__main__":
-    pass
+    import hb_hue
+    import time
+    print("Running hb_hue module self test...")
+    hbapi = hb_hue.HueAPI(debug = 1,fakeauth = 1)
+    print("Object initialized")
+    hbapi.load_creds_from_authenticate()
+    print("loaded creds")
+    hbapi.get_group_names()
+    print("got group names")
+    hbapi.get_light_names()
+    print("got light names")
+    hbapi.hue_groups(lnum = 0, lon = "false")
+    time.sleep(0.4)
+    hbapi.hue_groups(lnum = 0, lon = "true")
+    hbapi.ct_to_hue_sat(2600)
