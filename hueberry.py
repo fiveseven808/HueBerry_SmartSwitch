@@ -1198,7 +1198,7 @@ def settings_menu(g_scenesdir):
     encoder.pos = 0 #Reset to top menu
     old_display = 0
     exitvar = False
-    menudepth = 9
+    menudepth = 10
     refresh = 1
     scene_refresh = 0
     while exitvar == False:
@@ -1226,6 +1226,8 @@ def settings_menu(g_scenesdir):
                 hb_display.display_2lines(str(display) + ". Check for","Upgrades?",17)
             elif(display == 8):
                 hb_display.display_2lines(str(display) + ". Create a","New Scene",17)
+            elif(display == 9):
+                hb_display.display_2lines(str(display) + ". Toggle time","Mode 24/12h",17)
             else:
                 hb_display.display_2lines("Back to","Main Menu",17)
             old_display = display
@@ -1255,6 +1257,12 @@ def settings_menu(g_scenesdir):
             elif(display == 8):
                 new_scene_creator(g_scenesdir)
                 scene_refresh = 1
+            elif(display == 9):
+                settings.ToggleTimeFormat()
+                if (settings.GetTimeFormat()):
+                    hb_display.display_2lines("Time mode","Set to 12h",17)
+                else:
+                    hb_display.display_2lines("Time mode","Set to 24h",17)
             #elif(display == 9):
             #    scene_explorer(g_scenesdir)
             else:
