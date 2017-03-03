@@ -166,6 +166,7 @@ import pprint
 import hb_display
 import hb_encoder
 import hb_hue
+import hb_settings
 
 
 global logfile
@@ -1585,11 +1586,11 @@ def get_scene_total(g_scenesdir,offset):
     #allscenes_dict = ["Scene 1","Scene 2","Scene 3"]   #Static value
     return total_scenes,total_plus_offset,scene_files
 
-def clock_sub_menu(time_format):
+def clock_sub_menu():
     # Toggle between 12/24h format
     result = holding_button(1500,"Toggle 24 hr","Toggle ALL lights",21)
     if (result == 0):
-        time_format =  not time_format
+        settings.ToggleTimeFormat()
     else:
         discard,wholejson = get_huejson_value("g",0,"bri")
         if(wholejson['state']['any_on'] == True):
@@ -1598,7 +1599,6 @@ def clock_sub_menu(time_format):
         else:
             #print("lights were off. not now")
             hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
-    return time_format
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
 #Instantiate the hueberry display object
@@ -1616,7 +1616,6 @@ elif (debug_argument == 1):
 #--------------------------------------------------
 prev_millis = 0
 display = 0
-time_format = True
 
 #--------------------------------------------------
 #Search to see if an Upgrade file exists, if so, run it
@@ -1631,6 +1630,8 @@ check_wifi_file(maindirectory)
 authenticate = authenticate.Authenticate()
 #Load the Hue API module so that the hueberry can control hue lights lol
 hueapi = hb_hue.HueAPI()
+#Load the settings-module
+settings = hb_settings.Settings()
 
 api_url,bridge_ip = pair_hue_bridge(bridge_present = bridge_present)
 
@@ -1669,7 +1670,7 @@ while True:
     if(display == 0):
         cur_min = int(time.strftime("%M"))
         if(old_min != cur_min or refresh == 1):
-            hb_display.display_time(time_format)
+            hb_display.display_time(settings.GetTimeFormat())
             old_min = cur_min
             refresh = 0
         timeout = 0
@@ -1717,7 +1718,7 @@ while True:
     pos,pushed = encoder.get_state() # after loading everything, get state#
     if (pushed):
         if(display == 0):
-            time_format = clock_sub_menu(time_format)
+            clock_sub_menu()
             refresh = 1
         elif(display == 1):
             # Turn off all lights
