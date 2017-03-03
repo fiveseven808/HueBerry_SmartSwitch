@@ -1,6 +1,14 @@
 import pickle
 import os
 
+# -----------------------------------------------------------
+# Class for all settings that should be saved on restart
+# To add more settings, add them as local variables (__ before the name)
+# Then create methods to change the setting, and to read the setting
+# See the examples ToggleTimeFormat and GetTimeFormat.
+# Make sure that you call self.Save() once you have changed a setting
+# ----------------------------------------------------------
+
 class Settings(object):
 
     __filename = "settings.p"
@@ -26,7 +34,7 @@ class Settings(object):
             f.close()
             self.__dict__.update(tmp_dict)
 
-    # Changes the time format
+    # Changes the time format and saves it to the file.
     def ToggleTimeFormat(self):
         self.__time_format = not self.__time_format
         self.Save()
