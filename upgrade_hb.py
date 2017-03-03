@@ -14,7 +14,7 @@ import sys
 
 class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
-        self.req_modules = ['hb_display','hb_encoder','hueberry','console_colors','authenticate']
+        self.req_modules = ['hb_display','hb_encoder','hb_hue','hueberry','console_colors','authenticate']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -104,6 +104,8 @@ class upgrader(object):
             if x == 'console_colors':
                 self.download_hb_module(x)
             if x == 'authenticate':
+                self.download_hb_module(x)
+            if x == 'hb_hue':
                 self.download_hb_module(x)
         #print baremetal
 
