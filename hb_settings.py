@@ -15,6 +15,10 @@ class Settings(object):
 
     # Settings-variables that are saved to the file
     __time_format = True
+    # 0:do nothing, 1:turn all lights on, 2:turn all lights off, 3:toggle all lights
+    # Should be able to select a specific scene, later project
+    __quick_press_action = 1
+    __long_press_action = 2
 
     # Constructor. Loads the previosu version of the object, if there is any
     def __init__(self):
@@ -42,6 +46,40 @@ class Settings(object):
     # Gets the time format
     def GetTimeFormat(self):
         return self.__time_format
+
+    def SetQuickPressAction(self, action):
+        if action >= 0 and action <= 3:
+            self.__quick_press_action = action
+            self.Save()
+
+    def GetQuickPressAction(self):
+        return self.__quick_press_action
+
+    def __getQuickActionString(self, action):
+        if action == 0:
+            return "Do nothing"
+        elif action == 1:
+            return "Turn all on"
+        elif action == 2:
+            return "Turn all off"
+        elif action == 3:
+            return "Toggle all"
+        else:
+            return "False value"
+
+    def GetQuickPressActionString(self):
+        return self.__getQuickActionString(self.__quick_press_action)
+
+    def SetLongPressAction(self, action):
+        if action >= 0 and action <= 3:
+            self.__long_press_action = action
+            self.Save()
+
+    def GetLongPressAction(self):
+        return self.__long_press_action
+
+    def GetLongPressActionString(self):
+        return self.__getQuickActionString(self.__long_press_action)
 
 # For testing
 if __name__ == "__main__":

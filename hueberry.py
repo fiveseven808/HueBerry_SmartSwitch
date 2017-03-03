@@ -1198,7 +1198,7 @@ def settings_menu(g_scenesdir):
     encoder.pos = 0 #Reset to top menu
     old_display = 0
     exitvar = False
-    menudepth = 10
+    menudepth = 11
     refresh = 1
     scene_refresh = 0
     while exitvar == False:
@@ -1228,6 +1228,8 @@ def settings_menu(g_scenesdir):
                 hb_display.display_2lines(str(display) + ". Create a","New Scene",17)
             elif(display == 9):
                 hb_display.display_2lines(str(display) + ". Toggle time","Mode 24/12h",17)
+            elif(display == 10):
+                hb_display.display_2lines(str(display) + ". Change","Quick actions",17)
             else:
                 hb_display.display_2lines("Back to","Main Menu",17)
             old_display = display
@@ -1263,6 +1265,8 @@ def settings_menu(g_scenesdir):
                     hb_display.display_2lines("Time mode","Set to 12h",17)
                 else:
                     hb_display.display_2lines("Time mode","Set to 24h",17)
+            elif(display == 10):
+                quick_action_settings()
             #elif(display == 9):
             #    scene_explorer(g_scenesdir)
             else:
@@ -1276,6 +1280,89 @@ def settings_menu(g_scenesdir):
 #----------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------
+
+def quick_action_settings():
+    time.sleep(.25)
+    encoder.pos = 0 #Reset to top menu
+    old_display = 0
+    exitvar = False
+    menudepth = 3
+    refresh = 1
+
+    while exitvar == False:
+        pos,pushed = encoder.get_state()
+        if(pos > menudepth):
+            encoder.pos = menudepth
+        elif(pos < 1):
+            encoder.pos = 1
+        display = encoder.pos
+
+        #Display Selected Menu
+        if (old_display != display or refresh == 1):
+            if(display == 1):
+                hb_display.display_2lines("Change quick", "Press action", 17)
+            elif(display == 2):
+                hb_display.display_2lines("Change long", "Press action", 17)
+            else:
+                hb_display.display_2lines("Back to","Settings Menu",17)
+            old_display = display
+            refresh = 0
+        else:
+            time.sleep(0.005)
+
+        # Poll button press and trigger action based on current display
+        if(pushed):
+            if(display == 1):
+                settings.SetQuickPressAction(set_action())
+            elif(display == 2):
+                settings.SetLongPressAction(set_action())
+            else:
+                time.sleep(0.25)
+                exitvar = True
+            refresh = 1
+            encoder.pos = display
+            pos,pushed = encoder.get_state()
+            while(pushed):
+                pos,pushed = encoder.get_state()
+                time.sleep(0.01)
+    return
+
+def set_action():
+    time.sleep(.25)
+    encoder.pos = 0 #Reset to top menu
+    old_display = 0
+    exitvar = False
+    menudepth = 5
+    refresh = 1
+
+    while exitvar == False:
+        pos,pushed = encoder.get_state()
+        if(pos > menudepth):
+            encoder.pos = menudepth
+        elif(pos < 1):
+            encoder.pos = 1
+        display = encoder.pos
+
+        #Display Selected Menu
+        if (old_display != display or refresh == 1):
+            if(display == 1):
+                hb_display.display_2lines("Set to", "Do nothing", 17)
+            elif(display == 2):
+                hb_display.display_2lines("Set to", "Turn all on", 17)
+            elif(display == 3):
+                hb_display.display_2lines("Set to", "Turn all off", 17)
+            elif(display == 4):
+                hb_display.display_2lines("Set to", "Toggle all", 17)
+            else:
+                hb_display.display_2lines("Back to","Previous Menu",17)
+            old_display = display
+            refresh = 0
+        else:
+            time.sleep(0.005)
+        # Poll button press and trigger action based on current display
+        if(pushed):
+            return display - 1
+    return -1
 
 def new_scene_creator(g_scenesdir):
     #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
@@ -1595,11 +1682,20 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 def clock_sub_menu():
-    # Toggle between 12/24h format
-    result = holding_button(1500,"Toggle 24 hr","Toggle ALL lights",21)
+    result = holding_button(1500,settings.GetQuickPressActionString(),settings.GetLongPressActionString(),21)
     if (result == 0):
-        settings.ToggleTimeFormat()
+        action = settings.GetQuickPressAction()
     else:
+        action = settings.GetLongPressAction()
+
+    if action == 1:
+        # Turn lights on
+        hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+    elif action == 2:
+        # Turn lights off
+        hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+    elif action == 3:
+        # Toggle lights
         discard,wholejson = get_huejson_value("g",0,"bri")
         if(wholejson['state']['any_on'] == True):
             #print("lights were on. not now")
@@ -1607,6 +1703,7 @@ def clock_sub_menu():
         else:
             #print("lights were off. not now")
             hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+            
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
 #Instantiate the hueberry display object
