@@ -63,6 +63,9 @@ Temporary Items
 #Python Complied files
 *.pyc
 
+#Pickled files
+*.p
+
 #hueBerry files
 auth.*
 groups
