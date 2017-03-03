@@ -983,16 +983,14 @@ def devinfo_screen():
     exitvar = False
     menudepth = 4
     refresh = 1
-
     ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
     ssid = os.popen("iwconfig wlan0 | grep 'ESSID' | awk '{print $4}' | awk -F\\\" '{print $2}'").read()
     ipaddress_0 = os.popen("ifconfig eth0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
     ipaddress_1 = os.popen("ifconfig eth1 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > menudepth):
+        if(encoder.pos > menudepth):
             encoder.pos = menudepth
-        elif(pos < 1):
+        elif(encoder.pos < 1):
             encoder.pos = 1
         display = encoder.pos
 
@@ -1010,7 +1008,7 @@ def devinfo_screen():
             refresh = 0
         else:
             time.sleep(0.005)
-
+        pos,pushed = encoder.get_state()
         # Poll button press and trigger action based on current display
         if(pushed):
             if(display == 1):
@@ -1233,6 +1231,8 @@ def settings_menu(g_scenesdir):
                     hb_display.display_2lines("Time mode","Set to 12h",17)
                 else:
                     hb_display.display_2lines("Time mode","Set to 24h",17)
+                time.sleep(1)
+                encoder.wait_for_button_release()
             elif(display == 10):
                 quick_action_settings()
             #elif(display == 9):
@@ -1443,17 +1443,6 @@ def check_upgrade_file(maindirectory):
             time.sleep(1)
 
 def user_init_upgrade():
-    """
-    2017-02-15 //57
-    Planning on rework for update capability.....
-    method:
-        delete current upgrade_hb.py
-        download upgrade_hb.py from github
-        drop control of screen (no running functions)
-        run it.
-            upgrade.hb.py
-                load hb_display module
-    """
     hb_display.display_2lines("Checking for","Updates! :)",15)
     wget_results = os.popen("sudo rm new_upgrade_hb.py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/upgrade_hb.py --output-document=new_upgrade_hb.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
     if wget_results:
