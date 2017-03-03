@@ -1629,8 +1629,8 @@ check_wifi_file(maindirectory)
 #--------------------------------------------------
 #Load the Authentication Module so that the hueberry method can do what it needs to do.
 authenticate = authenticate.Authenticate()
-#Load the Hue API module so that the hueberry can control hue lights lol 
-hueapi = hb_hue.Hue_API()
+#Load the Hue API module so that the hueberry can control hue lights lol
+hueapi = hb_hue.HueAPI()
 
 api_url,bridge_ip = pair_hue_bridge(bridge_present = bridge_present)
 
