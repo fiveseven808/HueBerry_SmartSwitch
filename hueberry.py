@@ -135,6 +135,7 @@ import hb_display
 import hb_encoder
 import hb_hue
 import hb_settings
+import hb_menu
 
 
 global logfile
@@ -359,7 +360,7 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     print(result)
     return result
 
-def hue_groups(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
+def hue_groups(lnum, lon = -1, lbri = -1, lsat = -1, lx = -1, ly = -1, lct = -1, ltt = -1,**options):
     debugmsg("entering hue groups")
     if ('hue' in options):
         #debugmsg("hue and before result")
@@ -1245,6 +1246,46 @@ def settings_menu(g_scenesdir):
             encoder.wait_for_button_release()
     return scene_refresh
 
+def settings_menu_test(g_scenesdir):
+    menu_layout = ("Device","Info",lambda: devinfo_screen(),
+                    "Re-Pair","Hue Bridge",lambda: re_pair_bridge_stub(),
+                    "Shutdown","hueBerry",lambda: shutdown_hueberry(),
+                    "Restart","hueBerry",lambda: restart_hueberry(),
+                    "Flashlight","Function",lambda: flashlight_mode(),
+                    "Connect to","WiFi",lambda: wifi_settings(),
+                    "Check for","Upgrades?",lambda: user_init_upgrade(),
+                    "Create a","New Scene",lambda: create_scene_stub(),
+                    "Toggle time","Mode 24/12h",lambda: toggle_time_format_stub(),
+                    "Change","Quick actions",lambda: quick_action_settings(),
+                    "Back to","Main Menu",lambda: settings_quit_menu_stub())
+    settings_menu = hb_menu.Menu_Creator(debug = 1, menu_layout = menu_layout)
+    settings_menu.run_2_line_menu()
+    encoder.wait_for_button_release()
+    return scene_refresh
+
+def settings_quit_menu_stub():
+    settings_menu.exitvar = 1
+    print settings_menu.exitvar
+    time.sleep(1)
+
+def re_pair_bridge_stub():
+    os.popen("rm auth.json")
+    pair_hue_bridge()
+
+def create_scene_stub():
+    new_scene_creator(g_scenesdir)
+    scene_refresh = 1
+
+def toggle_time_format_stub():
+    settings.ToggleTimeFormat()
+    if (settings.GetTimeFormat()):
+        hb_display.display_2lines("Time mode","Set to 12h",17)
+    else:
+        hb_display.display_2lines("Time mode","Set to 24h",17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
+
 #----------------------------------------------------------------------------
 
 #----------------------------------------------------------------------------
@@ -1791,13 +1832,8 @@ while True:
             debugmsg("turning all lights off")
         elif(display == 2):
             # Turn on NIGHT lights dim (groups 1,2,3)
-            hb_display.display_2lines("Turning specific","lights on DIM",12)
-            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/1/action").read()
-            hue_lights(lnum = "8",lon = "true",lbri = "1",lsat = "1",lx = "-1",ly = "-1",ltt = "4", lct = "400")
-            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/2/action").read()
-            hue_lights(lnum = "5",lon = "true",lbri = "1",lsat = "200",lx = "0.5015",ly = "0.4153",ltt = "4", lct = "-1")
-            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"bri\":1,\"transitiontime\":-1}' " + api_url + "/groups/3/action").read()
-            hue_groups(lnum = "6",lon = "true",lbri = "1",lsat = "200",lx = "-1",ly = "-1",ltt = "4",lct = "400")
+            hb_display.display_2lines("Turning All","lights On -> DIM",12)
+            hue_groups(lnum = "0",lbri = "1",ltt="100")
             # Turn off front door light
             #print(debug)
             time.sleep(.5)

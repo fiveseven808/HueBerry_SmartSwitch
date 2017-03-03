@@ -14,7 +14,14 @@ import sys
 
 class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
-        self.req_modules = ['hb_display','hb_encoder','hb_hue','hb_settings','hueberry','console_colors','authenticate']
+        self.req_modules = ['hb_display',
+                            'hb_encoder',
+                            'hb_hue',
+                            'hb_settings',
+                            'hb_menu',
+                            'hueberry',
+                            'console_colors',
+                            'authenticate']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -109,6 +116,8 @@ class upgrader(object):
                 self.download_hb_module(x)
             if x == 'hb_settings':
                 self.download_hb_module(x)
+            if x == 'hb_menu':
+                self.download_hb_module(x)
         #print baremetal
 
     def download_hb_module(self,module):
@@ -140,6 +149,11 @@ class upgrader(object):
     //57
         2017-03-03 //57
             + WPBack wrote a settings module so we can make personlization changes to how the menu works!!!
+            1244 //57
+            + Added hb_menu module (not used yet)
+                - Partially impelemented, doesn't quite work though so not activated
+            * Changed Turn on Nights dim functionality
+                - Should in theory turn all lights that are currently on to 1 brightness over 10 seconds
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

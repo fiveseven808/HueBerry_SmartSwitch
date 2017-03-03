@@ -2,13 +2,13 @@ import hb_encoder
 import hb_display
 import time
 
-class Simple_Menu(object):
-    def __init__(self, menu_titles, menu_functions, debug = 0, mirror_mode = 0):
+class Menu_Creator(object):
+    def __init__(self, menu_layout, debug = 0, mirror_mode = 0):
         debug_argument = debug
         self.offset = 0 #carryover
         self.post_offset = 0 #carryover
-        self.menu_titles = menu_titles
-        self.menu_functions = menu_functions
+        self.menu_layout = menu_layout
+        self.exitvar = 0
         # Create Display Object
         if(mirror_mode == 1):
             self.hb_display = hb_display.display(console = 1,mirror = mirror_mode)
@@ -20,16 +20,16 @@ class Simple_Menu(object):
         elif (debug_argument == 1):
             self.encoder = hb_encoder.RotaryClass(debug = 1)
 
-    def run_menu(self):
+    def run_simple_menu(self):
         timeout = 0
         displaytemp = 0
         prev_secs = 0
         old_display = 0
         refresh = 1
         pushed = 0
-        menu_timeout = 30 
+        menu_timeout = 30
         while True:
-            total_screens = len(self.menu_titles)
+            total_screens = len(self.menu_layout)
             total_plus_offset = total_screens + self.offset
             menudepth = total_plus_offset + self.post_offset - 1
             # Cycle through different displays
@@ -37,11 +37,62 @@ class Simple_Menu(object):
                 self.encoder.pos = menudepth
             elif(self.encoder.pos < 0):
                 self.encoder.pos = 0
-            display = self.encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+            display = self.encoder.pos*2 # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+            display_number = (display/2)+1
             #Display Selected Menu
             if (old_display != display or refresh == 1):
                 if(display >= self.offset and display <= (total_plus_offset-1)):
-                    self.hb_display.display_2lines(str(display) + ". " + str(self.menu_titles[display-self.offset]),"Run?",15)
+                    self.hb_display.display_2lines(str(display_number) + ". " + str(self.menu_layout[display-self.offset]),"Run?",15)
+                old_display = display
+            elif(display != 0):
+                time.sleep(0.005)
+            secs = int(round(time.time()))
+            timeout_secs = secs - prev_secs
+            if(display != 0 and displaytemp != display):
+                prev_secs = secs
+                displaytemp = display
+            elif(display != 0 and timeout_secs >= menu_timeout):
+                self.encoder.pos = 0
+                display_temp = 0
+            elif(display == 0):
+                displaytemp = display
+            pos,pushed = self.encoder.get_state() # after loading everything, get state#
+            if (pushed):
+                if(display >= self.offset and display < total_plus_offset):
+                    #print display
+                    self.menu_layout[display+1]()
+                elif(display == (menudepth)):
+                    self.encoder.pos = 0
+                    light_control("g") #temp for test lol
+                    #scene_explorer(g_scenesdir)
+                time.sleep(0.01)
+                #prev_millis = int(round(time.time() * 1000))
+                self.encoder.pos = 0
+            #time.sleep(0.1)
+
+    def run_2_line_menu(self):
+        timeout = 0
+        displaytemp = 0
+        prev_secs = 0
+        old_display = 0
+        refresh = 1
+        pushed = 0
+        menu_timeout = 30
+        while self.exitvar == 0:
+            total_screens = len(self.menu_layout)
+            total_plus_offset = total_screens + self.offset
+            menudepth = total_plus_offset + self.post_offset - 1
+            # Cycle through different displays
+            if(self.encoder.pos > menudepth):
+                self.encoder.pos = menudepth
+            elif(self.encoder.pos < 0):
+                self.encoder.pos = 0
+            display = self.encoder.pos*3 # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+            display_number = (display/3)+1
+            #Display Selected Menu
+            if (old_display != display or refresh == 1):
+                if(display >= self.offset and display <= (total_plus_offset-1)):
+                    self.hb_display.display_2lines(str(display_number) + ". "+str(self.menu_layout[display-self.offset]),str(self.menu_layout[display-self.offset+1]),17)
                 old_display = display
             elif(display != 0):
                 time.sleep(0.005)
@@ -61,6 +112,7 @@ class Simple_Menu(object):
 
             # Poll button press and trigger action based on current display
             #if(not GPIO.input(21)):
+            print self.exitvar
             pos,pushed = self.encoder.get_state() # after loading everything, get state#
             if (pushed):
                 if(display >= self.offset and display < total_plus_offset):
@@ -87,8 +139,8 @@ class Simple_Menu(object):
                         self.hb_display.display_2lines("Something weird","Happened...",12)
                         time.sleep(5)
                     """
-                    print display
-                    self.menu_functions[display]()
+                    #print display
+                    self.menu_layout[display+2]()
                 elif(display == (menudepth)):
                     self.encoder.pos = 0
                     light_control("g") #temp for test lol
@@ -106,13 +158,9 @@ def printmenu(text):
 if __name__ == "__main__":
     import hb_menu
     import sys
-    tm_titles = ("1st menu",
-                "2nd menu",
-                "3rd menu",
-                "quit")
-    tm_functions = (lambda: printmenu("oshit1"),
-                    lambda: printmenu("oshit2"),
-                    lambda: printmenu("oshit3"),
-                    lambda: sys.exit())
-    testmenu = hb_menu.Simple_Menu(debug = 1,menu_titles = tm_titles, menu_functions = tm_functions)
-    testmenu.run_menu()
+    tm_menu = ("1st menu",lambda: printmenu("oshit! it works!"),
+                "2nd menu",lambda: printmenu("doing a second thing"),
+                "3rd menu",lambda: printmenu("doing a third thing"),
+                "quit",lambda: sys.exit())
+    testmenu = hb_menu.Menu_Creator(debug = 1,menu_layout = tm_menu)
+    testmenu.run_simple_menu()
