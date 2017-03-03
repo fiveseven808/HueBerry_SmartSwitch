@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 """
+v045
+2017-03-03 //57
++ WPBack wrote a settings module so we can make personlization changes to how the menu works!!!
+
+
 v044
-2012-02-22 //57
+2017-02-22 //57
 Update function rewritten entirely
 Updater is now a seperate file/class and even uses the display library (which means it needs to be up to date lol)
 Keeping this API/library level for encoder and display for now. Future updater modules will not use any extended functions.
@@ -25,43 +30,6 @@ But it was a requested feature.
     + Added a couple of switches for WSL and no bridge testing
 1403 //57
     + Fixed the updater function and display libraries to work in console mode better (doesn't affect prod)
-
-v043
-2017-02-18 //57
-Starting work on "Guest mode" or "Single Room mode"
-how it will work?
-    idea 1:
-        pick a room for guest mode by going into groups, and holding for 5 seconds?
-    idea 2;
-        go into settings, click on guest mode, then select a room
-    single room mode:
-        will replace the clock, with a clock + room brightness control
-            blind brightness?
-                + adjust without changing what lights are on
-                + incremental
-                - no brightness value displayable i think...
-                - cannot turn the light off...
-                    - if the light turns off, cannot turn on just that light again
-                + can do like a dimmer mode? push to on off?
-                    + then dial is brightness, like guest mode?
-        can break out to control rest of house if desired
-            + i.e. activate scenes?
-            * how to break out to ontrol rest of house?
-what i also want to do is auto update the brightness level i.e. if the brightness changes, while in the brightness mode, i want it to auto update... somehow...
-
-2017-02-19 //57
-o shit... i fucked up
-this is on the dev branch, not the other one... gotta fix this shit... hold on gonna backup everything... wish me luck
-----
-okay, looks like crisis aveted... i did none of the above stuff... instead, what i did was make a "real value" indicator for the light brightnesses (polls after 5 seconds of inactivity)
-it's not a pretty result, but it is accurate and kind of neat.
-i reworked the method to pull values from a centralized thing... much nicer
-it looks like it's working, just gotta implement it everywhere.
-
-2017-02-20 //57
-finally put to use that holding_button function i made a while back
-went and optimized the light_control function a little bit... light control can really be cleaned up...
-but first g_control and l_control need to be reworked into one function.
 
 
 --------------------
@@ -1290,10 +1258,9 @@ def quick_action_settings():
     refresh = 1
 
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > menudepth):
+        if(encoder.pos > menudepth):
             encoder.pos = menudepth
-        elif(pos < 1):
+        elif(encoder.pos < 1):
             encoder.pos = 1
         display = encoder.pos
 
@@ -1309,7 +1276,7 @@ def quick_action_settings():
             refresh = 0
         else:
             time.sleep(0.005)
-
+        pos,pushed = encoder.get_state()
         # Poll button press and trigger action based on current display
         if(pushed):
             if(display == 1):
@@ -1336,10 +1303,9 @@ def set_action():
     refresh = 1
 
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > menudepth):
+        if(encoder.pos > menudepth):
             encoder.pos = menudepth
-        elif(pos < 1):
+        elif(encoder.pos < 1):
             encoder.pos = 1
         display = encoder.pos
 
@@ -1360,6 +1326,7 @@ def set_action():
         else:
             time.sleep(0.005)
         # Poll button press and trigger action based on current display
+        pos,pushed = encoder.get_state()
         if(pushed):
             return display - 1
     return -1
@@ -1703,7 +1670,7 @@ def clock_sub_menu():
         else:
             #print("lights were off. not now")
             hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
-            
+
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
 #Instantiate the hueberry display object

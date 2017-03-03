@@ -14,7 +14,7 @@ import sys
 
 class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
-        self.req_modules = ['hb_display','hb_encoder','hb_hue','hueberry','console_colors','authenticate']
+        self.req_modules = ['hb_display','hb_encoder','hb_hue','hb_settings','hueberry','console_colors','authenticate']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -107,6 +107,8 @@ class upgrader(object):
                 self.download_hb_module(x)
             if x == 'hb_hue':
                 self.download_hb_module(x)
+            if x == 'hb_settings':
+                self.download_hb_module(x)
         #print baremetal
 
     def download_hb_module(self,module):
@@ -134,26 +136,10 @@ class upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v044-20170228
+    \rUpgrade level: v045-20170303
     //57
-        2012-02-24 //57
-            + hueberry now works on WSL!
-            - Installer doesn't work for WSL yet
-            + Added a couple of switches for WSL and no bridge testing
-        1403 //57
-            + Fixed the updater function and display libraries to work in console mode better (doesn't affect prod)
-            + Bug fixes. hb_encoder was a bit broken, now autodetects OS and loads appropriately (win vs linux)
-            + Created a console_colors class so I can add it everywhere without having to write all of that in
-        2012-02-26 //57
-            + Flashlight_mode now works again
-            - WSL running Ubuntu 14.04 confirmed not working with requests module... need cURL implementation
-        02-28 //57
-            + authenticate.py is now a class, and can be called by itself
-            + Minimum requirements for authenticate.py have been identified and noted
-            + Bridge detection code has been sorted out. hueBerry will go into an unfinished "Utility Mode"
-                If no bridge has been detected on boot. This means that the hueberry can function without an
-                auth.json file.
-            + 1000 bug fix
+        2017-03-03 //57
+            + WPBack wrote a settings module so we can make personlization changes to how the menu works!!!
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
