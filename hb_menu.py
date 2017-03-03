@@ -4,6 +4,30 @@ import time
 
 class Simple_Menu(object):
     def __init__(self, menu_titles, menu_functions, debug = 0, mirror_mode = 0):
+        debug_argument = debug
+        self.offset = 0 #carryover
+        self.post_offset = 0 #carryover
+        self.menu_titles = menu_titles
+        self.menu_functions = menu_functions
+        # Create Display Object
+        if(mirror_mode == 1):
+            self.hb_display = hb_display.display(console = 1,mirror = mirror_mode)
+        else:
+            self.hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
+        # Create Encoder Object
+        if (debug_argument == 0):
+            self.encoder = hb_encoder.RotaryClass()
+        elif (debug_argument == 1):
+            self.encoder = hb_encoder.RotaryClass(debug = 1)
+
+    def run_menu(self):
+        timeout = 0
+        displaytemp = 0
+        prev_secs = 0
+        old_display = 0
+        refresh = 1
+        pushed = 0
+        menu_timeout = 30 
         while True:
             total_screens = len(self.menu_titles)
             total_plus_offset = total_screens + self.offset
