@@ -619,6 +619,10 @@ def get_huejson_value(g_or_l,num,type):
     if(g_or_l == "l"):
         os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
     wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
+    print wholejson
+    if not wholejson:
+        #raise NameError("shit")
+        return -1,{}
     wholejson = json.loads(wholejson)
     if(type == "bri"):
         value = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
@@ -1704,7 +1708,13 @@ def clock_sub_menu():
         hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
     elif action == 3:
         # Toggle lights
+        print "inside TOGGLE LIGHTS"
+        time.sleep(1)
         discard,wholejson = get_huejson_value("g",0,"bri")
+        if discard == -1:
+            hb_display.display_custom("Error: can't JSON")
+            time.sleep(1)
+            return
         if(wholejson['state']['any_on'] == True):
             #print("lights were on. not now")
             hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")

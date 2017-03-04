@@ -158,6 +158,7 @@ class upgrader(object):
             + Implemented hb_menu module for settings. Things look okay for now
             + Fixed handling of lots of things in hb_menu.
             * Keep an eye out for bugs in the settings menu for this commit.
+            + Error handling for get_huejson_value
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
