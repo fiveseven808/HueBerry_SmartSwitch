@@ -12,6 +12,9 @@ import os
 //57: To-do
     - Setting for night mode start and stop time (outline font)
     - Setting for return to clock, or return to previous selection (for main menu only)
+    - Screen saver options
+        - date and time move in random positions on the screen?
+        - Turn off display after 5 minutes of inactivity? adjustable minutes of inactivity? 
 """
 class Settings(object):
 
