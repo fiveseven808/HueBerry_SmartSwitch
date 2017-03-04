@@ -1260,7 +1260,7 @@ def settings_menu_test(g_scenesdir):
                     "Change","Quick actions",lambda: quick_action_settings(),
                     #"Deeper Menu","Test",lambda: deeper_menu_test(),
                     "Back to","Main Menu","exit")
-    settings_menu = hb_menu.Menu_Creator(debug = 1, menu_layout = menu_layout)
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     scene_refresh = 1
@@ -1269,7 +1269,7 @@ def settings_menu_test(g_scenesdir):
 def deeper_menu_test():
     menu_layout = ("seekret","item",lambda: secretitem("real deep man..."),
                     "Back to","Main Menu","exit")
-    deeper_menu = hb_menu.Menu_Creator(debug = 1, menu_layout = menu_layout)
+    deeper_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     deeper_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
