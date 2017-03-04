@@ -159,7 +159,8 @@ class upgrader(object):
             + Fixed handling of lots of things in hb_menu.
             * Keep an eye out for bugs in the settings menu for this commit.
             + Error handling for get_huejson_value
-            + Preferences menu in Settinsg now!!! Thanks //WPBack! 
+            + Preferences menu in Settings now!!! Thanks //WPBack!
+            + Added the ability to force upgrades! (probably not good to leave in prod lol)
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

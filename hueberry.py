@@ -1257,7 +1257,7 @@ def settings_menu_test(g_scenesdir):
                     "Restart","hueBerry",lambda: restart_hueberry(),
                     "Flashlight","Function",lambda: flashlight_mode(),
                     "Connect to","WiFi",lambda: wifi_settings(),
-                    "Check for","Upgrades?",lambda: user_init_upgrade(),
+                    "Check for","Upgrades?",lambda: user_init_upgrade_precheck(),
                     "Create a","New Scene",lambda: create_scene_stub(g_scenesdir),
                     #"Scene","Explorer",lambda: scene_explorer(g_scenesdir),
                     "Preferences","[ Menu ]",lambda: preferences_menu(),
@@ -1276,6 +1276,13 @@ def preferences_menu():
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
+
+def user_init_upgrade_precheck():
+    result = holding_button(2000,"Hold to FORCE","Will FORCE UPDATE",21)
+    if result == 1:
+        user_init_upgrade(force = 1)
+    elif result == 0:
+        user_init_upgrade()
 
 def re_pair_bridge_stub():
     os.popen("rm auth.json")
@@ -1492,7 +1499,7 @@ def check_upgrade_file(maindirectory):
         while True:
             time.sleep(1)
 
-def user_init_upgrade():
+def user_init_upgrade(force = 0):
     hb_display.display_2lines("Checking for","Updates! :)",15)
     wget_results = os.popen("sudo rm new_upgrade_hb.py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/upgrade_hb.py --output-document=new_upgrade_hb.py -o upgrade.log; cat upgrade.log |  grep ERROR").read()
     if wget_results:
@@ -1512,6 +1519,9 @@ def user_init_upgrade():
     else:
         diff_result = os.popen("diff upgrade_hb.py new_upgrade_hb.py").read()
     #diff_result = os.popen("diff upgrade_hb.py upgrade_hb.py").read()
+    if force == 1:
+        diff_result = 1
+        # If set to force, put something in diff_result to force it
     if not diff_result:
         print("There are no changes or upgrades avaliable")
         hb_display.display_2lines("You are","up to date! :)",15)
