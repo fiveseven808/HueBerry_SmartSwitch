@@ -1260,7 +1260,7 @@ def settings_menu_test(g_scenesdir):
                     "Check for","Upgrades?",lambda: user_init_upgrade(),
                     "Create a","New Scene",lambda: create_scene_stub(g_scenesdir),
                     #"Scene","Explorer",lambda: scene_explorer(g_scenesdir),
-                    "Preferences","|Menu|",lambda: preferences_menu(),
+                    "Preferences","[ Menu ]",lambda: preferences_menu(),
                     "Back to","Main Menu","exit")
     settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     settings_menu.run_2_line_menu()
@@ -1271,7 +1271,7 @@ def settings_menu_test(g_scenesdir):
 def preferences_menu():
     menu_layout = ("Toggle time","Mode 24/12h",lambda: toggle_time_format_stub(),
                     "Change","Quick actions",lambda: quick_action_settings(),
-                    "Back to","Settings |Menu|","exit")
+                    "Back to","Settings [ Menu ]","exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
@@ -1805,7 +1805,7 @@ while True:
         elif(display >= offset and display <= (total_plus_offset-1)):
             hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
         elif(display == (menudepth-2)):
-            hb_display.display_2lines(str(display) + ". Settings", "|Menu|",13)
+            hb_display.display_2lines(str(display) + ". Settings", "[ Menu ]",13)
         elif(display == (menudepth-1)):
             hb_display.display_2lines(str(display) + ". Light Control", "Menu",13)
         elif(display == (menudepth-0)):
