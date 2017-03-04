@@ -154,6 +154,10 @@ class upgrader(object):
                 - Partially impelemented, doesn't quite work though so not activated
             * Changed Turn on Nights dim functionality
                 - Should in theory turn all lights that are currently on to 1 brightness over 10 seconds
+            1405 //57
+            + Implemented hb_menu module for settings. Things look okay for now
+            + Fixed handling of lots of things in hb_menu.
+            * Keep an eye out for bugs in the settings menu for this commit.
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

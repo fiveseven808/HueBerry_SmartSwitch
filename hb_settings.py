@@ -8,7 +8,11 @@ import os
 # See the examples ToggleTimeFormat and GetTimeFormat.
 # Make sure that you call self.Save() once you have changed a setting
 # ----------------------------------------------------------
-
+"""
+//57: To-do
+    - Setting for night mode start and stop time (outline font)
+    - Setting for return to clock, or return to previous selection (for main menu only)
+"""
 class Settings(object):
 
     __filename = "settings.p"

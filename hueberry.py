@@ -1254,25 +1254,36 @@ def settings_menu_test(g_scenesdir):
                     "Flashlight","Function",lambda: flashlight_mode(),
                     "Connect to","WiFi",lambda: wifi_settings(),
                     "Check for","Upgrades?",lambda: user_init_upgrade(),
-                    "Create a","New Scene",lambda: create_scene_stub(),
+                    "Create a","New Scene",lambda: create_scene_stub(g_scenesdir),
+                    #"Scene","Explorer",lambda: scene_explorer(g_scenesdir),
                     "Toggle time","Mode 24/12h",lambda: toggle_time_format_stub(),
                     "Change","Quick actions",lambda: quick_action_settings(),
-                    "Back to","Main Menu",lambda: settings_quit_menu_stub())
+                    #"Deeper Menu","Test",lambda: deeper_menu_test(),
+                    "Back to","Main Menu","exit")
     settings_menu = hb_menu.Menu_Creator(debug = 1, menu_layout = menu_layout)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
+    scene_refresh = 1
     return scene_refresh
 
-def settings_quit_menu_stub():
-    settings_menu.exitvar = 1
-    print settings_menu.exitvar
+def deeper_menu_test():
+    menu_layout = ("seekret","item",lambda: secretitem("real deep man..."),
+                    "Back to","Main Menu","exit")
+    deeper_menu = hb_menu.Menu_Creator(debug = 1, menu_layout = menu_layout)
+    deeper_menu.run_2_line_menu()
+    encoder.wait_for_button_release()
+    return
+
+def secretitem(text):
+    print text
     time.sleep(1)
+    return
 
 def re_pair_bridge_stub():
     os.popen("rm auth.json")
     pair_hue_bridge()
 
-def create_scene_stub():
+def create_scene_stub(g_scenesdir):
     new_scene_creator(g_scenesdir)
     scene_refresh = 1
 
@@ -1872,7 +1883,7 @@ while True:
                 time.sleep(5)
         elif(display == (menudepth-2)):
             encoder.pos = 0
-            scene_refresh = settings_menu(g_scenesdir)
+            scene_refresh = settings_menu_test(g_scenesdir)
             #InteliDraw_Test()
             scene_refresh = 1 # lol override. this might be useful lol
         elif(display == (menudepth-1)):
@@ -1882,6 +1893,7 @@ while True:
             encoder.pos = 0
             light_control("g") #temp for test lol
             #scene_explorer(g_scenesdir)
+        refresh = 1
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
         encoder.pos = 0

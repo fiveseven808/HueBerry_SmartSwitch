@@ -28,10 +28,11 @@ class Menu_Creator(object):
         refresh = 1
         pushed = 0
         menu_timeout = 30
+        depth_divisor = 2 # how many menu items per line. i.e. 1 title + 1 function = 2
         while True:
             total_screens = len(self.menu_layout)
             total_plus_offset = total_screens + self.offset
-            menudepth = total_plus_offset + self.post_offset - 1
+            menudepth = (total_plus_offset + self.post_offset - depth_divisor)/depth_divisor
             # Cycle through different displays
             if(self.encoder.pos > menudepth):
                 self.encoder.pos = menudepth
@@ -60,11 +61,11 @@ class Menu_Creator(object):
             if (pushed):
                 if(display >= self.offset and display < total_plus_offset):
                     #print display
-                    self.menu_layout[display+1]()
-                elif(display == (menudepth)):
-                    self.encoder.pos = 0
-                    light_control("g") #temp for test lol
-                    #scene_explorer(g_scenesdir)
+                    if self.menu_layout[display+(depth_divisor-1)] == "exit":
+                        #print "exiting"
+                        #time.sleep(2)
+                        break
+                    self.menu_layout[display+(depth_divisor-1)]()
                 time.sleep(0.01)
                 #prev_millis = int(round(time.time() * 1000))
                 self.encoder.pos = 0
@@ -78,10 +79,11 @@ class Menu_Creator(object):
         refresh = 1
         pushed = 0
         menu_timeout = 30
-        while self.exitvar == 0:
+        depth_divisor = 3 # how many menu items per line. i.e. 1 title + 1 function = 2
+        while True:
             total_screens = len(self.menu_layout)
             total_plus_offset = total_screens + self.offset
-            menudepth = total_plus_offset + self.post_offset - 1
+            menudepth = (total_plus_offset + self.post_offset - depth_divisor)/depth_divisor
             # Cycle through different displays
             if(self.encoder.pos > menudepth):
                 self.encoder.pos = menudepth
@@ -112,7 +114,7 @@ class Menu_Creator(object):
 
             # Poll button press and trigger action based on current display
             #if(not GPIO.input(21)):
-            print self.exitvar
+            #print self.exitvar
             pos,pushed = self.encoder.get_state() # after loading everything, get state#
             if (pushed):
                 if(display >= self.offset and display < total_plus_offset):
@@ -140,15 +142,16 @@ class Menu_Creator(object):
                         time.sleep(5)
                     """
                     #print display
-                    self.menu_layout[display+2]()
-                elif(display == (menudepth)):
-                    self.encoder.pos = 0
-                    light_control("g") #temp for test lol
-                    #scene_explorer(g_scenesdir)
+                    if self.menu_layout[display+(depth_divisor-1)] == "exit":
+                        #print "exiting"
+                        #time.sleep(2)
+                        break
+                    self.menu_layout[display+(depth_divisor-1)]()
                 time.sleep(0.01)
                 #prev_millis = int(round(time.time() * 1000))
-                self.encoder.pos = 0
+                self.encoder.pos = display/depth_divisor #resume where you came from
             #time.sleep(0.1)
+        return
 
 def printmenu(text):
     print(text)
