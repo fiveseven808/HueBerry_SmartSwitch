@@ -1161,96 +1161,7 @@ def wifi_settings():
                 break
             time.sleep(0.01)
 
-
 def settings_menu(g_scenesdir):
-    time.sleep(.25)
-    #global pos
-    #pos = 0
-    encoder.pos = 0 #Reset to top menu
-    old_display = 0
-    exitvar = False
-    menudepth = 11
-    refresh = 1
-    scene_refresh = 0
-    while exitvar == False:
-        if(encoder.pos > menudepth):
-            encoder.pos = menudepth
-        elif(encoder.pos < 1):
-            encoder.pos = 1
-        display = encoder.pos
-
-        #Display Selected Menu
-        if (old_display != display or refresh == 1):
-            if(display == 1):
-                hb_display.display_2lines(str(display) + ". Device","Info",17)
-            elif(display == 2):
-                hb_display.display_2lines(str(display) + ". Re-Pair","Hue Bridge",17)
-            elif(display == 3):
-                hb_display.display_2lines(str(display) + ". Shutdown","hueBerry",17)
-            elif(display == 4):
-                hb_display.display_2lines(str(display) + ". Restart","hueBerry",17)
-            elif(display == 5):
-                hb_display.display_2lines(str(display) + ". Flashlight","Function",17)
-            elif(display == 6):
-                hb_display.display_2lines(str(display) + ". Connect to","WiFi",17)
-            elif(display == 7):
-                hb_display.display_2lines(str(display) + ". Check for","Upgrades?",17)
-            elif(display == 8):
-                hb_display.display_2lines(str(display) + ". Create a","New Scene",17)
-            elif(display == 9):
-                hb_display.display_2lines(str(display) + ". Toggle time","Mode 24/12h",17)
-            elif(display == 10):
-                hb_display.display_2lines(str(display) + ". Change","Quick actions",17)
-            else:
-                hb_display.display_2lines("Back to","Main Menu",17)
-            old_display = display
-            refresh = 0
-        else:
-            time.sleep(0.005)
-
-        # Poll button press and trigger action based on current display
-        #if(not GPIO.input(21)):
-        pos,pushed = encoder.get_state()
-        if(pushed):
-            if(display == 1):
-                devinfo_screen()
-            elif(display == 2):
-                os.popen("rm auth.json")
-                pair_hue_bridge()
-            elif(display == 3):
-                shutdown_hueberry()
-            elif(display == 4):
-                restart_hueberry()
-            elif(display == 5):
-                flashlight_mode()
-            elif(display == 6):
-                wifi_settings()
-            elif(display == 7):
-                user_init_upgrade()
-            elif(display == 8):
-                new_scene_creator(g_scenesdir)
-                scene_refresh = 1
-            elif(display == 9):
-                settings.ToggleTimeFormat()
-                if (settings.GetTimeFormat()):
-                    hb_display.display_2lines("Time mode","Set to 12h",17)
-                else:
-                    hb_display.display_2lines("Time mode","Set to 24h",17)
-                time.sleep(1)
-                encoder.wait_for_button_release()
-            elif(display == 10):
-                quick_action_settings()
-            #elif(display == 9):
-            #    scene_explorer(g_scenesdir)
-            else:
-                time.sleep(0.25)
-                exitvar = True
-            refresh = 1
-            encoder.pos = display
-            encoder.wait_for_button_release()
-    return scene_refresh
-
-def settings_menu_test(g_scenesdir):
     menu_layout = ("Device","Info",lambda: devinfo_screen(),
                     "Re-Pair","Hue Bridge",lambda: re_pair_bridge_stub(),
                     "Shutdown","hueBerry",lambda: shutdown_hueberry(),
@@ -1271,7 +1182,7 @@ def settings_menu_test(g_scenesdir):
 def preferences_menu():
     menu_layout = ("Toggle time","Mode 24/12h",lambda: toggle_time_format_stub(),
                     "Change","Quick actions",lambda: quick_action_settings(),
-                    "Back to","Settings [ Menu ]","exit")
+                    "Back to","Settings Menu","exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
@@ -1307,48 +1218,12 @@ def toggle_time_format_stub():
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
-    time.sleep(.25)
-    encoder.pos = 0 #Reset to top menu
-    old_display = 0
-    exitvar = False
-    menudepth = 3
-    refresh = 1
-
-    while exitvar == False:
-        if(encoder.pos > menudepth):
-            encoder.pos = menudepth
-        elif(encoder.pos < 1):
-            encoder.pos = 1
-        display = encoder.pos
-
-        #Display Selected Menu
-        if (old_display != display or refresh == 1):
-            if(display == 1):
-                hb_display.display_2lines("Change quick", "Press action", 17)
-            elif(display == 2):
-                hb_display.display_2lines("Change long", "Press action", 17)
-            else:
-                hb_display.display_2lines("Back to","Settings Menu",17)
-            old_display = display
-            refresh = 0
-        else:
-            time.sleep(0.005)
-        pos,pushed = encoder.get_state()
-        # Poll button press and trigger action based on current display
-        if(pushed):
-            if(display == 1):
-                settings.SetQuickPressAction(set_action())
-            elif(display == 2):
-                settings.SetLongPressAction(set_action())
-            else:
-                time.sleep(0.25)
-                exitvar = True
-            refresh = 1
-            encoder.pos = display
-            pos,pushed = encoder.get_state()
-            while(pushed):
-                pos,pushed = encoder.get_state()
-                time.sleep(0.01)
+    menu_layout = ("Change quick", "Press action",lambda: settings.SetQuickPressAction(set_action()),
+                    "Change long", "Press action",lambda: settings.SetLongPressAction(set_action()),
+                    "Back to","Pref Menu","exit")
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    menu.run_2_line_menu()
+    encoder.wait_for_button_release()
     return
 
 def set_action():
@@ -1591,9 +1466,6 @@ def holding_button(holding_time_ms,display_before,display_after,button_pin):
     return successvar
 
 def set_scene_transition_time():
-    #placeholder
-    #hb_display.display_custom("doing a thing")
-    #global pos
     encoder.pos = 2                 # Start at 40ms
     exitvar = False
     max_rot_val = 150       # 30 sec max transition time
@@ -1616,12 +1488,8 @@ def set_scene_transition_time():
                 hb_display.display_2lines("Transition Time",'%.2f'%rot_bri + " sec",15)
             refresh = 0
         if rot_bri <= 0 and rot_bri != bri_pre:
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            #huecmd.start()
             bri_pre = rot_bri
         elif(rot_bri != bri_pre and millsdiff > 200):
-            #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':rot_bri,'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-            #huecmd.start()
             bri_pre = rot_bri
             prev_mills = mills
         elif(millsdiff > 200):
@@ -1681,6 +1549,14 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
             exitvar = True
         time.sleep(0.01)
     return result
+
+def binarydecision_new(binary_decision_question_function,answer1,answer2):
+    menu_layout = (lambda: binary_decision_question_function(), None, lambda: settings.SetQuickPressAction(set_action()),
+                    "Choose", str(answer1), lambda: set_result(1),
+                    "Choose", str(answer2), lambda: set_result(2))
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    menu.run_2_line_menu()
+    encoder.wait_for_button_release()
 
 def get_scene_total(g_scenesdir,offset):
     #search all of the scenes in the scenes directory
@@ -1840,7 +1716,6 @@ while True:
     #    print timeout_secs
 
     # Poll button press and trigger action based on current display
-    #if(not GPIO.input(21)):
     pos,pushed = encoder.get_state() # after loading everything, get state#
     if (pushed):
         if(display == 0):
@@ -1896,7 +1771,7 @@ while True:
                 time.sleep(5)
         elif(display == (menudepth-2)):
             encoder.pos = 0
-            scene_refresh = settings_menu_test(g_scenesdir)
+            scene_refresh = settings_menu(g_scenesdir)
             #InteliDraw_Test()
             scene_refresh = 1 # lol override. this might be useful lol
         elif(display == (menudepth-1)):
@@ -1910,4 +1785,3 @@ while True:
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
         encoder.pos = 0
-    #time.sleep(0.1)

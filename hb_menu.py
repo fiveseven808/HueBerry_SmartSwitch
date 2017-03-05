@@ -146,6 +146,7 @@ class Menu_Creator(object):
                         #print "exiting"
                         #time.sleep(2)
                         break
+                    # This is where the object that's selected actually runs... 
                     self.menu_layout[display+(depth_divisor-1)]()
                 time.sleep(0.01)
                 #prev_millis = int(round(time.time() * 1000))
