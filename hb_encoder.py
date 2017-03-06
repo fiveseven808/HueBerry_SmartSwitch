@@ -111,10 +111,12 @@ class RotaryClass(object):
             self.pushed = 1
 
     def wait_for_button_release(self):
-        while(self.pushed):
-            #just wait lol
+        if (self.debug == 0):
             self.get_state()
-            time.sleep(0.01)
+            while(self.pushed):
+                #just wait lol
+                self.get_state()
+                time.sleep(0.01)
         return
 
 
