@@ -1,9 +1,12 @@
 #!/usr/bin/env python
+__version__ = "v045-0306.57"
 """
 v045
 2017-03-03 //57
 + WPBack wrote a settings module so we can make personlization changes to how the menu works!!!
-
+0306 //57
++ New Menu module rewritten
++ Porting as many menus as I can over to the new module (SO MUCH CLEANER)
 
 v044
 2017-02-22 //57
@@ -980,7 +983,7 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
     time.sleep(0.5)
     return api_url,bridge_ip
 
-def devinfo_screen():
+def devinfo_screen_old():
     time.sleep(.25)
     #global pos
     encoder.pos = 0 #Reset to top menu
@@ -1036,6 +1039,21 @@ def devinfo_screen():
                 pos,pushed = encoder.get_state()
                 time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
+    return
+
+def devinfo_screen():
+    ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+    ssid = os.popen("iwconfig wlan0 | grep 'ESSID' | awk '{print $4}' | awk -F\\\" '{print $2}'").read()
+    ipaddress_0 = os.popen("ifconfig eth0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+    ipaddress_1 = os.popen("ifconfig eth1 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+    menu_layout = (lambda: hb_display.display_3lines("hueBerry IP: " + str(ipaddress),"Bridge IP: " + str(bridge_ip) ,"WLAN SSID: " + str(ssid),9,offset = 15), None, lambda: bd_set_result(0),
+                    lambda: hb_display.display_3lines("eth0 IP: " + str(ipaddress_0),"eth1 IP: " + str(ipaddress_1) ,"blah",9,offset = 15), None, lambda: bd_set_result(0),
+                    "Get hue Hub", "Info", lambda: get_hue_devinfo(),
+                    "Version Number", str(__version__), lambda: bd_set_result(0),
+                    "Back to", "Settings", "exit")
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    settings_menu.run_2_line_menu()
+    encoder.wait_for_button_release()
     return
 
 def get_hue_devinfo():
@@ -1182,7 +1200,7 @@ def settings_menu(g_scenesdir):
 def preferences_menu():
     menu_layout = ("Toggle time","Mode 24/12h",lambda: toggle_time_format_stub(),
                     "Change","Quick actions",lambda: quick_action_settings(),
-                    "Back to","Settings Menu","exit")
+                    "Back to","Settings","exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()

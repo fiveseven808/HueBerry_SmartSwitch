@@ -161,6 +161,9 @@ class upgrader(object):
             + Error handling for get_huejson_value
             + Preferences menu in Settings now!!! Thanks //WPBack!
             + Added the ability to force upgrades! (probably not good to leave in prod lol)
+        2017-03-06 //57
+            + New Menu module rewritten
+            + Porting as many menus as I can over to the new module (SO MUCH CLEANER)
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
