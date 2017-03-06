@@ -57,6 +57,7 @@ class Menu_Creator(object):
                 display_temp = 0
             elif(display == 0):
                 displaytemp = display
+            self.encoder.wait_for_button_release()
             pos,pushed = self.encoder.get_state() # after loading everything, get state#
             if (pushed):
                 if(display >= self.offset and display < total_plus_offset):
@@ -118,6 +119,7 @@ class Menu_Creator(object):
             # Poll button press and trigger action based on current display
             #if(not GPIO.input(21)):
             #print self.exitvar
+            self.encoder.wait_for_button_release()
             pos,pushed = self.encoder.get_state() # after loading everything, get state#
             if (pushed):
                 if(display >= self.offset and display < total_plus_offset):
