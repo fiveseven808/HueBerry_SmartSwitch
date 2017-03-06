@@ -1218,50 +1218,26 @@ def toggle_time_format_stub():
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
-    menu_layout = ("Change quick", "Press action",lambda: settings.SetQuickPressAction(set_action()),
-                    "Change long", "Press action",lambda: settings.SetLongPressAction(set_action()),
+    menu_layout = ("Change quick", "Press action",lambda: settings.SetQuickPressAction(set_action("Quick")),
+                    "Change long", "Press action",lambda: settings.SetLongPressAction(set_action("Long")),
                     "Back to","Pref Menu","exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
 
-def set_action():
-    time.sleep(.25)
-    encoder.pos = 0 #Reset to top menu
-    old_display = 0
-    exitvar = False
-    menudepth = 5
-    refresh = 1
-
-    while exitvar == False:
-        if(encoder.pos > menudepth):
-            encoder.pos = menudepth
-        elif(encoder.pos < 1):
-            encoder.pos = 1
-        display = encoder.pos
-
-        #Display Selected Menu
-        if (old_display != display or refresh == 1):
-            if(display == 1):
-                hb_display.display_2lines("Set to", "Do nothing", 17)
-            elif(display == 2):
-                hb_display.display_2lines("Set to", "Turn all on", 17)
-            elif(display == 3):
-                hb_display.display_2lines("Set to", "Turn all off", 17)
-            elif(display == 4):
-                hb_display.display_2lines("Set to", "Toggle all", 17)
-            else:
-                hb_display.display_2lines("Back to","Previous Menu",17)
-            old_display = display
-            refresh = 0
-        else:
-            time.sleep(0.005)
-        # Poll button press and trigger action based on current display
-        pos,pushed = encoder.get_state()
-        if(pushed):
-            return display - 1
-    return -1
+def set_action(type):
+    result = 0
+    menu_layout = ("Choose " + str(type), "Action:", "BD_TYPE",
+                    "Set to", "Do nothing", lambda: bd_set_result(1),
+                    "Set to", "Turn all on", lambda: bd_set_result(2),
+                    "Set to", "Turn all off", lambda: bd_set_result(3),
+                    "Set to", "Toggle all", lambda: bd_set_result(4),
+                    "Back to", "Previous Menu", lambda: bd_set_result(5))
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    result = menu.run_2_line_menu()
+    encoder.wait_for_button_release()
+    return result - 1
 
 def new_scene_creator(g_scenesdir):
     #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
@@ -1500,59 +1476,9 @@ def set_scene_transition_time():
     transition_time = encoder.pos*2
     return transition_time
 
-def binarydecision_old(binary_decision_question_function,answer1,answer2):
-    #def binarydecision(displayfunction,messagedict,)
-    #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get hb_display.display_3lines(something) passed to it, and then run it as pos == 0 or something...
-    #as of now 2/4/17 this is just a placeholder stolen from the function above. not called, and no functionality has been implemented
-    #disassemble question dict
-    #line1 = question_line1
-    #line2 = question_line2
-    #global pos
-    #pos = 0                 # Start at 0
-    encoder.pos = 0
-    exitvar = False
-    max_rot_val = 2       # binar question
-    old_pos = 0       # idk
-    refresh = 1
-    prev_mills = 0
-    while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > max_rot_val):
-            encoder.pos = max_rot_val
-        elif(pos < 0):
-            encoder.pos = 0
-        pos = encoder.pos
-        mills = int(round(time.time() * 1000))
-        millsdiff = mills - prev_mills
-        if(old_pos != pos or refresh ==  1 ):
-            old_pos = pos
-            if (pos == 0):
-                #hb_display.display_2lines(str(line1),str(line2),15)
-                binary_decision_question_function()
-                result = 0
-                #print "pos = "+str(pos)
-                #print "old pos = "+str(old_pos)
-            elif (pos == 1):
-                hb_display.display_2lines("Choose",str(answer1),15)
-                result = 1
-                #print "pos = "+str(pos)
-                #print "old pos = "+str(old_pos)
-            elif (pos == 2):
-                hb_display.display_2lines("Choose",str(answer2),15)
-                result = 2
-                #print "pos = "+str(pos)
-                #print "old pos = "+str(old_pos)
-            else:
-                print("fuck, something went wrong in binary decision")
-            refresh = 0
-        if(pushed and result > 0 ):
-            exitvar = True
-        time.sleep(0.01)
-    return result
-
 def binarydecision(binary_decision_question_function,answer1,answer2):
     bd_result = 0
-    menu_layout = (lambda: binary_decision_question_function(), "BD_TYPE", lambda: settings.SetQuickPressAction(set_action()),
+    menu_layout = (lambda: binary_decision_question_function(), None, "BD_TYPE",
                     "Choose", str(answer1), lambda: bd_set_result(1),
                     "Choose", str(answer2), lambda: bd_set_result(2))
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)

@@ -147,9 +147,9 @@ class Menu_Creator(object):
                     #print display
                     if self.menu_layout[display+(depth_divisor-1)] == "exit":
                         # If a menu item has "exit" as the function/action thing, then exit
-                        break
-                    # Position [1] can be interpeted as type (all caps)
-                    if self.menu_layout[1] == "BD_TYPE":
+                        return 0
+                    # Position [1] or [2] can be interpeted as type (all caps)
+                    if self.menu_layout[1] == "BD_TYPE" or self.menu_layout[2] == "BD_TYPE":
                         # If BD_TYPE menu
                         if display != 0 :
                             return self.menu_layout[display+(depth_divisor-1)]()
