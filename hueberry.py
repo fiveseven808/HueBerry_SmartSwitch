@@ -1500,7 +1500,7 @@ def set_scene_transition_time():
     transition_time = encoder.pos*2
     return transition_time
 
-def binarydecision(binary_decision_question_function,answer1,answer2):
+def binarydecision_old(binary_decision_question_function,answer1,answer2):
     #def binarydecision(displayfunction,messagedict,)
     #take input as a function? then run the function. or store it. this will be the "display" thing. i.e. this function will get hb_display.display_3lines(something) passed to it, and then run it as pos == 0 or something...
     #as of now 2/4/17 this is just a placeholder stolen from the function above. not called, and no functionality has been implemented
@@ -1550,13 +1550,19 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
         time.sleep(0.01)
     return result
 
-def binarydecision_new(binary_decision_question_function,answer1,answer2):
-    menu_layout = (lambda: binary_decision_question_function(), None, lambda: settings.SetQuickPressAction(set_action()),
-                    "Choose", str(answer1), lambda: set_result(1),
-                    "Choose", str(answer2), lambda: set_result(2))
+def binarydecision(binary_decision_question_function,answer1,answer2):
+    bd_result = 0
+    menu_layout = (lambda: binary_decision_question_function(), "BD_TYPE", lambda: settings.SetQuickPressAction(set_action()),
+                    "Choose", str(answer1), lambda: bd_set_result(1),
+                    "Choose", str(answer2), lambda: bd_set_result(2))
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
-    menu.run_2_line_menu()
+    bd_result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
+    return bd_result
+
+def bd_set_result(value):
+    return value
+
 
 def get_scene_total(g_scenesdir,offset):
     #search all of the scenes in the scenes directory

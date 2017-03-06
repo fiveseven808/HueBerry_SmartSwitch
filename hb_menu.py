@@ -94,7 +94,10 @@ class Menu_Creator(object):
             #Display Selected Menu
             if (old_display != display or refresh == 1):
                 if(display >= self.offset and display <= (total_plus_offset-1)):
-                    self.hb_display.display_2lines(str(display_number) + ". "+str(self.menu_layout[display-self.offset]),str(self.menu_layout[display-self.offset+1]),17)
+                    if callable(self.menu_layout[display-self.offset]) == False:
+                        self.hb_display.display_2lines(str(display_number) + ". "+str(self.menu_layout[display-self.offset]),str(self.menu_layout[display-self.offset+1]),17)
+                    else:
+                        self.menu_layout[display-self.offset]()
                 old_display = display
             elif(display != 0):
                 time.sleep(0.005)
@@ -143,11 +146,19 @@ class Menu_Creator(object):
                     """
                     #print display
                     if self.menu_layout[display+(depth_divisor-1)] == "exit":
-                        #print "exiting"
-                        #time.sleep(2)
+                        # If a menu item has "exit" as the function/action thing, then exit
                         break
-                    # This is where the object that's selected actually runs... 
-                    self.menu_layout[display+(depth_divisor-1)]()
+                    # Position [1] can be interpeted as type (all caps)
+                    if self.menu_layout[1] == "BD_TYPE":
+                        # If BD_TYPE menu
+                        if display != 0 :
+                            return self.menu_layout[display+(depth_divisor-1)]()
+                        if display == 0:
+                            # Make sure to do nothing when the "Question" for BD_TYPE is selected
+                            pass
+                    else: # If normal type menu
+                        # This is where the object that's selected actually runs...
+                        self.menu_layout[display+(depth_divisor-1)]()
                 time.sleep(0.01)
                 #prev_millis = int(round(time.time() * 1000))
                 self.encoder.pos = display/depth_divisor #resume where you came from
