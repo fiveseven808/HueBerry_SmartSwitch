@@ -201,6 +201,13 @@ class Menu_Creator(object):
         if (wholejson['state']['any_on'] == False):
             brite = 0
         """
+        title1 = self.menu_layout[1]
+        title2 = self.menu_layout[2]
+        max_rot_val = self.menu_layout[3]
+        main_func = self.menu_layout[4]
+        timeout_ms = self.menu_layout[5]
+        tiemout_func = self.menu_layout[6]
+        pos_value_func = self.menu_layout[7]
         #The above is deermined by the calling function and passed to the below in the big dict
         brite = brite/10.16        #trim it down to 25 values
         #Make this "starting" value something that pulls from a return from a function? perhaps? or mayube it's predetermined and sent lol
