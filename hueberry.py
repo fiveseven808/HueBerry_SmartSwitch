@@ -1180,17 +1180,18 @@ def wifi_settings():
             time.sleep(0.01)
 
 def settings_menu(g_scenesdir):
-    menu_layout = ("Device","Info",lambda: devinfo_screen(),
-                    "Re-Pair","Hue Bridge",lambda: re_pair_bridge_stub(),
-                    "Shutdown","hueBerry",lambda: shutdown_hueberry(),
-                    "Restart","hueBerry",lambda: restart_hueberry(),
-                    "Flashlight","Function",lambda: flashlight_mode(),
-                    "Connect to","WiFi",lambda: wifi_settings(),
-                    "Check for","Upgrades?",lambda: user_init_upgrade_precheck(),
-                    "Create a","New Scene",lambda: create_scene_stub(g_scenesdir),
-                    #"Scene","Explorer",lambda: scene_explorer(g_scenesdir),
-                    "Preferences","[ Menu ]",lambda: preferences_menu(),
-                    "Back to","Main Menu","exit")
+    menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                    "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                    "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                    "Restart", "hueBerry", lambda: restart_hueberry(),
+                    "Flashlight", "Function", lambda: flashlight_mode(),
+                    "Connect to", "WiFi", lambda: wifi_settings(),
+                    "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
+                    "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
+                    #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                    #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
+                    "Preferences", "[ Menu ]", lambda: preferences_menu(),
+                    "Back to", "Main Menu", "exit")
     settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
@@ -1198,16 +1199,16 @@ def settings_menu(g_scenesdir):
     return scene_refresh
 
 def preferences_menu():
-    menu_layout = ("Toggle time","Mode 24/12h",lambda: toggle_time_format_stub(),
-                    "Change","Quick actions",lambda: quick_action_settings(),
-                    "Back to","Settings","exit")
+    menu_layout = ("Toggle time", "Mode 24/12h", lambda: toggle_time_format_stub(),
+                    "Change", "Quick actions", lambda: quick_action_settings(),
+                    "Back to", "Settings", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
 
 def user_init_upgrade_precheck():
-    result = holding_button(2000,"Hold to FORCE","Will FORCE UPDATE",21)
+    result = holding_button(2000,"Hold to FORCE", "Will FORCE UPDATE", 21)
     if result == 1:
         user_init_upgrade(force = 1)
     elif result == 0:
@@ -1224,9 +1225,9 @@ def create_scene_stub(g_scenesdir):
 def toggle_time_format_stub():
     settings.ToggleTimeFormat()
     if (settings.GetTimeFormat()):
-        hb_display.display_2lines("Time mode","Set to 12h",17)
+        hb_display.display_2lines("Time mode", "Set to 12h", 17)
     else:
-        hb_display.display_2lines("Time mode","Set to 24h",17)
+        hb_display.display_2lines("Time mode", "Set to 24h", 17)
     time.sleep(1)
     encoder.wait_for_button_release()
 
@@ -1236,9 +1237,9 @@ def toggle_time_format_stub():
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
-    menu_layout = ("Change quick", "Press action",lambda: settings.SetQuickPressAction(set_action("Quick")),
-                    "Change long", "Press action",lambda: settings.SetLongPressAction(set_action("Long")),
-                    "Back to","Pref Menu","exit")
+    menu_layout = ("Change quick", "Press action", lambda: settings.SetQuickPressAction(set_action("Quick")),
+                    "Change long", "Press action", lambda: settings.SetLongPressAction(set_action("Long")),
+                    "Back to", "Pref Menu", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
@@ -1259,12 +1260,12 @@ def set_action(type):
 
 def new_scene_creator(g_scenesdir):
     #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
-    total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset = 0)
+    total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir, offset = 0)
     new_scene_number = total_scenes + 1
     new_scene_name = str(g_scenesdir) + str(new_scene_number) + "_scene.sh"
     print "New scene will be: " + str(new_scene_name)
     ltt = set_scene_transition_time()
-    result = get_house_scene_by_light(new_scene_name,ltt)
+    result = get_house_scene_by_light(new_scene_name, ltt)
     debugmsg("ran NEW scene by individual creation with result = " + result)
     return
 
@@ -1281,7 +1282,7 @@ def scene_explorer(g_scenesdir):
     while exitvar == False:
         # Display the current scene
         if (scene_refresh == 1):
-            total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
+            total_screens, total_plus_offset, scene_files = get_scene_total(g_scenesdir, offset)
             scene_refresh = 0
         menudepth = total_plus_offset + post_offset - 1
         # Cycle through different displays
