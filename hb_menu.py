@@ -21,6 +21,11 @@ class Menu_Creator(object):
             self.encoder = hb_encoder.RotaryClass(debug = 1)
 
     def run_simple_menu(self):
+        """
+        menu_layout = ("1st menu",lambda: printmenu("oshit! it works!"),
+                    "2nd menu",lambda: printmenu("doing a second thing"),
+                    "quit",lambda: sys.exit())
+        """
         timeout = 0
         displaytemp = 0
         prev_secs = 0
@@ -70,9 +75,15 @@ class Menu_Creator(object):
                 time.sleep(0.01)
                 #prev_millis = int(round(time.time() * 1000))
                 self.encoder.pos = 0
+                refresh = 1
             #time.sleep(0.1)
 
     def run_2_line_menu(self):
+        """
+        menu_layout = ("Name 1", "Name 2", lambda: do_thing_1(),
+                        "Name 3", "Name 4", lambda: do_thing_2(),
+                        "Back to", "Main Menu", "exit")
+        """
         timeout = 0
         displaytemp = 0
         prev_secs = 0
@@ -164,10 +175,82 @@ class Menu_Creator(object):
                         # This is where the object that's selected actually runs...
                         self.menu_layout[display+(depth_divisor-1)]()
                 time.sleep(0.01)
+                refresh = 1
                 #prev_millis = int(round(time.time() * 1000))
                 self.encoder.pos = display/depth_divisor #resume where you came from
             #time.sleep(0.1)
         return
+
+    def single_value_menu(self):
+        """
+        datastructure = (group_or_light_or_something, bri_or_hue_or_something,
+                        max_rot_value, lambda: func_2_run_off_of_pos(),
+                        timeout, lambda: timeout_func(),
+                        lambda: pos_to_value_func())
+        """
+        """
+        brite,wholejson = get_huejson_value("g",group,"bri")
+        if(brite == -1):
+            #print "No lights avaliable"
+            return
+        #else:
+        #    print "guess it was brite"
+        brite = int(brite)      #make integer
+        if brite < 10 and brite >= 0:
+            brite = 10
+        if (wholejson['state']['any_on'] == False):
+            brite = 0
+        """
+        #The above is deermined by the calling function and passed to the below in the big dict
+        brite = brite/10.16        #trim it down to 25 values
+        #Make this "starting" value something that pulls from a return from a function? perhaps? or mayube it's predetermined and sent lol
+        brite = int(brite)      #convert the float down to int agian
+        #Need to detmermine initial encoder position
+        encoder.pos = brite
+        max_rot_val = 25
+        #bri_pre = encoder.pos * 10
+        bri_pre = encoder.pos * 10.16
+        refresh = 1
+        prev_mills = 0
+        self.encoder.wait_for_button_release()
+        while True:
+            pos,pushed = encoder.get_state()
+            if(pos > max_rot_val):
+                encoder.pos = max_rot_val
+            elif(pos < 0):
+                encoder.pos = 0
+            mills = int(round(time.time() * 1000))
+            millsdiff = mills - prev_mills
+            #rot_bri = encoder.pos * 10
+            rot_bri = encoder.pos * 10.16
+            if(bri_pre != rot_bri or refresh ==  1 ):
+                hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.54)) + "%",17)
+                refresh = 0
+            if rot_bri <= 0 and rot_bri != bri_pre:
+                #print"turning off?"
+                #hue_groups(lnum = group,lon = "false",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
+                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+                huecmd.start()
+                bri_pre = rot_bri
+            elif(rot_bri != bri_pre and millsdiff > 200):
+                #print"millsdiff > 200"
+                #hue_groups(lnum = group,lon = "true",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
+                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+                huecmd.start()
+                bri_pre = rot_bri
+                prev_mills = mills
+            millsdiff = mills - prev_mills
+            if(millsdiff > 5000):
+                #If 5.0 seconds have passed and nothing has happened, go and refresh the display and reset the miliseconds
+                rot_bri,wholejson = get_huejson_value("g",group,"bri")
+                #print "the rot bri is: "+str(rot_bri)
+                hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
+                prev_mills = mills
+            if(pushed):
+                exitvar = True
+            time.sleep(0.01)
+            refresh = 1
+
 
 def printmenu(text):
     print(text)

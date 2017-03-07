@@ -1472,6 +1472,7 @@ def set_scene_transition_time():
     bri_pre = encoder.pos/5.0       # 20ms per rotation
     refresh = 1
     prev_mills = 0
+    encoder.wait_for_button_release()
     while exitvar == False:
         pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
