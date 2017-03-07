@@ -46,8 +46,7 @@ class Menu_Creator(object):
                 if(display >= self.offset and display <= (total_plus_offset-1)):
                     self.hb_display.display_2lines(str(display_number) + ". " + str(self.menu_layout[display-self.offset]),"Run?",15)
                 old_display = display
-            elif(display != 0):
-                time.sleep(0.005)
+            time.sleep(0.005)
             secs = int(round(time.time()))
             timeout_secs = secs - prev_secs
             if(display != 0 and displaytemp != display):
@@ -101,8 +100,9 @@ class Menu_Creator(object):
                     else:
                         self.menu_layout[display-self.offset]()
                 old_display = display
-            elif(display != 0):
-                time.sleep(0.005)
+            #elif(display != 0):
+            #    time.sleep(0.005)
+            time.sleep(0.005)
 
             secs = int(round(time.time()))
             timeout_secs = secs - prev_secs

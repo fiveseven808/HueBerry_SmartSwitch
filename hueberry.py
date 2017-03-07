@@ -1201,6 +1201,8 @@ def settings_menu(g_scenesdir):
 def preferences_menu():
     menu_layout = ("Toggle time", "Mode 24/12h", lambda: toggle_time_format_stub(),
                     "Change", "Quick actions", lambda: quick_action_settings(),
+                    #"Set Screen", "Saver", lambda: screensaver_settings(),
+                    #"Set Night Mode", "Settings", lambda: nightmode_settings(),
                     "Back to", "Settings", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     menu.run_2_line_menu()
@@ -1252,6 +1254,9 @@ def set_action(type):
                     "Set to", "Turn all on", lambda: bd_set_result(2),
                     "Set to", "Turn all off", lambda: bd_set_result(3),
                     "Set to", "Toggle all", lambda: bd_set_result(4),
+                    # "Load a", "Specific Scene", lambda:scene_pick_menu(),
+                    # "Toggle a", "Specific Light", lambda:light_pick_menu(),
+                    # "Toggle a", "Specific Group", lambda:group_pick_menu(),
                     "Back to", "Previous Menu", lambda: bd_set_result(5))
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
     result = menu.run_2_line_menu()
