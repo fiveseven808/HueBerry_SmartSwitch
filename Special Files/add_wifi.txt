@@ -1,0 +1,10 @@
+SSID goes here
+P@55phr@s3_goes_here
+
+# Use this file to add a wireless access point without the use of WPS
+# First line of this file is the SSID of the access point
+# Second line of this file is the pre-shared key (password)
+#
+# Any subsequent lines in this file are ignored
+# Stick this file in the /boot/hueBerry/ directory
+# Boot the hueBerry with the new file in the specific directory and follow on-screen instructions

@@ -1343,16 +1343,25 @@ def check_wifi_file(maindirectory):
             pos,pushed = encoder.get_state()
             if(pushed):
                 break
-        ssids = os.popen("cat " + str(ADDWIFIPATH) + " | awk '{print $1}'").read()
-        ssid_array = ssids.split('\n')
-        hb_display.display_3lines("SSID: " + str(ssid_array[0]),"PSK: " + str(ssid_array[1]),"Continue?",11,offset = 15)
+        ssids = os.popen("cat " + str(ADDWIFIPATH)).read()
+        ssid_array = ssids.split('\r\n') # Try and parse out microsoft created files
+        if len(ssid_array) <= 1: # If it doesn't parse out properly
+            ssid_array = ssids.split('\n') # Try and parse the "normal" way
+            if len(ssid_array) <= 1: # If it still doesn't work
+                os.rename(ADDWIFIPATH,ADDWIFIPATH + ".FAILED") # File must not be formatted right
+                text = "Something went wrong adding wifi... File is not formatted properly"
+                debugmsg(text)
+                hb_display.display_max_text(text)
+                time.sleep(4)
+                return #go back and resume boot
+        hb_display.display_3lines("SSID: " + ssid_array[0].encode('utf-8'),"PSK: " + ssid_array[1].encode('utf-8'),"Continue?",11,offset = 15)
         while True:
             time.sleep(0.01)
             pos,pushed = encoder.get_state()
             if(pushed):
                 break
         with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as myfile:
-            myfile.write("\nnetwork={\n\tssid=\"" + str(ssid_array[0]) + "\"\n\tpsk=\"" + str(ssid_array[1]) + "\"\n}\n")
+            myfile.write("\nnetwork={\n\tssid=\"" + ssid_array[0].encode('utf-8') + "\"\n\tpsk=\"" + ssid_array[1].encode('utf-8') + "\"\n}\n")
         os.rename(ADDWIFIPATH,ADDWIFIPATH + ".added")
         hb_display.display_3lines("Added to database!","Rebooting... ","Please Wait",13,16)
         os.popen("sudo shutdown -r now")
