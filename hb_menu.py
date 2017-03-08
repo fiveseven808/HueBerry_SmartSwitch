@@ -3,17 +3,18 @@ import hb_display
 import time
 
 class Menu_Creator(object):
-    def __init__(self, menu_layout, debug = 0, mirror_mode = 0):
+    def __init__(self, menu_layout, debug = 0, mirror_mode = 0, rotate = 0):
         debug_argument = debug
         self.offset = 0 #carryover
         self.post_offset = 0 #carryover
         self.menu_layout = menu_layout
         self.exitvar = 0
         # Create Display Object
+        # Maybe instead of create? get passed display object from hueberry? would make this less independent though... and confusing...
         if(mirror_mode == 1):
             self.hb_display = hb_display.display(console = 1,mirror = mirror_mode)
         else:
-            self.hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
+            self.hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
         # Create Encoder Object
         if (debug_argument == 0):
             self.encoder = hb_encoder.RotaryClass()

@@ -14,13 +14,13 @@ class display(object):
     def __init__(self, console=0, mirror = 0, rotation = 0):
         self.console = console
         self.mirror = mirror
+        self.rotate_angle = rotation
         if (self.console == 0 or self.mirror == 1):
             import Adafruit_SSD1306
             self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
             self.disp.begin()
             self.width = self.disp.width
             self.height = self.disp.height
-            self.rotate_angle = rotation
         else:
             #console specific initiation goes here
             #Adafruit OLED library standard width for string calculation
@@ -212,7 +212,7 @@ class display(object):
 
     def send_to_screen(self):
         if self.rotate_angle > 0 :
-            self.disp.image(self.image.rotate(rotate_angle))
+            self.disp.image(self.image.rotate(self.rotate_angle))
         else:
             self.disp.image(self.image)
         self.disp.display()

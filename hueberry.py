@@ -1054,7 +1054,7 @@ def devinfo_screen():
                     "Get hue Hub", "Info", lambda: get_hue_devinfo(),
                     "Version Number", str(__version__), lambda: bd_set_result(0),
                     "Back to", "Settings", "exit")
-    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1195,7 +1195,7 @@ def settings_menu(g_scenesdir):
                     #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
                     "Preferences", "[ Menu ]", lambda: preferences_menu(),
                     "Back to", "Main Menu", "exit")
-    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     scene_refresh = 1
@@ -1207,7 +1207,7 @@ def preferences_menu():
                     #"Set Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
                     "Back to", "Settings", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1245,7 +1245,7 @@ def quick_action_settings():
     menu_layout = ("Change quick", "Press action", lambda: settings.SetQuickPressAction(set_action("Quick")),
                     "Change long", "Press action", lambda: settings.SetLongPressAction(set_action("Long")),
                     "Back to", "Pref Menu", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1261,7 +1261,7 @@ def set_action(type):
                     # "Toggle a", "Specific Light", lambda:light_pick_menu(),
                     # "Toggle a", "Specific Group", lambda:group_pick_menu(),
                     "Back to", "Previous Menu", lambda: bd_set_result(5))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return result - 1
@@ -1518,7 +1518,7 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
     menu_layout = (lambda: binary_decision_question_function(), None, "BD_TYPE",
                     "Choose", str(answer1), lambda: bd_set_result(1),
                     "Choose", str(answer2), lambda: bd_set_result(2))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     bd_result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return bd_result
