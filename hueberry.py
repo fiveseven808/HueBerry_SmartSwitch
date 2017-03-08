@@ -1668,7 +1668,7 @@ while True:
         old_display = display
         old_min = 60
     elif(display != 0):
-        time.sleep(0.005)
+        #time.sleep(0.005)
         old_min = 60
 
     secs = int(round(time.time()))
