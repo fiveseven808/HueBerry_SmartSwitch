@@ -1651,7 +1651,7 @@ while True:
         if(display == 1):
             hb_display.display_2lines(str(display) + ". Turn OFF","all lights slowly",17)
         elif(display == 2):
-            hb_display.display_2lines(str(display) + ". DIM ON","Night lights",17)
+            hb_display.display_2lines(str(display) + ". DIM all","Active lights",17)
         elif(display == 3):
             hb_display.display_2lines(str(display) + ". FULL ON","all lights",17)
         elif(display == 4):
