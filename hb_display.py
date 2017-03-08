@@ -11,7 +11,7 @@ class display(object):
     # Will work to integrate this into hueberry.py soon
     # For now, this is just a proof of concept
 
-    def __init__(self,console=0,mirror = 0):
+    def __init__(self, console=0, mirror = 0, rotation = 0):
         self.console = console
         self.mirror = mirror
         if (self.console == 0 or self.mirror == 1):
@@ -20,6 +20,7 @@ class display(object):
             self.disp.begin()
             self.width = self.disp.width
             self.height = self.disp.height
+            self.rotate_angle = rotation
         else:
             #console specific initiation goes here
             #Adafruit OLED library standard width for string calculation
@@ -79,8 +80,7 @@ class display(object):
         if H < 21 and H > 6:
             self.draw.text((x_pos, y_pos), current_date, font=font, fill=255)
         # Draw the image buffer
-        self.disp.image(self.image)
-        self.disp.display()
+        self.send_to_screen()
 
     def display_2lines(self,line1,line2,size):
         if(self.time_format):
@@ -110,8 +110,7 @@ class display(object):
             x_pos = (self.width/2)-(self.string_width(font,line2)/2)
             y_pos = self.disp.height-26
             self.draw.text((x_pos, y_pos), line2, font=font, fill=255)
-            self.disp.image(self.image)
-            self.disp.display()
+            self.send_to_screen()
         if (self.console == 1):
             os.system('clear')
             print("Currently Displaying 2 lines")
@@ -156,8 +155,7 @@ class display(object):
             x_pos = (self.width/2)-(self.string_width(font,line3)/2)
             y_pos += offset
             self.draw.text((x_pos, y_pos), line3, font=font, fill=255)
-            self.disp.image(self.image)
-            self.disp.display()
+            self.send_to_screen()
         if (self.console == 1):
             os.system('clear')
             print("Currently Displaying 3 lines")
@@ -183,8 +181,7 @@ class display(object):
             # Draw SSID
             self.draw.text((x_pos, y_pos), text, font=font, fill=255)
             # Draw the image buffer
-            self.disp.image(self.image)
-            self.disp.display()
+            self.send_to_screen()
         if (self.console == 1):
             os.system('clear')
             print("       display_custom")
@@ -200,8 +197,7 @@ class display(object):
     def draw_flashlight(self):
         if (self.console == 0 or self.mirror == 1):
             self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=1)
-            self.disp.image(self.image)
-            self.disp.display()
+            self.send_to_screen()
         if (self.console == 1):
             os.system('clear')
             print("         Flashlight")
@@ -213,6 +209,13 @@ class display(object):
             print("############################")
             print("----------------------------")
             return
+
+    def send_to_screen(self):
+        if self.rotate_angle > 0 :
+            self.disp.image(self.image.rotate(rotate_angle))
+        else:
+            self.disp.image(self.image)
+        self.disp.display()
 
     def string_width(self,fontType,string):
         string_width = 0

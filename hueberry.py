@@ -98,6 +98,7 @@ mirror_mode = 0
 bridge_present = 1
 wsl_env = 0
 simulation_arg = 0
+rotate = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -110,6 +111,8 @@ for arg in sys.argv:
     if arg == '-util':
         wsl_env = 1
         bridge_present = 0
+    if arg == '-r180':
+        rotate = 180
     if arg in ("-s","--simulate"):
         simulation_arg = 1
     if arg in ("-h","--help"):
@@ -1574,7 +1577,7 @@ def clock_sub_menu():
 if(mirror_mode == 1):
     hb_display = hb_display.display(console = 1,mirror = mirror_mode)
 else:
-    hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode)
+    hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
 
 # Create Encoder Object
 if (debug_argument == 0):
