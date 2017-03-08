@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
 #
@@ -18,6 +20,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+#import os
+#bearing = os.path.dirname(os.path.abspath(__file__))
+#bearing = bearing + "/../"
+#-----------------------------
+#----Begin Plugin stuff-------
+import plugin.hbplugin
+hbapi = plugin.hbplugin.HB_PAPI(debug = 0) #this program won't work in debug mode
+#-----------------------------
+#------End Plugin stuff-------
+
 import math
 import time
 
@@ -144,3 +156,6 @@ while True:
         pos = startpos
     # Pause briefly before drawing next frame.
     #time.sleep(0.1)
+    encoder_pos, pushed = hbapi.get_state()
+    if pushed == 1:
+        break
