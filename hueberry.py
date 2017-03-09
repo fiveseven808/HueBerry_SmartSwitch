@@ -1640,11 +1640,11 @@ while True:
         elif(display >= offset and display <= (total_plus_offset-1)):
             hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
         elif(display == (menudepth-2)):
-            hb_display.display_2lines(str(display) + ". Settings", "[ Menu ]",13)
+            hb_display.display_2lines(str(display) + ". Settings", "[ Menu ]",14)
         elif(display == (menudepth-1)):
-            hb_display.display_2lines(str(display) + ". Light Control", "Menu",13)
+            hb_display.display_2lines(str(display) + ". Light Control", "[ Menu ]",14)
         elif(display == (menudepth-0)):
-            hb_display.display_2lines(str(display) + ". Group Control", "Menu",13)
+            hb_display.display_2lines(str(display) + ". Group Control", "[ Menu ]",14)
         old_display = display
         old_min = 60
     elif(display != 0):
