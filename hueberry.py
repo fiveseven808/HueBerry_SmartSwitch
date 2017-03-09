@@ -1,38 +1,18 @@
 #!/usr/bin/env python
-__version__ = "v045-0306.57"
+__version__ = "v046-0308.57.b"
 """
-v045
-2017-03-03 //57
-+ WPBack wrote a settings module so we can make personlization changes to how the menu works!!!
-0306 //57
-+ New Menu module rewritten
-+ Porting as many menus as I can over to the new module (SO MUCH CLEANER)
-
-v044
-2017-02-22 //57
-Update function rewritten entirely
-Updater is now a seperate file/class and even uses the display library (which means it needs to be up to date lol)
-Keeping this API/library level for encoder and display for now. Future updater modules will not use any extended functions.
-FULL update required
-Oh, and unicode support has been added to support scene creation
-Need a unicode font to display on screen though.
-
-1313 //57
-Making 0.4s a special time for the hueberry scene creator
-Will not specify a transition time so that other thihngs can work
-
-1725 //57
-Rearranged the clock thing... it now does stuff! :D
-Mash the button for 1.5 seconds and it will toggle all the lights in the house
-Not sure how useful this is for people with rooms they don't always use
-But it was a requested feature.
-
-2012-02-24 //57
-    + hueberry now works on WSL!
-    - Installer doesn't work for WSL yet
-    + Added a couple of switches for WSL and no bridge testing
-1403 //57
-    + Fixed the updater function and display libraries to work in console mode better (doesn't affect prod)
+v046
+2017-03-08 //57
++ I have not been updating the changes... most of them have been under the hood
++ Menu rework (most menus moved over to new system)
++ Wifi by file works now (was previously broken)
++ Updates can now be forced
++ WPBack added a settings menu and implementation
++ WSL Fixes
++ Night lights mode has been made generic
+* Placeholders for future functions now present in menu code
+* Rotate 180 degrees, undocumented, but now avaliable via command line arguments
+* Undocumented Plugins directory added. Need to implement hueberry side menu
 
 
 --------------------

@@ -103,7 +103,9 @@ class display(object):
             timeheight = 10
             self.draw.line((0, timeheight, self.width, timeheight), fill=255)
             # Set font type and size
-            font = ImageFont.truetype('BMW_naa.ttf', size, encoding = "unic")
+            fit_size = self.resize_string(current_size = size, string = line1)
+            fit_size = self.resize_string(current_size = fit_size, string = line2)
+            font = ImageFont.truetype('BMW_naa.ttf', fit_size, encoding = "unic")
             x_pos = (self.width/2)-(self.string_width(font,line1)/2)
             y_pos = 8 + (self.disp.height-4-8)/2 - (35/2)
             self.draw.text((x_pos, y_pos), line1, font=font, fill=255)
@@ -216,6 +218,18 @@ class display(object):
         else:
             self.disp.image(self.image)
         self.disp.display()
+
+    def resize_string(self, current_size, string):
+        font = ImageFont.truetype('BMW_naa.ttf', current_size, encoding = "unic")
+        current_width = self.string_width(font,string)
+        if current_width > self.width:
+            #resize the faka
+            while current_width > self.width:
+                current_size = current_size - 1
+                font = ImageFont.truetype('BMW_naa.ttf', current_size, encoding = "unic")
+                current_width = self.string_width(font,string)
+        max_size = current_size
+        return max_size
 
     def string_width(self,fontType,string):
         string_width = 0
