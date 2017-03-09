@@ -1281,7 +1281,7 @@ def scene_explorer(g_scenesdir):
         display = encoder.pos
         if (old_display != display):
             if (display >= offset and display <= (total_plus_offset-1)):
-                hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Manage?",15)
+                hb_display.display_2lines(str(scene_files[display-offset]),"Manage?",15)
             else:
                 hb_display.display_2lines("Back to","Settings Menu",17)
             old_display = display
@@ -1295,10 +1295,11 @@ def scene_explorer(g_scenesdir):
                 selected_file = str(g_scenesdir) + str(scene_files[display-offset])
                 if result == 0:
                     hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
-                    print "running the below thing"
+                    #print "running the below thing"
                     #os.popen("\"" + str(selected_file) + "\"")
-                    print(str(selected_file))
-                    time.sleep(1)
+                    #print(str(selected_file))
+                    scene_manager(selected_file,str(scene_files[display-offset]))
+                    #time.sleep(1)
                     #debugmsg("Running: " + str(scene_files[display-offset]))
                 elif result == 1:
                     print "result == 1"
@@ -1314,6 +1315,17 @@ def scene_explorer(g_scenesdir):
             scene_refresh = 1
             old_display = -1 #to refresh
         time.sleep(0.01)
+    return
+
+def scene_manager(file_location, file_name):
+    menu_layout = ("Editing Scene:", file_name, lambda: toggle_time_format_stub(),
+                    "Delete", "Scene", lambda: quick_action_settings(),
+                    "Rename", "Scene", lambda: screensaver_settings(),
+                    "Re-Program", "Scene", lambda: nightmode_settings(),
+                    "Back to", "Scene Explorer", "exit")
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu.run_2_line_menu()
+    encoder.wait_for_button_release()
     return
 
 def check_wifi_file(maindirectory):
