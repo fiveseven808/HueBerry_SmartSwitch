@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v046-0308.57.b"
+__version__ = "v046-0309.57.a"
 """
 v046
 2017-03-08 //57
@@ -1171,7 +1171,7 @@ def settings_menu(g_scenesdir):
                     "Connect to", "WiFi", lambda: wifi_settings(),
                     "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
                     "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                    #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                    "Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
                     #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
                     "Preferences", "[ Menu ]", lambda: preferences_menu(),
                     "Back to", "Main Menu", "exit")
