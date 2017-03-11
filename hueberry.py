@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v046-0309.57.a"
+__version__ = "v046-0311.57.a"
 """
 v046
 2017-03-08 //57
@@ -13,6 +13,9 @@ v046
 * Placeholders for future functions now present in menu code
 * Rotate 180 degrees, undocumented, but now avaliable via command line arguments
 * Undocumented Plugins directory added. Need to implement hueberry side menu
+2017-03-11 //57
++ Added decision instead of forcing adding of credentials if hue bridge is found
++ Attempting to fix installer.... although hard to test... 
 
 
 --------------------
@@ -944,6 +947,12 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
             else:
                 hbutil = 0
                 while True:
+                    decision_result = binarydecision(lambda: hb_display.display_3lines("Create Creds","Or","Util Mode?",13,offset = 15),"Create Creds","Util Mode")
+                    if (decision_result != 1):
+                        hb_display.display_2lines("Running in","Util Mode...",15)
+                        time.sleep(1)
+                        hbutil = 1
+                        break
                     hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
                     pos,pushed = encoder.get_state()
                     if(pushed):
