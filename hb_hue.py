@@ -4,6 +4,7 @@ import console_colors
 import sys
 import math
 import colorsys
+import json
 bcolors = console_colors.bcolors
 
 """
@@ -15,6 +16,8 @@ class HueAPI(object):
         #Set the debug level
         self.debug = debug
         self.fakeauth = fakeauth
+        self.errorlevel = 0 # Reset errorlevel to success which is 0
+        self.errordata = 0
         if (self.debug == 0):
             pass
 
@@ -34,7 +37,6 @@ class HueAPI(object):
             self.api_url = 'http://%s/api/%s' % (self.bridge_ip,self.api_key)
             self.debugmsg("FAKE Link Established! "+ self.bridge_ip)
         return self.api_url
-
 
     def get_huejson_value(self,g_or_l,num,type):
         #g_or_l:
@@ -68,11 +70,9 @@ class HueAPI(object):
         os.popen("rm brite")
         if not value:
             if(g_or_l == "l"):
-                #hb_display.display_2lines("No devices","in lights",17)
-                pass
+                self.errorlevel = "GHV_ND_L"
             if(g_or_l == "g"):
-                #hb_display.display_2lines("No devices","in groups",17)
-                pass
+                self.errorlevel = "GHV_ND_G"
             #time.sleep(3)
             value = -1
         return value,wholejson
@@ -91,13 +91,16 @@ class HueAPI(object):
             #print "not brite"
             retry = 1
             while not cmdout:
-                if retry >= 3:
-                    #hb_display.display_2lines("An error in ","get_group_name",15)
+                if retry > 3:
                     self.debugmsg("error in get_group_names probably lost connection to hub")
+                    self.errorlevel = "g_nocmdout"
+                    self.errordata = __name__
                     time.sleep(2)
                     return 0,0,0,0
                     break
                 #hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
+                self.errorlevel = "Bridge_Retry"
+                self.errordata = retry
                 os.popen("curl --silent -H \"Accept: application/json\" -X GET " + self.api_url + "/groups  > groups")
                 cmdout = os.popen("cat groups").read()
                 retry = retry + 1
@@ -123,13 +126,17 @@ class HueAPI(object):
             #print "not brite"
             retry = 1
             while not light_names:
-                if retry == 3:
+                if retry > 3:
                     #hb_display.display_2lines("An error in ","get_light_names",15)
                     self.debugmsg("error in get_light_names probably lost connection to hub")
+                    self.errorlevel = "g_nocmdout"
+                    self.errordata = __name__
                     time.sleep(2)
                     return 0,0,0,0
                     break
                 #hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
+                self.errorlevel = "Bridge_Retry"
+                self.errordata = retry
                 os.popen("curl --silent -H \"Accept: application/json\" -X GET " + self.api_url + "/lights  > lights")
                 light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
                 retry = retry + 1
@@ -152,6 +159,8 @@ class HueAPI(object):
         if not result:
             #print "not brite"
             #hb_display.display_2lines("An error in ","hue_lights",17)
+            self.errorlevel = "g_nocmdout"
+            self.errordata = __name__
             time.sleep(2)
             return
         print(result)
@@ -171,6 +180,8 @@ class HueAPI(object):
         if not result:
             #print "not brite"
             #hb_display.display_2lines("An error in ","hue_groups",17)
+            self.errorlevel = "g_nocmdout"
+            self.errordata = __name__
             time.sleep(2)
             return
         #print(result)
@@ -255,23 +266,62 @@ class HueAPI(object):
             current_time = time.strftime("%m / %d / %Y %-H:%M")
             #with open(logfile, "a") as myfile:
             #    myfile.write(current_time + " " + message + "\n")
-            print(current_time + " " + message + "\n")
+            print(current_time + " " + message + "")
         else:
             return
+
+    def error_handler(self):
+        #interpret self.errorlevel and print out a statement.
+        #This will be a template for other programs that want to
+        #interpret the Hue_API error level and act on them
+
+        if self.errorlevel != 0:
+            if self.errorlevel == "GHV_ND_L":
+                #hb_display.display_2lines("No devices","in lights",17)
+                print("Errror: No devices in Lights")
+            if self.errorlevel == "GHV_ND_G":
+                #hb_display.display_2lines("No devices","in groups",17)
+                print("Errror: No devices in Groups")
+            if self.errorlevel == "g_nocmdout":
+                #hb_display.display_2lines("An error in ",str(self.errordata),15)
+                print("Error: in "+str(self.errordata)+". Probably lost connection to hub")
+            if self.errorlevel =="Bridge_Retry":
+                #hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
+                print("Warning: Bridge not responding, Retry #"+str(self.errordata))
+            self.errorlevel_old = self.errorlevel
+        self.errorlevel = 0 # Reset Error level
+
+def process_monitor(thread):
+    """
+    This function starts a thread then monitors it for output
+    Spits out any output via hb_api error_handler. Later hb_display
+    Quits when thread finishes.
+    """
+    thread.start()
+    while True:
+        hbapi.error_handler()
+        if thread.isAlive() == False:
+            break
 
 if __name__ == "__main__":
     import hb_hue
     import time
+    import threading
     print("Running hb_hue module self test...")
     hbapi = hb_hue.HueAPI(debug = 1,fakeauth = 1)
     print("Object initialized")
     hbapi.load_creds_from_authenticate()
+    hbapi.error_handler()
     print("loaded creds")
-    hbapi.get_group_names()
+    t1 = threading.Thread(target = hbapi.get_group_names)
+    process_monitor(t1) # Give me realtime output from this function (since it retries)
     print("got group names")
-    hbapi.get_light_names()
+    t1 = threading.Thread(target = hbapi.get_light_names)
+    process_monitor(t1) # Give me realtime output from this function (since it retries)
     print("got light names")
     hbapi.hue_groups(lnum = 0, lon = "false")
+    hbapi.error_handler()
     time.sleep(0.4)
     hbapi.hue_groups(lnum = 0, lon = "true")
+    hbapi.error_handler()
     hbapi.ct_to_hue_sat(2600)

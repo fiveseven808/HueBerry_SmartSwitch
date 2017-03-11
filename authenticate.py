@@ -46,7 +46,7 @@ class Authenticate(object):
             print('ERROR:',data[0]['error']['description'])
         else:
             print('NO ERROR')
-            save_creds(data[0]['success']['username'],bridge_host)
+            self.save_creds(data[0]['success']['username'],bridge_host)
 
     def save_creds(self, username,ip):
         with open(os.path.expanduser(self.USERNAME_SAVE_PATH), 'w') as f:
