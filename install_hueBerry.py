@@ -120,8 +120,8 @@ for x in n2install:
 #print baremetal
 if baremetal > 0:
     print("" + bcolors.BOLD + "Downloading dev branch of hueBerry" + bcolors.ENDC)
-    myrun("git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git")
-    print("Cloned Repo lol")
+    myrun("runuser -l pi -c 'git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git'")
+    print("Cloned Repo ")
     print("Gonna enable I2c and OC the bus")
     with open("/boot/config.txt", "a") as myfile:
         myfile.write("\ndtparam=i2c_arm=on\ndtparam=i2c_baudrate=400000")
