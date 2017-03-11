@@ -1171,7 +1171,7 @@ def settings_menu(g_scenesdir):
                     "Connect to", "WiFi", lambda: wifi_settings(),
                     "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
                     "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                    "Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                    #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
                     #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
                     "Preferences", "[ Menu ]", lambda: preferences_menu(),
                     "Back to", "Main Menu", "exit")
