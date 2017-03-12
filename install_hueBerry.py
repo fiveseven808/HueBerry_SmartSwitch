@@ -124,16 +124,14 @@ if baremetal > 0:
     print("Cloned Repo ")
     print("Gonna enable I2c and OC the bus")
     with open("/boot/config.txt", "a") as myfile:
-        myfile.write("\ndtparam=i2c_arm=on\ndtparam=i2c_baudrate=400000")
-    print("Enabled I2c REBOOT REQUIRED")
+        myfile.write("\ndtparam=i2c_baudrate=400000")
+    print("Enabled I2c OC parameter")
 
 finalreadme = """
 \rHow to run:
-    Ensure that I2c is enabled and that the display and rotary encoder are wired up properly
+    [REQUIRED] Ensure that I2c is enabled and that the display and rotary encoder are wired up properly
     [Optional] Disable X and decrease GPU mem to minimum
     [Optional] Overclock SD card
-
-    If I2C was not enabled previous to running the installer, please reboot
 
     Then run the following commands:
 

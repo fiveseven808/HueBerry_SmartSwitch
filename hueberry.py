@@ -15,7 +15,13 @@ v046
 * Undocumented Plugins directory added. Need to implement hueberry side menu
 2017-03-11 //57
 + Added decision instead of forcing adding of credentials if hue bridge is found
-+ Attempting to fix installer.... although hard to test... 
++ Attempting to fix installer.... although hard to test...
+
+--------
+Things to do
+* Handle adding Wifi without screen? (try except displaying on a screen?)
+* If no screen is detected, signal via the onboard led that wifi adding is complete?
+* Dynamic (or seperate) Menu for Util mode? (Clock, Util Settings menu, chck for programs not scenes)
 
 
 --------------------
@@ -82,6 +88,7 @@ bridge_present = 1
 wsl_env = 0
 simulation_arg = 0
 rotate = 0
+util_mode = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -94,6 +101,7 @@ for arg in sys.argv:
     if arg == '-util':
         wsl_env = 1
         bridge_present = 0
+        util_mode = 1
     if arg == '-r180':
         rotate = 180
     if arg in ("-s","--simulate"):
@@ -1171,19 +1179,33 @@ def wifi_settings():
                 break
             time.sleep(0.01)
 
-def settings_menu(g_scenesdir):
-    menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                    "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                    "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                    "Restart", "hueBerry", lambda: restart_hueberry(),
-                    "Flashlight", "Function", lambda: flashlight_mode(),
-                    "Connect to", "WiFi", lambda: wifi_settings(),
-                    "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
-                    "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                    #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
-                    #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
-                    "Preferences", "[ Menu ]", lambda: preferences_menu(),
-                    "Back to", "Main Menu", "exit")
+def settings_menu(g_scenesdir,util_mode = 0):
+    if util_mode == 0:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
+                        "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
+                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                        #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
+                        "Preferences", "[ Menu ]", lambda: preferences_menu(),
+                        "Back to", "Main Menu", "exit")
+    elif util_mode == 1:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        #"Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
+                        #"Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
+                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                        "Plugin", "Manager", lambda: plugin_manager(plugins_dir),
+                        #"Preferences", "[ Menu ]", lambda: preferences_menu(),
+                        "Back to", "Main Menu", "exit")
     settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
