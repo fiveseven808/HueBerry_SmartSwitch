@@ -1,4 +1,4 @@
-#import curses
+import curses
 import time
 import os
 import console_colors
@@ -38,7 +38,12 @@ If the debug variable wasn't set then it'll just pull the pos value from the obj
     It'll go and then immediately check if the button is being pushed
 """
 class RotaryClass(object):
-    def __init__(self,debug = 0,enc_plus = 16, enc_minus = 20,enc_button = 21,no_encoder = 0):
+    def __init__(self,debug = 0,
+                enc_plus = 16,
+                enc_minus = 20,
+                enc_button = 21,
+                no_encoder = 0,
+                encoder_object = None):
         #Set the encoder + and - pins and push switch pin
         self.enc_plus = enc_plus
         self.enc_minus = enc_minus
@@ -48,6 +53,7 @@ class RotaryClass(object):
         self.pos = 0
         self.pushed = 0
         self.no_encoder = no_encoder
+        self.encoder_object = encoder_object #if not none, this is a curses object
         if (self.debug == 0):
             #Setup the rotary encoder module (lol idk what it does)
             self.pi = pigpio.pi()
@@ -55,6 +61,15 @@ class RotaryClass(object):
             #Set the GPIO parameters for the push switch pin
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.enc_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        else:
+            #self.screen = curses.initscr()
+            # turn off input echoing
+            #curses.noecho()
+            # respond to keys immediately (don't wait for enter)
+            #curses.cbreak()
+            # map arrow keys to special values
+            #self.screen.keypad(True)
+            pass
 
     def callback(self,way):
         #This function updates object scoped variables
@@ -120,42 +135,12 @@ class RotaryClass(object):
         return
 
 
-class control(object):
-    def __init__(self):
-        # get the curses screen window
-        self.screen = curses.initscr()
-        # turn off input echoing
-        curses.noecho()
-        # respond to keys immediately (don't wait for enter)
-        curses.cbreak()
-        # map arrow keys to special values
-        self.screen.keypad(True)
-    def get_key(self):
-        char = self.screen.getch()
-        if char == ord('q'):
-            #break
-            return "q"
-        elif char == curses.KEY_RIGHT:
-            # print doesn't work with curses, use addstr instead
-            #screen.addstr(0, 0, 'right')
-            return "right"
-        elif char == curses.KEY_LEFT:
-            #screen.addstr(0, 0, 'left ')
-            return "left"
-        elif char == curses.KEY_UP:
-            #screen.addstr(0, 0, 'up   ')
-            return "up"
-        elif char == curses.KEY_DOWN:
-            #screen.addstr(0, 0, 'down ')
-            return "down"
-        elif char == curses.KEY_ENTER:
-            #screen.addstr(0, 0, 'enter ')
-            return "enter"
 
 
 if __name__ == "__main__":
     import time
     import hb_encoder
+    """
     test = hb_encoder.RotaryClass(debug = 1)
     test.callback(1)
     time.sleep(.5)
@@ -167,3 +152,7 @@ if __name__ == "__main__":
     print "testing button... please push the encoder or enter"
     pos,pushed = test.get_state()
     print "pos: "+str(pos)+" pushed: "+str(pushed)
+    """
+    test = hb_encoder.control()
+    test.read_key_loop()
+    test.quit_nicely()

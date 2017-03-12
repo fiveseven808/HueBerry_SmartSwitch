@@ -79,6 +79,7 @@ bridge_present = 1
 wsl_env = 0
 simulation_arg = 0
 rotate = 0
+curses_test = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -93,6 +94,8 @@ for arg in sys.argv:
         bridge_present = 0
     if arg == '-r180':
         rotate = 180
+    if arg == '-curses':
+        curses_test = 1
     if arg in ("-s","--simulate"):
         simulation_arg = 1
     if arg in ("-h","--help"):
@@ -122,6 +125,7 @@ import hb_encoder
 import hb_hue
 import hb_settings
 import hb_menu
+import curses
 
 
 global logfile
@@ -1575,7 +1579,11 @@ else:
 if (debug_argument == 0):
     encoder = hb_encoder.RotaryClass()
 elif (debug_argument == 1):
-    encoder = hb_encoder.RotaryClass(debug = 1)
+    if curses_test == 0:
+        encoder = hb_encoder.RotaryClass(debug = 1)
+    else:
+        curses_object = curses.initscr()
+        encoder = hb_encoder.RotaryClass(debug = 1, encoder_object = curses_object)
 #--------------------------------------------------
 prev_millis = 0
 display = 0
