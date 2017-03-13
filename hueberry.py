@@ -1172,7 +1172,7 @@ def settings_menu(g_scenesdir,util_mode = 0):
                         "Connect to", "WiFi", lambda: wifi_settings(),
                         "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
                         "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                        "Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                        "[ Scene ]", "[ Explorer ]", lambda: scene_explorer(g_scenesdir),
                         #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
                         "Preferences", "[ Menu ]", lambda: preferences_menu(),
                         "Back to", "Main Menu", "exit")
@@ -1295,9 +1295,13 @@ def scene_explorer(g_scenesdir):
         display = encoder.pos
         if (old_display != display):
             if (display >= offset and display <= (total_plus_offset-1)):
-                hb_display.display_2lines(str(scene_files[display-offset]),"Manage?",15)
+                hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
+                                            "Manage?",
+                                            size = 15)
             else:
-                hb_display.display_2lines("Back to","Settings Menu",17)
+                hb_display.display_2lines(  "Back to",
+                                            "Settings Menu",
+                                            size = 17)
             old_display = display
         pos,pushed = encoder.get_state()
         if(pushed):
@@ -1305,13 +1309,17 @@ def scene_explorer(g_scenesdir):
                 #print display, offset
                 selected_scenenumber = display-offset+1
                 #print selected_scenenumber
-                result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+                result = holding_button(1000,
+                                        "Hold to edit: " + scene_files[display-offset],
+                                        "Will edit: " + scene_files[display-offset],21)
                 selected_file = str(g_scenesdir) + str(scene_files[display-offset])
                 if result == 0:
-                    hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
+                    hb_display.display_2lines(  "Turning lights:",
+                                                str(scene_files[display-offset]),
+                                                size = 15)
                     #print "running the below thing"
                     os.popen("\"" + str(selected_file) + "\"")
-                    print(str(selected_file))
+                    #print(str(selected_file))
                     time.sleep(1)
                     #debugmsg("Running: " + str(scene_files[display-offset]))
                 elif result == 1:
@@ -1325,7 +1333,7 @@ def scene_explorer(g_scenesdir):
     return
 
 def scene_manager(file_location, file_name):
-    menu_layout = ("Editing Scene:", file_name, lambda: bd_set_result(0), #do nothing lol
+    menu_layout = ("Editing Scene:", "[ " + file_name + " ]", lambda: bd_set_result(0), #do nothing lol
                     "Delete", "Scene", lambda: delete_scene(file_location, file_name),
                     #"Rename", "Scene", lambda: rename_scene(file_location, file_name),
                     "Re-Program", "Scene", lambda: reprogram_scene(file_location, file_name),
