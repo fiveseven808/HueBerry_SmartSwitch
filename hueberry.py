@@ -934,23 +934,37 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
                 print(msg)
                 hb_display.display_max_text(msg,centered = 1,offset = 1)
                 hbutil = 1
-                time.sleep(5)
+                time.sleep(2)
             else:
                 hbutil = 0
                 while True:
-                    decision_result = binarydecision(lambda: hb_display.display_3lines("Create Creds","Or","Util Mode?",13,offset = 15),"Create Creds","Util Mode")
-                    if (decision_result != 1):
+                    decision_result = binarydecision(lambda: hb_display.display_3lines(
+                                                                                        "Create Creds",
+                                                                                        "Or",
+                                                                                        "Util Mode?",
+                                                                                        13,
+                                                                                        offset = 15),
+                                                            answer1 = "Create Creds",
+                                                            answer2 = "Util Mode")
+                    if decision_result == 1:
+                        hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
+                        encoder.wait_for_button_release()
+                        while True:
+                            pos,pushed = encoder.get_state()
+                            if(pushed):
+                                break
+                            time.sleep(0.01)
+                    elif (decision_result == 2):
                         hb_display.display_2lines("Running in","Util Mode...",15)
-                        time.sleep(1)
+                        encoder.wait_for_button_release()
+                        time.sleep(.5)
                         hbutil = 1
                         break
-                    hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
-                    pos,pushed = encoder.get_state()
-                    if(pushed):
-                        break
                     time.sleep(0.01)
-                hb_display.display_custom("Pairing...")
-                authenticate.authenticate('hueBerry',ip)
+                if decision_result == 1:
+                    print("hueberry ip" + str(ip))
+                    hb_display.display_custom("Pairing...")
+                    authenticate.authenticate('hueBerry',ip)
     if bridge_present == 1 and hbutil == 0:
         #After a credential file exists
         authenticate.load_creds()
