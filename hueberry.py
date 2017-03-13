@@ -116,6 +116,10 @@ import curses
 
 print "Finished Importing all modules! hopefully this will work!"
 
+# For when I want to measure the time of all of the modules loading
+# Using the dot graph method Described here:
+# http://stackoverflow.com/questions/767881/time-taken-by-an-import-in-python
+#sys.exit()
 
 global logfile
 if wsl_env == 0:

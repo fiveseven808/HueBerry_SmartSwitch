@@ -11,7 +11,7 @@ result_array = temp.split('\n')
 num_groups = len(result_array) - 1
 if(num_groups != 4):
     print(bcolors.RED+"This OS is not Raspbian. RPi specific modules will not be loaded."+bcolors.ENDC)
-    time.sleep(1)
+    #time.sleep(1)
     #sys.exit()
 else:
     print(bcolors.GRN+"Looks like you're running Rasbian! Loading RPi specific modules!"+bcolors.ENDC)
