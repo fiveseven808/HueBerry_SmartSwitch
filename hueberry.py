@@ -1336,7 +1336,7 @@ def scene_manager(file_location, file_name):
     menu_layout = ("Editing Scene:", "[ " + file_name + " ]", lambda: bd_set_result(0), #do nothing lol
                     "Delete", "Scene", lambda: delete_scene(file_location, file_name),
                     #"Rename", "Scene", lambda: rename_scene(file_location, file_name),
-                    "Re-Program", "Scene", lambda: reprogram_scene(file_location, file_name),
+                    "Re-Program", "w/Current State", lambda: reprogram_scene(file_location, file_name),
                     "Back to", "Scene Explorer", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
