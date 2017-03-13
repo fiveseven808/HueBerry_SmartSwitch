@@ -1296,7 +1296,7 @@ def scene_explorer(g_scenesdir):
         if (old_display != display):
             if (display >= offset and display <= (total_plus_offset-1)):
                 hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
-                                            "Manage?",
+                                            "Run | Hold-Edit",
                                             size = 15)
             else:
                 hb_display.display_2lines(  "Back to",
