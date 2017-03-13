@@ -174,7 +174,9 @@ class Menu_Creator(object):
                             pass
                     else: # If normal type menu
                         # This is where the object that's selected actually runs...
-                        self.menu_layout[display+(depth_divisor-1)]()
+                        return_status = self.menu_layout[display+(depth_divisor-1)]()
+                    if return_status == "BREAK_MENU":
+                        return
                 time.sleep(0.01)
                 refresh = 1
                 #prev_millis = int(round(time.time() * 1000))

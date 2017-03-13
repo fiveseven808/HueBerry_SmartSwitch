@@ -1,27 +1,20 @@
 #!/usr/bin/env python
-__version__ = "v046-0311.57.a"
+__version__ = "v047-0312.57.a"
 """
-v046
-2017-03-08 //57
-+ I have not been updating the changes... most of them have been under the hood
-+ Menu rework (most menus moved over to new system)
-+ Wifi by file works now (was previously broken)
-+ Updates can now be forced
-+ WPBack added a settings menu and implementation
-+ WSL Fixes
-+ Night lights mode has been made generic
-* Placeholders for future functions now present in menu code
-* Rotate 180 degrees, undocumented, but now avaliable via command line arguments
-* Undocumented Plugins directory added. Need to implement hueberry side menu
-2017-03-11 //57
-+ Added decision instead of forcing adding of credentials if hue bridge is found
-+ Attempting to fix installer.... although hard to test...
+2017-03-12 //57
++ Enabled Scene Explorer.
+    + Added the ability to delete scenes without a computer (FINALLY!)
+    + Added an obvious way to reprogram scenes (instead of holding down)
 
 --------
 Things to do
+Short term goals:
+* Allow the quick actions to use a scene!
+Long term goals:
 * Handle adding Wifi without screen? (try except displaying on a screen?)
 * If no screen is detected, signal via the onboard led that wifi adding is complete?
 * Dynamic (or seperate) Menu for Util mode? (Clock, Util Settings menu, chck for programs not scenes)
+
 
 
 --------------------
@@ -65,20 +58,8 @@ def print_usage():
     print(usage)
 
 import os
-import os.path
 #set working directory to script directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-#check requirements for new v042
-#try:
-#    import hb_display
-#except:
-#print "Downloading the api thing since it doesn't exist"
-#   os.popen("rm hueberry_api.py") # Remove old libraries
-#   os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
-#os.popen("wget SOMETHING AWESOME GOES HERE LIKE AN UPGRADER FILER")
-#THEN later in the code where the upgrade code is, reference the upgrader file insead
-print "Finished! hopefully this will work!"
 
 import sys
 #Defaults
@@ -115,11 +96,6 @@ for arg in sys.argv:
 
 if debug_argument != 1:
     os.popen("python splashscreen.py &")
-#    import Adafruit_SSD1306
-#import RPi.GPIO as GPIO
-#import pigpio
-#import rotary_encoder
-# temporary enabled until i figure out how to reroute input for console mode
 
 import threading
 import time
@@ -138,6 +114,8 @@ import hb_settings
 import hb_menu
 import curses
 
+print "Finished Importing all modules! hopefully this will work!"
+
 
 global logfile
 if wsl_env == 0:
@@ -152,6 +130,7 @@ menu_timeout = 30 #seconds
 print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
 #Create Required directories if they do not exist.
 maindirectory = "/boot/hueBerry/"
+#maindirectory = os.environ['HOME'] + "/"
 if (os.path.isdir(maindirectory) == False):
     os.popen("sudo mkdir /boot/hueBerry")
     print "Created Directory: " + str(maindirectory)
@@ -1193,7 +1172,7 @@ def settings_menu(g_scenesdir,util_mode = 0):
                         "Connect to", "WiFi", lambda: wifi_settings(),
                         "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
                         "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                        "Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
                         #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
                         "Preferences", "[ Menu ]", lambda: preferences_menu(),
                         "Back to", "Main Menu", "exit")
@@ -1331,19 +1310,12 @@ def scene_explorer(g_scenesdir):
                 if result == 0:
                     hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
                     #print "running the below thing"
-                    #os.popen("\"" + str(selected_file) + "\"")
-                    #print(str(selected_file))
-                    scene_manager(selected_file,str(scene_files[display-offset]))
-                    #time.sleep(1)
+                    os.popen("\"" + str(selected_file) + "\"")
+                    print(str(selected_file))
+                    time.sleep(1)
                     #debugmsg("Running: " + str(scene_files[display-offset]))
                 elif result == 1:
-                    print "result == 1"
-                    #ltt = set_scene_transition_time()
-                    #result = get_house_scene_by_light(selected_file,ltt)
-                    #debugmsg("Ran scene editing by group with result = " + result)
-                else:
-                    hb_display.display_2lines("Something weird","Happened...",12)
-                    time.sleep(5)
+                    scene_manager(selected_file,str(scene_files[display-offset]))
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -1353,14 +1325,37 @@ def scene_explorer(g_scenesdir):
     return
 
 def scene_manager(file_location, file_name):
-    menu_layout = ("Editing Scene:", file_name, lambda: toggle_time_format_stub(),
-                    "Delete", "Scene", lambda: quick_action_settings(),
-                    "Rename", "Scene", lambda: screensaver_settings(),
-                    "Re-Program", "Scene", lambda: nightmode_settings(),
+    menu_layout = ("Editing Scene:", file_name, lambda: bd_set_result(0), #do nothing lol
+                    "Delete", "Scene", lambda: delete_scene(file_location, file_name),
+                    #"Rename", "Scene", lambda: rename_scene(file_location, file_name),
+                    "Re-Program", "Scene", lambda: reprogram_scene(file_location, file_name),
                     "Back to", "Scene Explorer", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
+    return
+
+def delete_scene(file_location, file_name):
+    print file_location
+    decision_result = binarydecision(
+                        lambda: hb_display.display_2lines("Really delete",
+                                                            str(file_name) + "?",
+                                                            size = 17),
+                        answer1 = "[ Yes ]",
+                        answer2 = "[ No ]")
+    if (decision_result == 2):
+        hb_display.display_2lines("Scene Deletion","Canceled",15)
+        time.sleep(1)
+        return
+    os.popen("rm " + file_location)
+    hb_display.display_2lines(str(file_name),"DELETED",17)
+    time.sleep(1)
+    return "BREAK_MENU"
+
+def reprogram_scene(file_location, file_name):
+    # Wait for release is already built in to this function
+    ltt = set_scene_transition_time()
+    result = get_house_scene_by_light(file_location,ltt)
     return
 
 def check_wifi_file(maindirectory):
@@ -1699,7 +1694,7 @@ while True:
         old_display = display
         old_min = 60
     elif(display != 0):
-        #time.sleep(0.005)
+        time.sleep(0.005)
         old_min = 60
 
     secs = int(round(time.time()))
