@@ -925,7 +925,7 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
     if os.path.isfile('./auth.json') == False:
         hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
         if bridge_present == 1:
-            time.sleep(5)
+            time.sleep(2)
             msg = "Searching for hue Bridges"
             hb_display.display_max_text(msg,centered = 1,offset = 2)
             ip = authenticate.search_for_bridge()
@@ -936,35 +936,41 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
                 hbutil = 1
                 time.sleep(2)
             else:
+                hb_display.display_2lines(  "Hue Bridge",
+                                            "Found!",
+                                            size = 15)
+                time.sleep(1)
                 hbutil = 0
-                while True:
-                    decision_result = binarydecision(lambda: hb_display.display_3lines(
-                                                                                        "Create Creds",
-                                                                                        "Or",
-                                                                                        "Util Mode?",
-                                                                                        13,
-                                                                                        offset = 15),
-                                                            answer1 = "Create Creds",
-                                                            answer2 = "Util Mode")
-                    if decision_result == 1:
-                        hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
-                        encoder.wait_for_button_release()
-                        while True:
-                            pos,pushed = encoder.get_state()
-                            if(pushed):
-                                break
-                            time.sleep(0.01)
-                    elif (decision_result == 2):
-                        hb_display.display_2lines("Running in","Util Mode...",15)
-                        encoder.wait_for_button_release()
-                        time.sleep(.5)
-                        hbutil = 1
-                        break
-                    time.sleep(0.01)
+                decision_result = binarydecision(lambda: hb_display.display_3lines(
+                                                                                    "Create Creds",
+                                                                                    "Or",
+                                                                                    "Util Mode?",
+                                                                                    size = 13,
+                                                                                    offset = 15),
+                                                        answer1 = "[ Create Creds ]",
+                                                        answer2 = "[ Util Mode ]")
                 if decision_result == 1:
+                    hb_display.display_3lines(  "Attempting Link:",
+                                                "Push Bridge button" ,
+                                                "Then push button below",
+                                                size = 11,
+                                                offset = 15)
+                    encoder.wait_for_button_release()
+                    while True:
+                        pos,pushed = encoder.get_state()
+                        if(pushed):
+                            break
+                        time.sleep(0.01)
                     print("hueberry ip" + str(ip))
                     hb_display.display_custom("Pairing...")
                     authenticate.authenticate('hueBerry',ip)
+                elif decision_result == 2:
+                    hb_display.display_2lines(  "Running in",
+                                                "Util Mode...",
+                                                size = 15)
+                    encoder.wait_for_button_release()
+                    time.sleep(.5)
+                    hbutil = 1
     if bridge_present == 1 and hbutil == 0:
         #After a credential file exists
         authenticate.load_creds()
@@ -1228,6 +1234,14 @@ def user_init_upgrade_precheck():
         user_init_upgrade()
 
 def re_pair_bridge_stub():
+    decision_result = binarydecision(lambda: hb_display.display_2lines(
+                                                                        "Confirm Deletetion",
+                                                                        "of Bridge Pairing?",
+                                                                        size = 17),
+                                            answer1 = "[ Delete ]",
+                                            answer2 = "[ Cancel ]")
+    if decision_result == 2:
+        return "CANCELED"
     os.popen("rm auth.json")
     pair_hue_bridge()
 
