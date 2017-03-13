@@ -6,6 +6,16 @@ import os
 #import shutil
 #import imp
 import subprocess
+from contextlib import contextmanager
+
+@contextmanager
+def cd(newdir):
+    prevdir = os.getcwd()
+    os.chdir(os.path.expanduser(newdir))
+    try:
+        yield
+    finally:
+        os.chdir(prevdir)
 
 def myrun(cmd):
     """from http://blog.kagesenshi.org/2008/02/teeing-python-subprocesspopen-output.html
@@ -80,14 +90,18 @@ baremetal = 0
 for x in n2install:
     if x == 'pigpio':
         print("Installing " +str(x))
-        myrun("rm master.zip; sudo rm -rf pigpio-master; wget https://github.com/joan2937/pigpio/archive/master.zip && unzip master.zip &&  pigpio-master/make -j4 && sudo pigpio-master/make install && sudo pigpiod ")
+        myrun("rm master.zip; sudo rm -rf pigpio-master; wget https://github.com/joan2937/pigpio/archive/master.zip && unzip master.zip ")
+        with cd("pigpio-master/"):
+            myrun("sudo make -j4 && sudo make install && sudo pigpiod ")
         print("Done installing " +str(x)+"\n\n")
     if x == 'authenticate':
         print(bcolors.YLO + "The " +str(x)+" module should be in the same directory. Since it's not I guess you want a bare metal install?" + bcolors.ENDC + "\n\n")
         baremetal = baremetal + 1
     if x == 'Adafruit_SSD1306':
         print("Installing " +str(x)+"\n\n")
-        myrun("sudo apt-get -y install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get -y install python-imaging python-smbus && sudo apt-get install -y git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git && sudo python Adafruit_Python_SSD1306/setup.py install")
+        myrun("sudo apt-get -y install build-essential python-dev python-pip && sudo pip install RPi.GPIO && sudo apt-get -y install python-imaging python-smbus && sudo apt-get install -y git && git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git ")
+        with cd("Adafruit_Python_SSD1306/"):
+            myrun("sudo python setup.py install")
         print("Done installing " +str(x)+"\n\n")
     if x =='RPi':
         print(bcolors.RED + "    wtf, the " +str(x)+" module should be part of the most recent Raspberry Pi distribution.\nAre you even running this on a Pi?" + bcolors.ENDC + "\n\n")
@@ -106,16 +120,19 @@ for x in n2install:
 #print baremetal
 if baremetal > 0:
     print("" + bcolors.BOLD + "Downloading dev branch of hueBerry" + bcolors.ENDC)
-    myrun("git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git")
-    print("Cloned Repo lol")
-
+    myrun("runuser -l pi -c 'git clone -b dev https://github.com/fiveseven808/HueBerry_SmartSwitch.git'")
+    print("Cloned Repo ")
+    print("Gonna enable I2c and OC the bus")
+    with open("/boot/config.txt", "a") as myfile:
+        myfile.write("\ndtparam=i2c_baudrate=400000")
+    print("Enabled I2c OC parameter")
 
 finalreadme = """
 \rHow to run:
-    Ensure that I2c is enabled and that the display and rotary encoder are wired up properly
-    [Optional] Increase I2c bus
+    [REQUIRED] Ensure that I2c is enabled and that the display and rotary encoder are wired up properly
     [Optional] Disable X and decrease GPU mem to minimum
     [Optional] Overclock SD card
+
     Then run the following commands:
 
     cd HueBerry_SmartSwitch

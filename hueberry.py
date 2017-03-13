@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v046-0308.57.b"
+__version__ = "v046-0311.57.a"
 """
 v046
 2017-03-08 //57
@@ -13,6 +13,15 @@ v046
 * Placeholders for future functions now present in menu code
 * Rotate 180 degrees, undocumented, but now avaliable via command line arguments
 * Undocumented Plugins directory added. Need to implement hueberry side menu
+2017-03-11 //57
++ Added decision instead of forcing adding of credentials if hue bridge is found
++ Attempting to fix installer.... although hard to test...
+
+--------
+Things to do
+* Handle adding Wifi without screen? (try except displaying on a screen?)
+* If no screen is detected, signal via the onboard led that wifi adding is complete?
+* Dynamic (or seperate) Menu for Util mode? (Clock, Util Settings menu, chck for programs not scenes)
 
 
 --------------------
@@ -80,6 +89,7 @@ wsl_env = 0
 simulation_arg = 0
 rotate = 0
 curses_test = 0
+util_mode = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -92,6 +102,7 @@ for arg in sys.argv:
     if arg == '-util':
         wsl_env = 1
         bridge_present = 0
+        util_mode = 1
     if arg == '-r180':
         rotate = 180
     if arg == '-curses':
@@ -948,6 +959,12 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
             else:
                 hbutil = 0
                 while True:
+                    decision_result = binarydecision(lambda: hb_display.display_3lines("Create Creds","Or","Util Mode?",13,offset = 15),"Create Creds","Util Mode")
+                    if (decision_result != 1):
+                        hb_display.display_2lines("Running in","Util Mode...",15)
+                        time.sleep(1)
+                        hbutil = 1
+                        break
                     hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
                     pos,pushed = encoder.get_state()
                     if(pushed):
@@ -1166,19 +1183,33 @@ def wifi_settings():
                 break
             time.sleep(0.01)
 
-def settings_menu(g_scenesdir):
-    menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                    "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                    "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                    "Restart", "hueBerry", lambda: restart_hueberry(),
-                    "Flashlight", "Function", lambda: flashlight_mode(),
-                    "Connect to", "WiFi", lambda: wifi_settings(),
-                    "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
-                    "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                    #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
-                    #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
-                    "Preferences", "[ Menu ]", lambda: preferences_menu(),
-                    "Back to", "Main Menu", "exit")
+def settings_menu(g_scenesdir,util_mode = 0):
+    if util_mode == 0:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
+                        "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
+                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                        #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
+                        "Preferences", "[ Menu ]", lambda: preferences_menu(),
+                        "Back to", "Main Menu", "exit")
+    elif util_mode == 1:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        #"Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
+                        #"Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
+                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                        "Plugin", "Manager", lambda: plugin_manager(plugins_dir),
+                        #"Preferences", "[ Menu ]", lambda: preferences_menu(),
+                        "Back to", "Main Menu", "exit")
     settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
