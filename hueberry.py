@@ -1234,8 +1234,7 @@ def user_init_upgrade_precheck():
         user_init_upgrade()
 
 def re_pair_bridge_stub():
-    decision_result = binarydecision(lambda: hb_display.display_2lines(
-                                                                        "Confirm Deletetion",
+    decision_result = binarydecision(lambda: hb_display.display_2lines( "Confirm Deletetion",
                                                                         "of Bridge Pairing?",
                                                                         size = 17),
                                             answer1 = "[ Delete ]",
@@ -1243,7 +1242,12 @@ def re_pair_bridge_stub():
     if decision_result == 2:
         return "CANCELED"
     os.popen("rm auth.json")
+    hb_display.display_max_text("Auth file has been successfully DELETED",
+                                centered = 1,
+                                offset = 2)
+    time.sleep(1)
     pair_hue_bridge()
+    return "AUTH DELETED FINISHED RE-PAIR ATTEMPT"
 
 def create_scene_stub(g_scenesdir):
     new_scene_creator(g_scenesdir)
