@@ -1,10 +1,14 @@
 #!/usr/bin/env python
-__version__ = "v047-0312.57.a"
+__version__ = "v047-0313.57.a"
 """
 2017-03-12 //57
 + Enabled Scene Explorer.
     + Added the ability to delete scenes without a computer (FINALLY!)
     + Added an obvious way to reprogram scenes (instead of holding down)
+2017-03-13 //57
++ Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
++ Fixed authentication issues... Can do initial pair at least.
++ Cleaned up some bits of code
 
 --------
 Things to do
@@ -1488,11 +1492,16 @@ def user_init_upgrade(force = 0):
 def user_upgrade_menu():
     bd_result = 0
     menu_layout = (lambda:  hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15), None, "BD_TYPE",
-                    #"View", "Changelog", lambda: user_upgrade_changelog(),
+                    "View", "Changelog", lambda: user_upgrade_changelog(),
                     "Choose", "[ Upgrade Now! ]", lambda: bd_set_result(1),
                     "Choose", "[ Cancel ]", lambda: bd_set_result(2))
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     bd_result = menu.run_2_line_menu()
+    if bd_result == 0:
+        hb_display.display_2lines(  "Returning to",
+                                    "Settings Menu",
+                                    size = 17)
+        time.sleep(1)
     encoder.wait_for_button_release()
     return bd_result
 
