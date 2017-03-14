@@ -146,12 +146,16 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v047-0312.57.a
+    \rUpgrade level: v047-0313.57.a
     //57
         2017-03-12 //57
         + Enabled Scene Explorer.
             + Added the ability to delete scenes without a computer (FINALLY!)
             + Added an obvious way to reprogram scenes (instead of holding down)
+        2017-03-13 //57
+        + Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
+        + Fixed authentication issues... Can do initial pair at least.
+        + Cleaned up some bits of code
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

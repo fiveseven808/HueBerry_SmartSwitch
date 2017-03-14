@@ -252,6 +252,7 @@ class display(object):
             innerFinished = False
             while not innerFinished:
                 #print 'thistext: '+str(thistext)
+                #print newline
                 if drawer.textsize(' '.join(thistext),font)[0] > containerWidth:
                     # this is the heart of the algorithm: we pop words off the current
                     # sentence until the width is ok, then in the next outer loop
@@ -259,6 +260,9 @@ class display(object):
                     newline.insert(0,thistext.pop(-1))
                 else:
                     innerFinished = True
+                if "\n" in newline:
+                    innerFinished = True
+                    #This if doesn't work but I want it to work... :'(
             if len(newline) > 0:
                 lines.append(newline)
                 line = line + 1
