@@ -137,29 +137,6 @@ class Menu_Creator(object):
             pos,pushed = self.encoder.get_state() # after loading everything, get state#
             if (pushed):
                 if(display >= self.offset and display < total_plus_offset):
-                    """
-                    #print display, self.offset
-                    selected_scenenumber = display-self.offset+1
-                    #print selected_scenenumber
-                    result = holding_button(1000,"Hold to edit: " + scene_files[display-self.offset],"Will edit: " + scene_files[display-self.offset],21)
-                    selected_file = str(g_scenesdir) + str(scene_files[display-self.offset])
-                    if result == 0:
-                        self.hb_display.display_2lines("Turning lights:",str(scene_files[display-self.offset]),12)
-                        #print scene_files[display-self.offset]
-                        print "running the below thing"
-                        #selected_file = str(g_scenesdir) + str(scene_files[display-self.offset])
-                        os.popen("\"" + str(selected_file) + "\"")
-                        print(str(selected_file))
-                        time.sleep(1)
-                        debugmsg("Running: " + str(scene_files[display-self.offset]))
-                    elif result == 1:
-                        ltt = set_scene_transition_time()
-                        result = get_house_scene_by_light(selected_file,ltt)
-                        debugmsg("Ran scene editing by group with result = " + result)
-                    else:
-                        self.hb_display.display_2lines("Something weird","Happened...",12)
-                        time.sleep(5)
-                    """
                     #print display
                     if self.menu_layout[display+(depth_divisor-1)] == "exit":
                         # If a menu item has "exit" as the function/action thing, then exit

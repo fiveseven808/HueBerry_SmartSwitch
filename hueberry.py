@@ -1484,7 +1484,8 @@ def user_init_upgrade(force = 0):
         print("It looks like there are changes avaliable. Installing...")
         answer1 = "[ Yes! ]"
         answer2 = "[ Cancel ]"
-        decision_result = binarydecision(lambda: hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
+        #decision_result = binarydecision(lambda: hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
+        decision_result = user_upgrade_menu()
         if (decision_result != 1):
             hb_display.display_2lines("Canceling...","Returning...",15)
             os.popen("rm new_upgrade_hb.py")
@@ -1496,9 +1497,9 @@ def user_init_upgrade(force = 0):
         #upgrader = new_upgrade_hb.upgrader(simulate = 1)
         if diff_result == 1:
             #Legacy switch, currently does nothing...
-            upgrader = new_upgrade_hb.upgrader(legacy = 1)
+            upgrader = new_upgrade_hb.Upgrader(legacy = 1)
         else:
-            upgrader = new_upgrade_hb.upgrader(console = debug_argument,simulate = simulation_arg)
+            upgrader = new_upgrade_hb.Upgrader(console = debug_argument,simulate = simulation_arg)
         #upgrader = upgrade_hb.upgrader(simulate = 1)
         #Do a blind upgrade lol don't even check
         #upgrader.check_modules_exist()
@@ -1509,6 +1510,24 @@ def user_init_upgrade(force = 0):
         #time.sleep(1)
         print("Upgrade Finished! hueBerry is now rebooting to complete the installation.")
         os.popen("sudo shutdown -r now")
+    return
+
+def user_upgrade_menu():
+    bd_result = 0
+    menu_layout = (lambda:  hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15), None, "BD_TYPE",
+                    #"View", "Changelog", lambda: user_upgrade_changelog(),
+                    "Choose", "[ Upgrade Now! ]", lambda: bd_set_result(1),
+                    "Choose", "[ Cancel ]", lambda: bd_set_result(2))
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    bd_result = menu.run_2_line_menu()
+    encoder.wait_for_button_release()
+    return bd_result
+
+def user_upgrade_changelog():
+    import new_upgrade_hb
+    #import upgrade_hb
+    upgrader = new_upgrade_hb.Upgrader()
+    hb_display.display_textbrowser(text = upgrader.display_exit_msg())
     return
 
 def debugmsg(message):

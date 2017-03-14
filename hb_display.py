@@ -272,43 +272,43 @@ class display(object):
         total_height = len(lines)*(height+1)
         return (lines,width,height,total_height)
 
-    def InteliDraw_Test(self):
-        #import hb_encoder
-        #encoder = hb_encoder.rotary()
-        global pos
-        pos = 0
-        text = 'One very extremely long string that cannot possibly fit \
-        into a small number of pixels of horizontal width, and the idea \
-        is to break this text up into multiple lines that can be placed like \
-        a paragraph into our image'
-        #draw = ImageDraw.Draw(OurImagePreviouslyDefined)
-        #font = fontpath = ImageFont.truetype('/usr/local/share/fonts/ttf/times.ttf',26)
-        #pixelWidth = 500 # pixels
+    def display_textbrowser(self,text,centered=0):
+        try:
+            hb_encoder.__name__
+        except:
+            try:
+                import hb_encoder
+            except ImportError:
+                print "This function requires the hb_encoder module"
+        encoder = hb_encoder.RotaryClass()
+        encoder.pos = 0
+        pos,pushed = encoder.get_state()
+        #text = 'One very extremely long string that cannot possibly fit \
+        #into a small number of pixels of horizontal width, and the idea \
+        #is to break this text up into multiple lines that can be placed like \
+        #a paragraph into our image'
         lines,tmp,h,total_h = self.IntelliDraw(self.draw,text,self.font,self.width)
         j = 0
-        #for i in lines:
-        #    draw.text( (0,0+j*h), i , font=font, fill=255)
-        #    j = j + 1
-        #self.disp.image(self.image)
-        #self.disp.display()
-        #time.sleep(5)
-        #draw.rectangle((0,0,width,height), outline=0, fill=0)
-        while(not GPIO.input(21)):
-            time.sleep(0.01)
-        time.sleep(0.5)
-        while GPIO.input(21):
+        encoder.wait_for_button_release()
+        while True:
             self.draw.rectangle((0,0,self.width,self.height), outline=0, fill=0)
             offset = ((h/2)*-1)*pos
             j = 0
             for i in lines:
-                #Line Centering code
-                x_pos = (self.width/2) - (self.string_width(self.font,i)/2)
+                if(centered == 1):
+                    x_pos = (self.width/2) - (self.string_width(self.font,i)/2)
+                else:
+                    x_pos = 0
                 self.draw.text( (x_pos,offset+(j*h)), i , font=self.font, fill=255)
                 j = j + 1
             self.disp.image(self.image)
             self.disp.display()
+            pos,pushed = encoder.get_state()
+            if pushed == 1:
+                break
             time.sleep(0.01)
-        time.sleep(1)
+        encoder.wait_for_button_release()
+        return
 
     def display_max_text(self,text,centered=0,offset = 0):
         lines,tmp,h,total_h = self.IntelliDraw(self.draw,text,self.font,self.width)
