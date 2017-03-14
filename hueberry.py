@@ -1655,6 +1655,148 @@ def clock_sub_menu():
             #print("lights were off. not now")
             hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
 
+def mainloop_test():
+    timeout = 0
+    displaytemp = 0
+    prev_secs = 0
+    old_min = 60
+    old_display = 0
+    refresh = 1
+    pushed = 0
+    scene_refresh = 1 #Do the initial scene refresh
+    debugmsg("-----------------------------")
+    debugmsg("Starting hueBerry program version " + __file__)
+    offset = 5 #clock (0) + 4 presets
+    post_offset = 3 #settings, light, group menu after scenes)
+    while True:
+        if (scene_refresh == 1):
+            total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
+            scene_refresh = 0
+        menudepth = total_plus_offset + post_offset - 1
+        # Cycle through different displays
+        if(encoder.pos > menudepth):
+            encoder.pos = menudepth
+        elif(encoder.pos < 0):
+            encoder.pos = 0
+        display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+        #Display Selected Menu
+        if(display == 0):
+            cur_min = int(time.strftime("%M"))
+            if(old_min != cur_min or refresh == 1):
+                hb_display.display_time(settings.GetTimeFormat())
+                old_min = cur_min
+                refresh = 0
+            timeout = 0
+            #Sleep to conserve CPU Cycles
+            time.sleep(0.01)
+        if (old_display != display):
+            if(display == 1):
+                hb_display.display_2lines(str(display) + ". Turn OFF","all lights slowly",17)
+            elif(display == 2):
+                hb_display.display_2lines(str(display) + ". DIM all","Active lights",17)
+            elif(display == 3):
+                hb_display.display_2lines(str(display) + ". FULL ON","all lights",17)
+            elif(display == 4):
+                hb_display.display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
+            #begin scene selection
+            elif(display >= offset and display <= (total_plus_offset-1)):
+                hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
+            elif(display == (menudepth-2)):
+                hb_display.display_2lines(str(display) + ". Settings", "[ Menu ]",14)
+            elif(display == (menudepth-1)):
+                hb_display.display_2lines(str(display) + ". Light Control", "[ Menu ]",14)
+            elif(display == (menudepth-0)):
+                hb_display.display_2lines(str(display) + ". Group Control", "[ Menu ]",14)
+            old_display = display
+            old_min = 60
+        elif(display != 0):
+            time.sleep(0.005)
+            old_min = 60
+
+        secs = int(round(time.time()))
+        timeout_secs = secs - prev_secs
+        if(display != 0 and displaytemp != display):
+            prev_secs = secs
+            displaytemp = display
+        elif(display != 0 and timeout_secs >= menu_timeout):
+            encoder.pos = 0
+            display_temp = 0
+        elif(display == 0):
+            displaytemp = display
+        #if(display != 0):
+        #    print timeout_secs
+
+        # Poll button press and trigger action based on current display
+        pos,pushed = encoder.get_state() # after loading everything, get state#
+        if (pushed):
+            if(display == 0):
+                clock_sub_menu()
+                refresh = 1
+            elif(display == 1):
+                # Turn off all lights
+                hb_display.display_2lines("Turning all","lights OFF slowly",12)
+                #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
+                debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
+                #print(debug)
+                time.sleep(1)
+                debugmsg("turning all lights off")
+            elif(display == 2):
+                # Turn on NIGHT lights dim (groups 1,2,3)
+                hb_display.display_2lines("Turning All","lights On -> DIM",12)
+                hue_groups(lnum = "0",lbri = "1",ltt="100")
+                # Turn off front door light
+                #print(debug)
+                time.sleep(.5)
+                debugmsg("turning on night lights dim")
+            elif(display == 3):
+                hb_display.display_2lines("Turning all","lights on FULL",12)
+                hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+                ##turn off front door light... we dont want that...
+                #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+                debugmsg("turning all lights on full")
+            elif(display == 4):
+                hb_display.display_2lines("Turning all","lights OFF quickly",12)
+                hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+                debugmsg("turning all lights off quick")
+            elif(display >= offset and display < total_plus_offset):
+                #print display, offset
+                selected_scenenumber = display-offset+1
+                #print selected_scenenumber
+                result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+                selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                if result == 0:
+                    hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
+                    #print scene_files[display-offset]
+                    print "running the below thing"
+                    #selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                    os.popen("\"" + str(selected_file) + "\"")
+                    print(str(selected_file))
+                    time.sleep(1)
+                    debugmsg("Running: " + str(scene_files[display-offset]))
+                elif result == 1:
+                    ltt = set_scene_transition_time()
+                    result = get_house_scene_by_light(selected_file,ltt)
+                    debugmsg("Ran scene editing by group with result = " + result)
+                else:
+                    hb_display.display_2lines("Something weird","Happened...",12)
+                    time.sleep(5)
+            elif(display == (menudepth-2)):
+                encoder.pos = 0
+                scene_refresh = settings_menu(g_scenesdir)
+                #InteliDraw_Test()
+                scene_refresh = 1 # lol override. this might be useful lol
+            elif(display == (menudepth-1)):
+                encoder.pos = 0
+                light_control("l")
+            elif(display == (menudepth)):
+                encoder.pos = 0
+                light_control("g") #temp for test lol
+                #scene_explorer(g_scenesdir)
+            refresh = 1
+            time.sleep(0.01)
+            #prev_millis = int(round(time.time() * 1000))
+            encoder.pos = 0
+
 #------------------------------------------------------------------------------------------------------------------------------
 # Main Loop I think
 #Instantiate the hueberry display object
@@ -1663,7 +1805,6 @@ if(mirror_mode == 1):
     hb_display = hb_display.display(console = 1,mirror = mirror_mode)
 else:
     hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
-
 # Create Encoder Object
 if (debug_argument == 0):
     encoder = hb_encoder.RotaryClass()
@@ -1674,17 +1815,14 @@ elif (debug_argument == 1):
         curses_object = curses.initscr()
         encoder = hb_encoder.RotaryClass(debug = 1, encoder_object = curses_object)
 #--------------------------------------------------
-prev_millis = 0
-display = 0
-
+#prev_millis = 0
+#display = 0
 #--------------------------------------------------
 #Search to see if an Upgrade file exists, if so, run it
 check_upgrade_file(maindirectory)
 #--------------------------------------------------
 #Search to see if an Add Wifi file exists, if so, add it then delete it.
 check_wifi_file(maindirectory)
-
-
 #--------------------------------------------------
 #Load the Authentication Module so that the hueberry method can do what it needs to do.
 authenticate = authenticate.Authenticate()
@@ -1692,12 +1830,13 @@ authenticate = authenticate.Authenticate()
 hueapi = hb_hue.HueAPI()
 #Load the settings-module
 settings = hb_settings.Settings()
-
 api_url,bridge_ip = pair_hue_bridge(bridge_present = bridge_present)
-
+#------------------------------------------
+# My attempt at methoding the main function...
+mainloop_test()
+#------------------------------------------
+"""
 #----------------- set variables---------------
-#global pos
-#pos = 0
 timeout = 0
 displaytemp = 0
 prev_secs = 0
@@ -1843,3 +1982,4 @@ while True:
         time.sleep(0.01)
         #prev_millis = int(round(time.time() * 1000))
         encoder.pos = 0
+"""
