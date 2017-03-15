@@ -528,6 +528,21 @@ def l_control(light):
             exitvar = True
         time.sleep(0.01)
 
+def l_control_newtype(light):
+    #This is the prototype for how I want t pote3ntially do this in the future
+    result = 0
+    menu_layout = ("Light: "+str(light), "Bri: ",
+                    calc_func = bri_calc, c_param = "encoder_pos",
+                    action_func = hue_lights, a_param = "bri",
+                    bot_limit = 0, top_limit = 100 #or maybe use range(0,100)?)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    result = menu.single_value_menu()
+    encoder.wait_for_button_release()
+    return result - 1
+
+def bri_calc(encoder_pos):
+    brightness = encoder_pos * 10
+    return brightness
 
 def g_control(group):
     brite,wholejson = get_huejson_value("g",group,"bri")
