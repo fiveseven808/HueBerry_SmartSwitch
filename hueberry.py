@@ -1,18 +1,28 @@
 #!/usr/bin/env python
-__version__ = "v046-0309.57.a"
+__version__ = "v047-0314.57.a"
 """
-v046
-2017-03-08 //57
-+ I have not been updating the changes... most of them have been under the hood
-+ Menu rework (most menus moved over to new system)
-+ Wifi by file works now (was previously broken)
-+ Updates can now be forced
-+ WPBack added a settings menu and implementation
-+ WSL Fixes
-+ Night lights mode has been made generic
-* Placeholders for future functions now present in menu code
-* Rotate 180 degrees, undocumented, but now avaliable via command line arguments
-* Undocumented Plugins directory added. Need to implement hueberry side menu
+2017-03-12 //57
++ Enabled Scene Explorer.
+    + Added the ability to delete scenes without a computer (FINALLY!)
+    + Added an obvious way to reprogram scenes (instead of holding down)
+2017-03-13 //57
++ Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
++ Fixed authentication issues... Can do initial pair at least.
++ Cleaned up some bits of code
+2017-03-14 //57
++ Merged main function branch, so now a function instead of just a mess
++ Began work on attempting to port the single value menus to a generic scheme
++ Announcement on Reddit! Happy pi day!
+
+--------
+Things to do
+Short term goals:
+* Allow the quick actions to use a scene!
+Long term goals:
+* Handle adding Wifi without screen? (try except displaying on a screen?)
+* If no screen is detected, signal via the onboard led that wifi adding is complete?
+* Dynamic (or seperate) Menu for Util mode? (Clock, Util Settings menu, chck for programs not scenes)
+
 
 
 --------------------
@@ -56,20 +66,8 @@ def print_usage():
     print(usage)
 
 import os
-import os.path
 #set working directory to script directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-#check requirements for new v042
-#try:
-#    import hb_display
-#except:
-#print "Downloading the api thing since it doesn't exist"
-#   os.popen("rm hueberry_api.py") # Remove old libraries
-#   os.popen("wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/dev/hb_display.py")
-#os.popen("wget SOMETHING AWESOME GOES HERE LIKE AN UPGRADER FILER")
-#THEN later in the code where the upgrade code is, reference the upgrader file insead
-print "Finished! hopefully this will work!"
 
 import sys
 #Defaults
@@ -79,6 +77,8 @@ bridge_present = 1
 wsl_env = 0
 simulation_arg = 0
 rotate = 0
+curses_test = 0
+util_mode = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -91,8 +91,11 @@ for arg in sys.argv:
     if arg == '-util':
         wsl_env = 1
         bridge_present = 0
+        util_mode = 1
     if arg == '-r180':
         rotate = 180
+    if arg == '-curses':
+        curses_test = 1
     if arg in ("-s","--simulate"):
         simulation_arg = 1
     if arg in ("-h","--help"):
@@ -101,11 +104,6 @@ for arg in sys.argv:
 
 if debug_argument != 1:
     os.popen("python splashscreen.py &")
-#    import Adafruit_SSD1306
-#import RPi.GPIO as GPIO
-#import pigpio
-#import rotary_encoder
-# temporary enabled until i figure out how to reroute input for console mode
 
 import threading
 import time
@@ -122,33 +120,14 @@ import hb_encoder
 import hb_hue
 import hb_settings
 import hb_menu
+import curses
 
+print "Finished Importing all modules! hopefully this will work!"
 
-global logfile
-if wsl_env == 0:
-    logfile = "/home/pi/hueberry.log"
-else:
-    logfile = "~/hueberry.log"
-
-global debug_state
-debug_state = 1
-
-menu_timeout = 30 #seconds
-print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
-#Create Required directories if they do not exist.
-maindirectory = "/boot/hueBerry/"
-if (os.path.isdir(maindirectory) == False):
-    os.popen("sudo mkdir /boot/hueBerry")
-    print "Created Directory: " + str(maindirectory)
-
-g_scenesdir = str(maindirectory) + "scenes/"
-if (os.path.isdir(g_scenesdir) == False):
-    os.popen("sudo mkdir /boot/hueBerry/scenes")
-    print "Created Directory: " + str(g_scenesdir)
-print "Main Directory is: " + str(maindirectory)
-print "Scripts Directory is: " + str(g_scenesdir)
-
-
+# For when I want to measure the time of all of the modules loading
+# Using the dot graph method Described here:
+# http://stackoverflow.com/questions/767881/time-taken-by-an-import-in-python
+#sys.exit()
 
 #--------------------------------------------------------------------------
 def get_group_names():
@@ -525,7 +504,6 @@ def l_control(light):
         if(pushed):
             exitvar = True
         time.sleep(0.01)
-
 
 def g_control(group):
     brite,wholejson = get_huejson_value("g",group,"bri")
@@ -931,7 +909,7 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
     if os.path.isfile('./auth.json') == False:
         hb_display.display_3lines("Initial Setup:","hueBerry is","not paired",13,16)
         if bridge_present == 1:
-            time.sleep(5)
+            time.sleep(2)
             msg = "Searching for hue Bridges"
             hb_display.display_max_text(msg,centered = 1,offset = 2)
             ip = authenticate.search_for_bridge()
@@ -940,17 +918,43 @@ def pair_hue_bridge(bridge_present = 1,hbutil = 0):
                 print(msg)
                 hb_display.display_max_text(msg,centered = 1,offset = 1)
                 hbutil = 1
-                time.sleep(5)
+                time.sleep(2)
             else:
+                hb_display.display_2lines(  "Hue Bridge",
+                                            "Found!",
+                                            size = 15)
+                time.sleep(1)
                 hbutil = 0
-                while True:
-                    hb_display.display_3lines("Attempting Link:","Push Bridge button" ,"Then push button below",11,offset = 15)
-                    pos,pushed = encoder.get_state()
-                    if(pushed):
-                        break
-                    time.sleep(0.01)
-                hb_display.display_custom("Pairing...")
-                authenticate.authenticate('hueBerry',ip)
+                decision_result = binarydecision(lambda: hb_display.display_3lines(
+                                                                                    "Create Creds",
+                                                                                    "Or",
+                                                                                    "Util Mode?",
+                                                                                    size = 13,
+                                                                                    offset = 15),
+                                                        answer1 = "[ Create Creds ]",
+                                                        answer2 = "[ Util Mode ]")
+                if decision_result == 1:
+                    hb_display.display_3lines(  "Attempting Link:",
+                                                "Push Bridge button" ,
+                                                "Then push button below",
+                                                size = 11,
+                                                offset = 15)
+                    encoder.wait_for_button_release()
+                    while True:
+                        pos,pushed = encoder.get_state()
+                        if(pushed):
+                            break
+                        time.sleep(0.01)
+                    print("hueberry ip" + str(ip))
+                    hb_display.display_custom("Pairing...")
+                    authenticate.authenticate('hueBerry',ip)
+                elif decision_result == 2:
+                    hb_display.display_2lines(  "Running in",
+                                                "Util Mode...",
+                                                size = 15)
+                    encoder.wait_for_button_release()
+                    time.sleep(.5)
+                    hbutil = 1
     if bridge_present == 1 and hbutil == 0:
         #After a credential file exists
         authenticate.load_creds()
@@ -1162,19 +1166,33 @@ def wifi_settings():
                 break
             time.sleep(0.01)
 
-def settings_menu(g_scenesdir):
-    menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                    "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                    "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                    "Restart", "hueBerry", lambda: restart_hueberry(),
-                    "Flashlight", "Function", lambda: flashlight_mode(),
-                    "Connect to", "WiFi", lambda: wifi_settings(),
-                    "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
-                    "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                    #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
-                    #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
-                    "Preferences", "[ Menu ]", lambda: preferences_menu(),
-                    "Back to", "Main Menu", "exit")
+def settings_menu(g_scenesdir,util_mode = 0):
+    if util_mode == 0:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
+                        "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
+                        "[ Scene ]", "[ Explorer ]", lambda: scene_explorer(g_scenesdir),
+                        #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
+                        "Preferences", "[ Menu ]", lambda: preferences_menu(),
+                        "Back to", "Main Menu", "exit")
+    elif util_mode == 1:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        #"Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
+                        #"Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
+                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
+                        "Plugin", "Manager", lambda: plugin_manager(plugins_dir),
+                        #"Preferences", "[ Menu ]", lambda: preferences_menu(),
+                        "Back to", "Main Menu", "exit")
     settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
@@ -1200,8 +1218,20 @@ def user_init_upgrade_precheck():
         user_init_upgrade()
 
 def re_pair_bridge_stub():
+    decision_result = binarydecision(lambda: hb_display.display_2lines( "Confirm Deletetion",
+                                                                        "of Bridge Pairing?",
+                                                                        size = 17),
+                                            answer1 = "[ Delete ]",
+                                            answer2 = "[ Cancel ]")
+    if decision_result == 2:
+        return "CANCELED"
     os.popen("rm auth.json")
+    hb_display.display_max_text("Auth file has been successfully DELETED",
+                                centered = 1,
+                                offset = 2)
+    time.sleep(1)
     pair_hue_bridge()
+    return "AUTH DELETED FINISHED RE-PAIR ATTEMPT"
 
 def create_scene_stub(g_scenesdir):
     new_scene_creator(g_scenesdir)
@@ -1281,9 +1311,13 @@ def scene_explorer(g_scenesdir):
         display = encoder.pos
         if (old_display != display):
             if (display >= offset and display <= (total_plus_offset-1)):
-                hb_display.display_2lines(str(scene_files[display-offset]),"Manage?",15)
+                hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
+                                            "Run | Hold-Edit",
+                                            size = 15)
             else:
-                hb_display.display_2lines("Back to","Settings Menu",17)
+                hb_display.display_2lines(  "Back to",
+                                            "Settings Menu",
+                                            size = 17)
             old_display = display
         pos,pushed = encoder.get_state()
         if(pushed):
@@ -1291,24 +1325,21 @@ def scene_explorer(g_scenesdir):
                 #print display, offset
                 selected_scenenumber = display-offset+1
                 #print selected_scenenumber
-                result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+                result = holding_button(1000,
+                                        "Hold to edit: " + scene_files[display-offset],
+                                        "Will edit: " + scene_files[display-offset],21)
                 selected_file = str(g_scenesdir) + str(scene_files[display-offset])
                 if result == 0:
-                    hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
+                    hb_display.display_2lines(  "Turning lights:",
+                                                str(scene_files[display-offset]),
+                                                size = 15)
                     #print "running the below thing"
-                    #os.popen("\"" + str(selected_file) + "\"")
+                    os.popen("\"" + str(selected_file) + "\"")
                     #print(str(selected_file))
-                    scene_manager(selected_file,str(scene_files[display-offset]))
-                    #time.sleep(1)
+                    time.sleep(1)
                     #debugmsg("Running: " + str(scene_files[display-offset]))
                 elif result == 1:
-                    print "result == 1"
-                    #ltt = set_scene_transition_time()
-                    #result = get_house_scene_by_light(selected_file,ltt)
-                    #debugmsg("Ran scene editing by group with result = " + result)
-                else:
-                    hb_display.display_2lines("Something weird","Happened...",12)
-                    time.sleep(5)
+                    scene_manager(selected_file,str(scene_files[display-offset]))
             else:
                 time.sleep(0.25)
                 exitvar = True
@@ -1318,14 +1349,37 @@ def scene_explorer(g_scenesdir):
     return
 
 def scene_manager(file_location, file_name):
-    menu_layout = ("Editing Scene:", file_name, lambda: toggle_time_format_stub(),
-                    "Delete", "Scene", lambda: quick_action_settings(),
-                    "Rename", "Scene", lambda: screensaver_settings(),
-                    "Re-Program", "Scene", lambda: nightmode_settings(),
+    menu_layout = ("Editing Scene:", "[ " + file_name + " ]", lambda: bd_set_result(0), #do nothing lol
+                    "Delete", "Scene", lambda: delete_scene(file_location, file_name),
+                    #"Rename", "Scene", lambda: rename_scene(file_location, file_name),
+                    "Re-Program", "w/Current State", lambda: reprogram_scene(file_location, file_name),
                     "Back to", "Scene Explorer", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
+    return
+
+def delete_scene(file_location, file_name):
+    print file_location
+    decision_result = binarydecision(
+                        lambda: hb_display.display_2lines("Really delete",
+                                                            str(file_name) + "?",
+                                                            size = 17),
+                        answer1 = "[ Yes ]",
+                        answer2 = "[ No ]")
+    if (decision_result == 2):
+        hb_display.display_2lines("Scene Deletion","Canceled",15)
+        time.sleep(1)
+        return
+    os.popen("rm " + file_location)
+    hb_display.display_2lines(str(file_name),"DELETED",17)
+    time.sleep(1)
+    return "BREAK_MENU"
+
+def reprogram_scene(file_location, file_name):
+    # Wait for release is already built in to this function
+    ltt = set_scene_transition_time()
+    result = get_house_scene_by_light(file_location,ltt)
     return
 
 def check_wifi_file(maindirectory):
@@ -1410,7 +1464,8 @@ def user_init_upgrade(force = 0):
         print("It looks like there are changes avaliable. Installing...")
         answer1 = "[ Yes! ]"
         answer2 = "[ Cancel ]"
-        decision_result = binarydecision(lambda: hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
+        #decision_result = binarydecision(lambda: hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15),answer1,answer2)
+        decision_result = user_upgrade_menu()
         if (decision_result != 1):
             hb_display.display_2lines("Canceling...","Returning...",15)
             os.popen("rm new_upgrade_hb.py")
@@ -1422,9 +1477,9 @@ def user_init_upgrade(force = 0):
         #upgrader = new_upgrade_hb.upgrader(simulate = 1)
         if diff_result == 1:
             #Legacy switch, currently does nothing...
-            upgrader = new_upgrade_hb.upgrader(legacy = 1)
+            upgrader = new_upgrade_hb.Upgrader(legacy = 1)
         else:
-            upgrader = new_upgrade_hb.upgrader(console = debug_argument,simulate = simulation_arg)
+            upgrader = new_upgrade_hb.Upgrader(console = debug_argument,simulate = simulation_arg)
         #upgrader = upgrade_hb.upgrader(simulate = 1)
         #Do a blind upgrade lol don't even check
         #upgrader.check_modules_exist()
@@ -1435,6 +1490,29 @@ def user_init_upgrade(force = 0):
         #time.sleep(1)
         print("Upgrade Finished! hueBerry is now rebooting to complete the installation.")
         os.popen("sudo shutdown -r now")
+    return
+
+def user_upgrade_menu():
+    bd_result = 0
+    menu_layout = (lambda:  hb_display.display_3lines("Upgrade Avaliable!","Upgrade to","Latest version?",13,offset = 15), None, "BD_TYPE",
+                    "View", "Changelog", lambda: user_upgrade_changelog(),
+                    "Choose", "[ Upgrade Now! ]", lambda: bd_set_result(1),
+                    "Choose", "[ Cancel ]", lambda: bd_set_result(2))
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    bd_result = menu.run_2_line_menu()
+    if bd_result == 0:
+        hb_display.display_2lines(  "Returning to",
+                                    "Settings Menu",
+                                    size = 17)
+        time.sleep(1)
+    encoder.wait_for_button_release()
+    return bd_result
+
+def user_upgrade_changelog():
+    import new_upgrade_hb
+    #import upgrade_hb
+    upgrader = new_upgrade_hb.Upgrader()
+    hb_display.display_textbrowser(text = upgrader.display_exit_msg())
     return
 
 def debugmsg(message):
@@ -1562,187 +1640,208 @@ def clock_sub_menu():
             #print("lights were off. not now")
             hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
 
-#------------------------------------------------------------------------------------------------------------------------------
-# Main Loop I think
-#Instantiate the hueberry display object
-# Create Display Object
-if(mirror_mode == 1):
-    hb_display = hb_display.display(console = 1,mirror = mirror_mode)
-else:
-    hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
-
-# Create Encoder Object
-if (debug_argument == 0):
-    encoder = hb_encoder.RotaryClass()
-elif (debug_argument == 1):
-    encoder = hb_encoder.RotaryClass(debug = 1)
-#--------------------------------------------------
-prev_millis = 0
-display = 0
-
-#--------------------------------------------------
-#Search to see if an Upgrade file exists, if so, run it
-check_upgrade_file(maindirectory)
-#--------------------------------------------------
-#Search to see if an Add Wifi file exists, if so, add it then delete it.
-check_wifi_file(maindirectory)
-
-
-#--------------------------------------------------
-#Load the Authentication Module so that the hueberry method can do what it needs to do.
-authenticate = authenticate.Authenticate()
-#Load the Hue API module so that the hueberry can control hue lights lol
-hueapi = hb_hue.HueAPI()
-#Load the settings-module
-settings = hb_settings.Settings()
-
-api_url,bridge_ip = pair_hue_bridge(bridge_present = bridge_present)
-
-#----------------- set variables---------------
-#global pos
-#pos = 0
-timeout = 0
-displaytemp = 0
-prev_secs = 0
-old_min = 60
-old_display = 0
-refresh = 1
-pushed = 0
-
-scene_refresh = 1 #Do the initial scene refresh
-
-
-
-debugmsg("-----------------------------")
-debugmsg("Starting hueBerry program version " + __file__)
-
-offset = 5 #clock (0) + 4 presets
-post_offset = 3 #settings, light, group menu after scenes)
-while True:
-    if (scene_refresh == 1):
-        total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
-        scene_refresh = 0
-    menudepth = total_plus_offset + post_offset - 1
-    # Cycle through different displays
-    if(encoder.pos > menudepth):
-        encoder.pos = menudepth
-    elif(encoder.pos < 0):
-        encoder.pos = 0
-    display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
-    #Display Selected Menu
-    if(display == 0):
-        cur_min = int(time.strftime("%M"))
-        if(old_min != cur_min or refresh == 1):
-            hb_display.display_time(settings.GetTimeFormat())
-            old_min = cur_min
-            refresh = 0
-        timeout = 0
-        #Sleep to conserve CPU Cycles
-        time.sleep(0.01)
-    if (old_display != display):
-        if(display == 1):
-            hb_display.display_2lines(str(display) + ". Turn OFF","all lights slowly",17)
-        elif(display == 2):
-            hb_display.display_2lines(str(display) + ". DIM all","Active lights",17)
-        elif(display == 3):
-            hb_display.display_2lines(str(display) + ". FULL ON","all lights",17)
-        elif(display == 4):
-            hb_display.display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
-        #begin scene selection
-        elif(display >= offset and display <= (total_plus_offset-1)):
-            hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
-        elif(display == (menudepth-2)):
-            hb_display.display_2lines(str(display) + ". Settings", "[ Menu ]",14)
-        elif(display == (menudepth-1)):
-            hb_display.display_2lines(str(display) + ". Light Control", "[ Menu ]",14)
-        elif(display == (menudepth-0)):
-            hb_display.display_2lines(str(display) + ". Group Control", "[ Menu ]",14)
-        old_display = display
-        old_min = 60
-    elif(display != 0):
-        #time.sleep(0.005)
-        old_min = 60
-
-    secs = int(round(time.time()))
-    timeout_secs = secs - prev_secs
-    if(display != 0 and displaytemp != display):
-        prev_secs = secs
-        displaytemp = display
-    elif(display != 0 and timeout_secs >= menu_timeout):
-        encoder.pos = 0
-        display_temp = 0
-    elif(display == 0):
-        displaytemp = display
-    #if(display != 0):
-    #    print timeout_secs
-
-    # Poll button press and trigger action based on current display
-    pos,pushed = encoder.get_state() # after loading everything, get state#
-    if (pushed):
+def mainloop_test():
+    timeout = 0
+    displaytemp = 0
+    prev_secs = 0
+    old_min = 60
+    old_display = 0
+    refresh = 1
+    pushed = 0
+    scene_refresh = 1 #Do the initial scene refresh
+    debugmsg("-----------------------------")
+    debugmsg("Starting hueBerry program version " + __file__)
+    offset = 5 #clock (0) + 4 presets
+    post_offset = 3 #settings, light, group menu after scenes)
+    while True:
+        if (scene_refresh == 1):
+            total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
+            scene_refresh = 0
+        menudepth = total_plus_offset + post_offset - 1
+        # Cycle through different displays
+        if(encoder.pos > menudepth):
+            encoder.pos = menudepth
+        elif(encoder.pos < 0):
+            encoder.pos = 0
+        display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+        #Display Selected Menu
         if(display == 0):
-            clock_sub_menu()
-            refresh = 1
-        elif(display == 1):
-            # Turn off all lights
-            hb_display.display_2lines("Turning all","lights OFF slowly",12)
-            #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
-            debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
-            #print(debug)
-            time.sleep(1)
-            debugmsg("turning all lights off")
-        elif(display == 2):
-            # Turn on NIGHT lights dim (groups 1,2,3)
-            hb_display.display_2lines("Turning All","lights On -> DIM",12)
-            hue_groups(lnum = "0",lbri = "1",ltt="100")
-            # Turn off front door light
-            #print(debug)
-            time.sleep(.5)
-            debugmsg("turning on night lights dim")
-        elif(display == 3):
-            hb_display.display_2lines("Turning all","lights on FULL",12)
-            hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
-            ##turn off front door light... we dont want that...
-            #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
-            debugmsg("turning all lights on full")
-        elif(display == 4):
-            hb_display.display_2lines("Turning all","lights OFF quickly",12)
-            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
-            debugmsg("turning all lights off quick")
-        elif(display >= offset and display < total_plus_offset):
-            #print display, offset
-            selected_scenenumber = display-offset+1
-            #print selected_scenenumber
-            result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
-            selected_file = str(g_scenesdir) + str(scene_files[display-offset])
-            if result == 0:
-                hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
-                #print scene_files[display-offset]
-                print "running the below thing"
-                #selected_file = str(g_scenesdir) + str(scene_files[display-offset])
-                os.popen("\"" + str(selected_file) + "\"")
-                print(str(selected_file))
+            cur_min = int(time.strftime("%M"))
+            if(old_min != cur_min or refresh == 1):
+                hb_display.display_time(settings.GetTimeFormat())
+                old_min = cur_min
+                refresh = 0
+            timeout = 0
+            #Sleep to conserve CPU Cycles
+            time.sleep(0.01)
+        if (old_display != display):
+            if(display == 1):
+                hb_display.display_2lines(str(display) + ". Turn OFF","all lights slowly",17)
+            elif(display == 2):
+                hb_display.display_2lines(str(display) + ". DIM all","Active lights",17)
+            elif(display == 3):
+                hb_display.display_2lines(str(display) + ". FULL ON","all lights",17)
+            elif(display == 4):
+                hb_display.display_2lines(str(display) + ". Turn OFF","all lights quickly",17)
+            #begin scene selection
+            elif(display >= offset and display <= (total_plus_offset-1)):
+                hb_display.display_2lines(str(display) + ". " + str(scene_files[display-offset]),"Run?",15)
+            elif(display == (menudepth-2)):
+                hb_display.display_2lines(str(display) + ". Settings", "[ Menu ]",14)
+            elif(display == (menudepth-1)):
+                hb_display.display_2lines(str(display) + ". Light Control", "[ Menu ]",14)
+            elif(display == (menudepth-0)):
+                hb_display.display_2lines(str(display) + ". Group Control", "[ Menu ]",14)
+            old_display = display
+            old_min = 60
+        elif(display != 0):
+            time.sleep(0.005)
+            old_min = 60
+
+        secs = int(round(time.time()))
+        timeout_secs = secs - prev_secs
+        if(display != 0 and displaytemp != display):
+            prev_secs = secs
+            displaytemp = display
+        elif(display != 0 and timeout_secs >= menu_timeout):
+            encoder.pos = 0
+            display_temp = 0
+        elif(display == 0):
+            displaytemp = display
+        #if(display != 0):
+        #    print timeout_secs
+
+        # Poll button press and trigger action based on current display
+        pos,pushed = encoder.get_state() # after loading everything, get state#
+        if (pushed):
+            if(display == 0):
+                clock_sub_menu()
+                refresh = 1
+            elif(display == 1):
+                # Turn off all lights
+                hb_display.display_2lines("Turning all","lights OFF slowly",12)
+                #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
+                debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
+                #print(debug)
                 time.sleep(1)
-                debugmsg("Running: " + str(scene_files[display-offset]))
-            elif result == 1:
-                ltt = set_scene_transition_time()
-                result = get_house_scene_by_light(selected_file,ltt)
-                debugmsg("Ran scene editing by group with result = " + result)
-            else:
-                hb_display.display_2lines("Something weird","Happened...",12)
-                time.sleep(5)
-        elif(display == (menudepth-2)):
+                debugmsg("turning all lights off")
+            elif(display == 2):
+                # Turn on NIGHT lights dim (groups 1,2,3)
+                hb_display.display_2lines("Turning All","lights On -> DIM",12)
+                hue_groups(lnum = "0",lbri = "1",ltt="100")
+                # Turn off front door light
+                #print(debug)
+                time.sleep(.5)
+                debugmsg("turning on night lights dim")
+            elif(display == 3):
+                hb_display.display_2lines("Turning all","lights on FULL",12)
+                hue_groups(lnum = "0",lon = "true",lbri = "254",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+                ##turn off front door light... we dont want that...
+                #hue_groups(lnum = "5",lon = "false",lbri = "1",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+                debugmsg("turning all lights on full")
+            elif(display == 4):
+                hb_display.display_2lines("Turning all","lights OFF quickly",12)
+                hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+                debugmsg("turning all lights off quick")
+            elif(display >= offset and display < total_plus_offset):
+                #print display, offset
+                selected_scenenumber = display-offset+1
+                #print selected_scenenumber
+                result = holding_button(1000,"Hold to edit: " + scene_files[display-offset],"Will edit: " + scene_files[display-offset],21)
+                selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                if result == 0:
+                    hb_display.display_2lines("Turning lights:",str(scene_files[display-offset]),12)
+                    #print scene_files[display-offset]
+                    print "running the below thing"
+                    #selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                    os.popen("\"" + str(selected_file) + "\"")
+                    print(str(selected_file))
+                    time.sleep(1)
+                    debugmsg("Running: " + str(scene_files[display-offset]))
+                elif result == 1:
+                    ltt = set_scene_transition_time()
+                    result = get_house_scene_by_light(selected_file,ltt)
+                    debugmsg("Ran scene editing by group with result = " + result)
+                else:
+                    hb_display.display_2lines("Something weird","Happened...",12)
+                    time.sleep(5)
+            elif(display == (menudepth-2)):
+                encoder.pos = 0
+                scene_refresh = settings_menu(g_scenesdir)
+                #InteliDraw_Test()
+                scene_refresh = 1 # lol override. this might be useful lol
+            elif(display == (menudepth-1)):
+                encoder.pos = 0
+                light_control("l")
+            elif(display == (menudepth)):
+                encoder.pos = 0
+                light_control("g") #temp for test lol
+                #scene_explorer(g_scenesdir)
+            refresh = 1
+            time.sleep(0.01)
+            #prev_millis = int(round(time.time() * 1000))
             encoder.pos = 0
-            scene_refresh = settings_menu(g_scenesdir)
-            #InteliDraw_Test()
-            scene_refresh = 1 # lol override. this might be useful lol
-        elif(display == (menudepth-1)):
-            encoder.pos = 0
-            light_control("l")
-        elif(display == (menudepth)):
-            encoder.pos = 0
-            light_control("g") #temp for test lol
-            #scene_explorer(g_scenesdir)
-        refresh = 1
-        time.sleep(0.01)
-        #prev_millis = int(round(time.time() * 1000))
-        encoder.pos = 0
+
+if __name__ == "__main__":
+    #------------------------------------------------------------------------------------------------------------------------------
+    # Main Loop I think
+    global logfile
+    if wsl_env == 0:
+        logfile = "/home/pi/hueberry.log"
+    else:
+        logfile = "~/hueberry.log"
+
+    global debug_state
+    debug_state = 1
+
+    menu_timeout = 30 #seconds
+    print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
+    #Create Required directories if they do not exist.
+    maindirectory = "/boot/hueBerry/"
+    #maindirectory = os.environ['HOME'] + "/"
+    if (os.path.isdir(maindirectory) == False):
+        os.popen("sudo mkdir /boot/hueBerry")
+        print "Created Directory: " + str(maindirectory)
+
+    g_scenesdir = str(maindirectory) + "scenes/"
+    if (os.path.isdir(g_scenesdir) == False):
+        os.popen("sudo mkdir /boot/hueBerry/scenes")
+        print "Created Directory: " + str(g_scenesdir)
+    print "Main Directory is: " + str(maindirectory)
+    print "Scripts Directory is: " + str(g_scenesdir)
+    #Instantiate the hueberry display object
+    # Create Display Object
+    if(mirror_mode == 1):
+        hb_display = hb_display.display(console = 1,mirror = mirror_mode)
+    else:
+        hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
+    # Create Encoder Object
+    if (debug_argument == 0):
+        encoder = hb_encoder.RotaryClass()
+    elif (debug_argument == 1):
+        if curses_test == 0:
+            encoder = hb_encoder.RotaryClass(debug = 1)
+        else:
+            curses_object = curses.initscr()
+            encoder = hb_encoder.RotaryClass(debug = 1, encoder_object = curses_object)
+    #--------------------------------------------------
+    #prev_millis = 0
+    #display = 0
+    #--------------------------------------------------
+    #Search to see if an Upgrade file exists, if so, run it
+    check_upgrade_file(maindirectory)
+    #--------------------------------------------------
+    #Search to see if an Add Wifi file exists, if so, add it then delete it.
+    check_wifi_file(maindirectory)
+    #--------------------------------------------------
+    #Load the Authentication Module so that the hueberry method can do what it needs to do.
+    authenticate = authenticate.Authenticate()
+    #Load the Hue API module so that the hueberry can control hue lights lol
+    hueapi = hb_hue.HueAPI()
+    #Load the settings-module
+    settings = hb_settings.Settings()
+    api_url,bridge_ip = pair_hue_bridge(bridge_present = bridge_present)
+    #------------------------------------------
+    # My attempt at methoding the main function...
+    mainloop_test()
+    #------------------------------------------

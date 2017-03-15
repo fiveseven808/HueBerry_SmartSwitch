@@ -12,13 +12,14 @@ import hb_display
 import time
 import sys
 
-class upgrader(object):
+class Upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
         self.req_modules = ['hb_display',
                             'hb_encoder',
                             'hb_hue',
                             'hb_settings',
                             'hb_menu',
+                            #'hbplugin'
                             'hueberry',
                             'console_colors',
                             'authenticate']
@@ -145,28 +146,20 @@ class upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v045-20170303
+    \rUpgrade level: v047-0313.57.a
     //57
-        2017-03-03 //57
-            + WPBack wrote a settings module so we can make personlization changes to how the menu works!!!
-            1244 //57
-            + Added hb_menu module (not used yet)
-                - Partially impelemented, doesn't quite work though so not activated
-            * Changed Turn on Nights dim functionality
-                - Should in theory turn all lights that are currently on to 1 brightness over 10 seconds
-            1405 //57
-            + Implemented hb_menu module for settings. Things look okay for now
-            + Fixed handling of lots of things in hb_menu.
-            * Keep an eye out for bugs in the settings menu for this commit.
-            + Error handling for get_huejson_value
-            + Preferences menu in Settings now!!! Thanks //WPBack!
-            + Added the ability to force upgrades! (probably not good to leave in prod lol)
-        2017-03-06 //57
-            + New Menu module rewritten
-            + Porting as many menus as I can over to the new module (SO MUCH CLEANER)
+        2017-03-12 //57
+        + Enabled Scene Explorer.
+            + Added the ability to delete scenes without a computer (FINALLY!)
+            + Added an obvious way to reprogram scenes (instead of holding down)
+        2017-03-13 //57
+        + Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
+        + Fixed authentication issues... Can do initial pair at least.
+        + Cleaned up some bits of code
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
+        return finalreadme
 
 if __name__ == "__main__":
     import sys
