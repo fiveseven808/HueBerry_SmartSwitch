@@ -1,6 +1,6 @@
-HueBerry: DimmerDial
+HueBerry: Smart Switch
 =============
-## Smart dial for the Philips Hue lighting system
+## IoT Smart Switch for the Philips Hue lighting system
 
 [![Learn About the hueBerry!](http://i.imgur.com/zl9XxJq.jpg)](https://youtu.be/YTvbsL82ZcM?t=1m3s "hueBerry is awesome!")
 
