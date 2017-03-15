@@ -161,80 +161,57 @@ class Menu_Creator(object):
             #time.sleep(0.1)
         return
 
-    def single_value_menu(self):
-        """
-        datastructure = (group_or_light_or_something, bri_or_hue_or_something,
-                        max_rot_value, lambda: func_2_run_off_of_pos(),
-                        timeout, lambda: timeout_func(),
-                        lambda: pos_to_value_func())
-        """
-        """
-        brite,wholejson = get_huejson_value("g",group,"bri")
-        if(brite == -1):
-            #print "No lights avaliable"
-            return
-        #else:
-        #    print "guess it was brite"
-        brite = int(brite)      #make integer
-        if brite < 10 and brite >= 0:
-            brite = 10
-        if (wholejson['state']['any_on'] == False):
-            brite = 0
-        """
-        title1 = self.menu_layout[1]
-        title2 = self.menu_layout[2]
-        max_rot_val = self.menu_layout[3]
-        main_func = self.menu_layout[4]
-        timeout_ms = self.menu_layout[5]
-        tiemout_func = self.menu_layout[6]
-        pos_value_func = self.menu_layout[7]
-        #The above is deermined by the calling function and passed to the below in the big dict
-        brite = brite/10.16        #trim it down to 25 values
-        #Make this "starting" value something that pulls from a return from a function? perhaps? or mayube it's predetermined and sent lol
-        brite = int(brite)      #convert the float down to int agian
+    def single_value_menu(self, main_title,value_title,
+                                calc_func, rev_calc,
+                                action_func,
+                                start_pos,a_param,
+                                min_val, max_val,
+                                timeout, timeout_func):
         #Need to detmermine initial encoder position
-        encoder.pos = brite
-        max_rot_val = 25
-        #bri_pre = encoder.pos * 10
-        bri_pre = encoder.pos * 10.16
+        self.encoder.pos = int(start_pos)
+        max_rot_val = max_val
+        bri_pre = calc_func(self.encoder.pos)
         refresh = 1
         prev_mills = 0
         self.encoder.wait_for_button_release()
+        pos = self.encoder.pos
         while True:
-            pos,pushed = encoder.get_state()
-            if(pos > max_rot_val):
-                encoder.pos = max_rot_val
-            elif(pos < 0):
-                encoder.pos = 0
+            if(self.encoder.pos > max_rot_val):
+                self.encoder.pos = max_rot_val
+            elif(self.encoder.pos < min_val):
+                self.encoder.pos = min_val
             mills = int(round(time.time() * 1000))
             millsdiff = mills - prev_mills
-            #rot_bri = encoder.pos * 10
-            rot_bri = encoder.pos * 10.16
+            rot_bri = calc_func(self.encoder.pos)
             if(bri_pre != rot_bri or refresh ==  1 ):
-                hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.54)) + "%",17)
+                self.hb_display.display_2lines(main_title,value_title + str(int(rot_bri)) + "%",17)
                 refresh = 0
-            if rot_bri <= 0 and rot_bri != bri_pre:
-                #print"turning off?"
+            if rot_bri <= min_val and rot_bri != bri_pre:
+                print"turning off since below min value"
                 #hue_groups(lnum = group,lon = "false",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
-                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-                huecmd.start()
+                #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+                #huecmd.start()
                 bri_pre = rot_bri
             elif(rot_bri != bri_pre and millsdiff > 200):
-                #print"millsdiff > 200"
+                print"millsdiff > 200"
+                print"running actionfunc with rot_bri calcuated result"
+                action_func(pos)
                 #hue_groups(lnum = group,lon = "true",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
-                huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
-                huecmd.start()
+                #huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
+                #huecmd.start()
                 bri_pre = rot_bri
                 prev_mills = mills
             millsdiff = mills - prev_mills
-            if(millsdiff > 5000):
+            if(millsdiff > timeout):
                 #If 5.0 seconds have passed and nothing has happened, go and refresh the display and reset the miliseconds
-                rot_bri,wholejson = get_huejson_value("g",group,"bri")
-                #print "the rot bri is: "+str(rot_bri)
-                hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
+                #rot_bri,wholejson = get_huejson_value("g",group,"bri")
+                self.hb_display.display_2lines(main_title,value_title + str(int(rot_bri)) + "%",17)
+                timeout_func(pos)
+                print "the rot bri after 5 sec is: "+str(rot_bri)
                 prev_mills = mills
+            pos,pushed = self.encoder.get_state()
             if(pushed):
-                exitvar = True
+                return #exit function goes here
             time.sleep(0.01)
             refresh = 1
 
