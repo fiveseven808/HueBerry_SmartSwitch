@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v047-0313.57.a"
+__version__ = "v047-0314.57.a"
 """
 2017-03-12 //57
 + Enabled Scene Explorer.
@@ -9,6 +9,10 @@ __version__ = "v047-0313.57.a"
 + Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
 + Fixed authentication issues... Can do initial pair at least.
 + Cleaned up some bits of code
+2017-03-14 //57
++ Merged main function branch, so now a function instead of just a mess
++ Began work on attempting to port the single value menus to a generic scheme
++ Announcement on Reddit! Happy pi day!
 
 --------
 Things to do
