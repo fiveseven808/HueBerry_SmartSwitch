@@ -61,10 +61,16 @@ class Authenticate(object):
     def search_for_bridge(self, timeout=3):
         """Searches for a bridge on the local network and returns the IP if it
         finds one."""
+        all_bridges = []
         r = requests.get('http://www.meethue.com/api/nupnp', timeout=timeout)
         bridges = r.json()
         if len(bridges) > 0:
             return bridges[0]['internalipaddress']
+        elif len(bridges) > 1:
+            for each in bridges:
+                all_bridges.append(bridges[each]['internalipaddress'])
+                print("more than one bridge on network?")
+                return all_bridges
         else:
             return None
 

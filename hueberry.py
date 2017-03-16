@@ -13,6 +13,8 @@ __version__ = "v047-0314.57.a"
 + Merged main function branch, so now a function instead of just a mess
 + Began work on attempting to port the single value menus to a generic scheme
 + Announcement on Reddit! Happy pi day!
+2017-03-15 //57
++ Attempting to create prototypes for dual bridge configuration
 
 --------
 Things to do
