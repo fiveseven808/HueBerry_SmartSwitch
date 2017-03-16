@@ -12,7 +12,7 @@ import hb_display
 import time
 import sys
 
-class upgrader(object):
+class Upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
         self.req_modules = ['hb_display',
                             'hb_encoder',
@@ -222,9 +222,9 @@ if __name__ == "__main__":
         #upgrader = new_upgrade_hb.upgrader(simulate = 1)
         if diff_result == 1:
             #Legacy switch, currently does nothing...
-            upgrader = new_upgrade_hb.upgrader(legacy = 1)
+            upgrader = new_upgrade_hb.Upgrader(legacy = 1)
         else:
-            upgrader = new_upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
+            upgrader = new_upgrade_hb.Upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
     #Do a blind upgrade lol don't even check
     #upgrader.check_modules_exist()
     upgrader.download_all_modules()
