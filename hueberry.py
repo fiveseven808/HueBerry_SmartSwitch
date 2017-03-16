@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v047-0314.57.a"
+__version__ = "v047-0315.57.a"
 """
 2017-03-12 //57
 + Enabled Scene Explorer.
@@ -15,6 +15,7 @@ __version__ = "v047-0314.57.a"
 + Announcement on Reddit! Happy pi day!
 2017-03-15 //57
 + Attempting to create prototypes for dual bridge configuration
++ Scene Explorer bug fix
 
 --------
 Things to do
@@ -1291,7 +1292,7 @@ def new_scene_creator(g_scenesdir):
 
 def scene_explorer(g_scenesdir):
     #This function will act like a browser so you can delete or rename certain scenes?
-    #if(display >= offset and display <= (total_plus_offset-1)):
+    encoder.wait_for_button_release()
     display = 0
     offset = 0 #or 1? for like... instructions so you know where you are?
     scene_refresh = 1
