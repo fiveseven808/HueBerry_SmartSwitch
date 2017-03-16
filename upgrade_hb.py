@@ -146,7 +146,7 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v047-0313.57.a
+    \rUpgrade level: v047-0315.57.a
     //57
         2017-03-12 //57
         + Enabled Scene Explorer.
@@ -156,6 +156,13 @@ class Upgrader(object):
         + Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
         + Fixed authentication issues... Can do initial pair at least.
         + Cleaned up some bits of code
+        2017-03-14 //57
+        + Merged main function branch, so now a function instead of just a mess
+        + Began work on attempting to port the single value menus to a generic scheme
+        + Announcement on Reddit! Happy pi day!
+        2017-03-15 //57
+        + Attempting to create prototypes for dual bridge configuration
+        + Scene Explorer bug fix
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
@@ -215,9 +222,9 @@ if __name__ == "__main__":
         #upgrader = new_upgrade_hb.upgrader(simulate = 1)
         if diff_result == 1:
             #Legacy switch, currently does nothing...
-            upgrader = new_upgrade_hb.upgrader(legacy = 1)
+            upgrader = new_upgrade_hb.Upgrader(legacy = 1)
         else:
-            upgrader = new_upgrade_hb.upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
+            upgrader = new_upgrade_hb.Upgrader(console = debug_argument,mirror = mirror_mode,help = disp_help,simulate = simulate_arg)
     #Do a blind upgrade lol don't even check
     #upgrader.check_modules_exist()
     upgrader.download_all_modules()
