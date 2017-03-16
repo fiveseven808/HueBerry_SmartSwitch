@@ -12,7 +12,7 @@ import hb_display
 import time
 import sys
 
-class Upgrader(object):
+class upgrader(object):
     def __init__(self,console=0,mirror = 0,help = 0,simulate = 0,legacy = 0, branch = "dev"):
         self.req_modules = ['hb_display',
                             'hb_encoder',
