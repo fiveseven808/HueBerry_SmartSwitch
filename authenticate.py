@@ -66,11 +66,11 @@ class Authenticate(object):
         bridges = r.json()
         if len(bridges) > 0:
             return bridges[0]['internalipaddress']
-        elif len(bridges) > 1:
-            for each in bridges:
-                all_bridges.append(bridges[each]['internalipaddress'])
-                print("more than one bridge on network?")
-                return all_bridges
+        #elif len(bridges) > 1:
+        #    for each in bridges:
+        #        all_bridges.append(bridges[each]['internalipaddress'])
+        #        print("more than one bridge on network?")
+        #        return all_bridges
         else:
             return None
 
