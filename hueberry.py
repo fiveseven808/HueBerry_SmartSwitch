@@ -19,6 +19,7 @@ __version__ = "v047-0317.57.a"
 2017-03-17 //57
 * Attempting to add a scene browser to Quick Actions
 + Messy hodge podge, but you can now control individual rooms and lights with quick actions!!!! YAY!!!!
++ Reworked the settings menu so it's not so long and ridiculous
 
 --------
 Things to do
@@ -1179,12 +1180,7 @@ def wifi_settings():
 
 def settings_menu(g_scenesdir,util_mode = 0):
     if util_mode == 0:
-        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                        "Restart", "hueBerry", lambda: restart_hueberry(),
-                        "Flashlight", "Function", lambda: flashlight_mode(),
-                        "Connect to", "WiFi", lambda: wifi_settings(),
+        menu_layout = ("System", "[ Menu ]", lambda: system_menu(),
                         "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
                         "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
                         "[ Scene ]", "[ Explorer ]", lambda: scene_explorer(g_scenesdir),
@@ -1209,6 +1205,19 @@ def settings_menu(g_scenesdir,util_mode = 0):
     encoder.wait_for_button_release()
     scene_refresh = 1
     return scene_refresh
+
+def system_menu():
+    menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                    "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                    "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                    "Restart", "hueBerry", lambda: restart_hueberry(),
+                    "Flashlight", "Function", lambda: flashlight_mode(),
+                    "Connect to", "WiFi", lambda: wifi_settings(),
+                    "Back to", "Main Menu", "exit")
+    system_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    system_menu.run_2_line_menu()
+    encoder.wait_for_button_release()
+    return
 
 def preferences_menu():
     menu_layout = ("Toggle time", "Mode 24/12h", lambda: toggle_time_format_stub(),
@@ -1314,7 +1323,7 @@ def new_scene_creator(g_scenesdir):
     debugmsg("ran NEW scene by individual creation with result = " + result)
     return
 
-def scene_explorer(g_scenesdir):
+def scene_explorer(g_scenesdir,selection_only = 0):
     #This function will act like a browser so you can delete or rename certain scenes?
     encoder.wait_for_button_release()
     display = 0
@@ -1348,28 +1357,31 @@ def scene_explorer(g_scenesdir):
             old_display = display
         pos,pushed = encoder.get_state()
         if(pushed):
-            if(display >= offset and display < total_plus_offset):
-                #print display, offset
-                selected_scenenumber = display-offset+1
-                #print selected_scenenumber
-                result = holding_button(1000,
-                                        "Hold to edit: " + scene_files[display-offset],
-                                        "Will edit: " + scene_files[display-offset],21)
-                selected_file = str(g_scenesdir) + str(scene_files[display-offset])
-                if result == 0:
-                    hb_display.display_2lines(  "Turning lights:",
-                                                str(scene_files[display-offset]),
-                                                size = 15)
-                    #print "running the below thing"
-                    os.popen("\"" + str(selected_file) + "\"")
-                    #print(str(selected_file))
-                    time.sleep(1)
-                    #debugmsg("Running: " + str(scene_files[display-offset]))
-                elif result == 1:
-                    scene_manager(selected_file,str(scene_files[display-offset]))
-            else:
-                time.sleep(0.25)
-                exitvar = True
+            if selection_only == 0:
+                if(display >= offset and display < total_plus_offset):
+                    #print display, offset
+                    selected_scenenumber = display-offset+1
+                    #print selected_scenenumber
+                    result = holding_button(1000,
+                                            "Hold to edit: " + scene_files[display-offset],
+                                            "Will edit: " + scene_files[display-offset],21)
+                    selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                    if result == 0:
+                        hb_display.display_2lines(  "Turning lights:",
+                                                    str(scene_files[display-offset]),
+                                                    size = 15)
+                        #print "running the below thing"
+                        os.popen("\"" + str(selected_file) + "\"")
+                        #print(str(selected_file))
+                        time.sleep(1)
+                        #debugmsg("Running: " + str(scene_files[display-offset]))
+                    elif result == 1:
+                        scene_manager(selected_file,str(scene_files[display-offset]))
+                else:
+                    time.sleep(0.25)
+                    exitvar = True
+            elif selection_only == 1:
+                return selected_file, scene_files[display-offset]
             scene_refresh = 1
             old_display = -1 #to refresh
         time.sleep(0.01)

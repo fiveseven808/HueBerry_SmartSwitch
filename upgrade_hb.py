@@ -166,6 +166,7 @@ class Upgrader(object):
         2017-03-17 //57
         * Attempting to add a scene browser to Quick Actions
         + Messy hodge podge, but you can now control individual rooms and lights with quick actions!!!! YAY!!!!
+        + Reworked the settings menu so it's not so long and ridiculous
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
