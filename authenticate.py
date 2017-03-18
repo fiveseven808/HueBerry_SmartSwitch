@@ -49,7 +49,7 @@ class Authenticate(object):
             self.save_creds(data[0]['success']['username'],bridge_host)
 
     def save_creds(self, username,ip):
-        with open(os.path.expanduser(self.USERNAME_SAVE_PATH), 'w') as f:
+        with open(os.path.expanduser(self.USERNAME_SAVE_PATH), 'a') as f:
             f.write(json.dumps({
                 'philips-hue': {
                     'api_key': username,
@@ -66,11 +66,24 @@ class Authenticate(object):
         bridges = r.json()
         if len(bridges) > 0:
             return bridges[0]['internalipaddress']
-        #elif len(bridges) > 1:
-        #    for each in bridges:
-        #        all_bridges.append(bridges[each]['internalipaddress'])
-        #        print("more than one bridge on network?")
-        #        return all_bridges
+        else:
+            return None
+
+    def search_for_all_bridges(self, debug = 0, timeout=3):
+        """Searches for a bridge on the local network and returns the IP of all
+        bridges that it finds"""
+        all_bridges = []
+        if debug == 0:
+            r = requests.get('http://www.meethue.com/api/nupnp', timeout=timeout)
+            bridges = r.json()
+        else:
+            r = os.popen("cat mb_bridge.json").read()
+            bridges = json.loads(r)
+        if len(bridges) > 0:
+            all_bridges = []
+            for each_entry in bridges:
+                all_bridges.append(each_entry['internalipaddress'])
+            return all_bridges
         else:
             return None
 
@@ -104,7 +117,7 @@ if __name__ == "__main__":
             msg = "No Bridges found. Quitting auth file creation."
             print(msg)
             sys.exit()
-        else:
+        elif len(ip) == 1:
             print("Attempting Link: Push Bridge button, then hit the enter key")
             raw_input()
             print("Pairing...")
@@ -113,6 +126,17 @@ if __name__ == "__main__":
             except:
                 print("Something went horribly wrong, exiting...")
                 sys.exit()
+        elif len(ip) > 1:
+            print("Attempting Link: Push EVERY Bridge button, then hit the enter key all within 30 seconds")
+            raw_input()
+            for each_ip in ip:
+                #print each_ip
+                print("Pairing... with " + str(each_ip))
+                try:
+                    authenticate.authenticate('python module',each_ip)
+                except:
+                    print("Something went horribly wrong when pairing with "+str(each_ip)+", exiting...")
+                    sys.exit()
     #After a credential file exists
     authenticate.load_creds()
     api_key = authenticate.api_key
