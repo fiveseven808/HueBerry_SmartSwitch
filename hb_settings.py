@@ -25,7 +25,12 @@ class Settings(object):
     # 0:do nothing, 1:turn all lights on, 2:turn all lights off, 3:toggle all lights
     # Should be able to select a specific scene, later project
     __quick_press_action = 1
+    __quick_press_mode = "g"
+    __quick_press_number = 0
     __long_press_action = 2
+    __long_press_mode = "g"
+    __long_press_number = 0
+
 
     # Constructor. Loads the previosu version of the object, if there is any
     def __init__(self):

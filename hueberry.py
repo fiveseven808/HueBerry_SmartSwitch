@@ -1635,7 +1635,6 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
 def bd_set_result(value):
     return value
 
-
 def get_scene_total(g_scenesdir,offset):
     #search all of the scenes in the scenes directory
     #count how many there are (maybe dump names into a dict then do a len()?)
