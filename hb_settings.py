@@ -14,7 +14,7 @@ import os
     - Setting for return to clock, or return to previous selection (for main menu only)
     - Screen saver options
         - date and time move in random positions on the screen?
-        - Turn off display after 5 minutes of inactivity? adjustable minutes of inactivity? 
+        - Turn off display after 5 minutes of inactivity? adjustable minutes of inactivity?
 """
 class Settings(object):
 
@@ -54,15 +54,23 @@ class Settings(object):
     def GetTimeFormat(self):
         return self.__time_format
 
-    def SetQuickPressAction(self, action):
+    def SetQuickPressAction(self, action, mode = 0, number = 0 ):
         if action >= 0 and action <= 3:
             self.__quick_press_action = action
+            self.Save()
+        if action == "set_group_or_light":
+            self.__quick_press_action = action
+            self.__quick_press_mode = mode
+            self.__quick_press_number = number
             self.Save()
 
     def GetQuickPressAction(self):
         return self.__quick_press_action
 
-    def __getQuickActionString(self, action):
+    def get_quick_press_action_SGoL(self):
+        return self.__quick_press_mode, self.__quick_press_number
+
+    def __getQuickActionString(self, action, type = 0):
         if action == 0:
             return "Do nothing"
         elif action == 1:
@@ -71,22 +79,33 @@ class Settings(object):
             return "Turn all off"
         elif action == 3:
             return "Toggle all"
+        elif action == "set_group_or_light":
+            return "Toggle a group or light"
+
         else:
             return "False value"
 
     def GetQuickPressActionString(self):
-        return self.__getQuickActionString(self.__quick_press_action)
+        return self.__getQuickActionString(self.__quick_press_action, type = "quickpress")
 
-    def SetLongPressAction(self, action):
+    def SetLongPressAction(self, action, mode = 0, number = 0 ):
         if action >= 0 and action <= 3:
             self.__long_press_action = action
+            self.Save()
+        if action == "set_group_or_light":
+            self.__long_press_action = action
+            self.__long_press_mode = mode
+            self.__long_press_number = number
             self.Save()
 
     def GetLongPressAction(self):
         return self.__long_press_action
 
+    def get_long_press_action_SGoL(self):
+        return self.__long_press_mode, self.__long_press_number
+
     def GetLongPressActionString(self):
-        return self.__getQuickActionString(self.__long_press_action)
+        return self.__getQuickActionString(self.__long_press_action, type = "longpress")
 
 # For testing
 if __name__ == "__main__":

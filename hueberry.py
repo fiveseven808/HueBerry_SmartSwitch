@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v047-0315.57.a"
+__version__ = "v047-0317.57.a"
 """
 2017-03-12 //57
 + Enabled Scene Explorer.
@@ -16,6 +16,9 @@ __version__ = "v047-0315.57.a"
 2017-03-15 //57
 + Attempting to create prototypes for dual bridge configuration
 + Scene Explorer bug fix
+2017-03-17 //57
+* Attempting to add a scene browser to Quick Actions
++ Messy hodge podge, but you can now control individual rooms and lights with quick actions!!!! YAY!!!!
 
 --------
 Things to do
@@ -363,7 +366,7 @@ def hue_groups(lnum, lon = -1, lbri = -1, lsat = -1, lx = -1, ly = -1, lct = -1,
 #   Displays:
 #       Group or Light name as you scroll around. Allows you to change most attributes of the light
 #------------------------------------------------------------------------------------
-def light_control(mode):
+def light_control(mode,selection_only = 0):
     if (mode == "g"):
         hb_display.display_custom("loading groups...")
         name_array,total,lstate_a,keyvalues = get_group_names()
@@ -376,11 +379,11 @@ def light_control(mode):
     refresh = 1
     exitvar = False
     menudepth = total + 1
+    encoder.wait_for_button_release()
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > menudepth):
+        if(encoder.pos > menudepth):
             encoder.pos = menudepth
-        elif(pos < 1):
+        elif(encoder.pos < 1):
             encoder.pos = 1
         display = encoder.pos
 
@@ -395,70 +398,75 @@ def light_control(mode):
         else:
             time.sleep(0.005)
 
+        pos,pushed = encoder.get_state()
         # Poll button press and trigger action based on current display
         if(pushed):
-            if(display <= total):
-                ctmode = 0
-                huemode = 0
-                ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
-                if(ctmode == 0):
-                    if(mode == "g"):
-                        g_control(keyvalues[display-1])
-                        ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
-                        if (ctmode ==0):
-                            hb_display.display_custom("returning from ct...")
-                    elif(mode == "l"):
-                        l_control(num_lights[display-1])
-                        ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
-                        if (ctmode ==0):
-                            hb_display.display_custom("returning from ct...")
-
-                if(ctmode == 1):
-                    if(mode == "g"):
-                        ct_control(keyvalues[display-1],"g")
-                        huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
-                        if (huemode == 1):
-                            hue_control(keyvalues[display-1],"g")
-                            huemode = 0
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning...")
-                        huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
-                        if (huemode == 1):
-                            sat_control(keyvalues[display-1],"g")
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning from sat...")
-
-                    elif(mode == "l"):
-                        ct_control(num_lights[display-1],"l")
-                        huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
-                        if (huemode == 1):
-                            hue_control(num_lights[display-1],"l")
-                            huemode = 0
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning...")
-                        huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
-                        if (huemode == 1):
-                            sat_control(num_lights[display-1],"l")
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning...")
-                    #finished with sat for l or g
-                    pos,pushed = encoder.get_state()
-                    while(pushed):
-                        hb_display.display_custom("returning...")
-                        time.sleep(0.01)
+            if selection_only == 0:
+                if(display <= total):
+                    ctmode = 0
+                    huemode = 0
+                    ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
+                    if(ctmode == 0):
+                        if(mode == "g"):
+                            g_control(keyvalues[display-1])
+                            ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
+                            if (ctmode ==0):
+                                hb_display.display_custom("returning from ct...")
+                        elif(mode == "l"):
+                            l_control(num_lights[display-1])
+                            ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
+                            if (ctmode ==0):
+                                hb_display.display_custom("returning from ct...")
+                    if(ctmode == 1):
+                        if(mode == "g"):
+                            ct_control(keyvalues[display-1],"g")
+                            huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
+                            if (huemode == 1):
+                                hue_control(keyvalues[display-1],"g")
+                                huemode = 0
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning...")
+                            huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
+                            if (huemode == 1):
+                                sat_control(keyvalues[display-1],"g")
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning from sat...")
+                        elif(mode == "l"):
+                            ct_control(num_lights[display-1],"l")
+                            huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
+                            if (huemode == 1):
+                                hue_control(num_lights[display-1],"l")
+                                huemode = 0
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning...")
+                            huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
+                            if (huemode == 1):
+                                sat_control(num_lights[display-1],"l")
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning...")
+                        #finished with sat for l or g
                         pos,pushed = encoder.get_state()
-                if(mode == "g"):
-                    name_array,total,lstate_a,keyvalues = get_group_names()
-                elif(mode == "l"):
-                    name_array,num_lights,lstate_a,total = get_light_names()
-                refresh = 1
-                encoder.pos = display
-
-            else:
-                time.sleep(0.25)
-                exitvar = True
-            time.sleep(0.01)
-            #prev_millis = int(round(time.time() * 1000))
+                        while(pushed):
+                            hb_display.display_custom("returning...")
+                            time.sleep(0.01)
+                            pos,pushed = encoder.get_state()
+                    if(mode == "g"):
+                        name_array,total,lstate_a,keyvalues = get_group_names()
+                    elif(mode == "l"):
+                        name_array,num_lights,lstate_a,total = get_light_names()
+                    refresh = 1
+                    encoder.pos = display
+                else:
+                    time.sleep(0.25)
+                    exitvar = True
+                time.sleep(0.01)
+                #prev_millis = int(round(time.time() * 1000))
+            elif selection_only == 1:
+                encoder.wait_for_button_release()
+                if (mode == "g"):
+                    return keyvalues[display-1]
+                elif (mode == "l"):
+                    return num_lights[display-1]
     return
 
 
@@ -586,7 +594,7 @@ def get_huejson_value(g_or_l,num,type):
     if(g_or_l == "l"):
         os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
     wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
-    print wholejson
+    #print wholejson
     if not wholejson:
         #raise NameError("shit")
         return -1,{}
@@ -1271,13 +1279,29 @@ def set_action(type):
                     "Set to", "Turn all off", lambda: bd_set_result(3),
                     "Set to", "Toggle all", lambda: bd_set_result(4),
                     # "Load a", "Specific Scene", lambda:scene_pick_menu(),
-                    # "Toggle a", "Specific Light", lambda:light_pick_menu(),
-                    # "Toggle a", "Specific Group", lambda:group_pick_menu(),
-                    "Back to", "Previous Menu", lambda: bd_set_result(5))
+                     "Toggle a", "Specific Light", lambda:light_group_pick_menu(type = type, mode = "l"),
+                     "Toggle a", "Specific Group", lambda:light_group_pick_menu(type = type, mode = "g"),
+                    "Back to", "Previous Menu", lambda: bd_set_result(-1))
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return result - 1
+
+def light_group_pick_menu(type, mode):
+    number = light_control( mode = mode,
+                            selection_only = 1)
+    encoder.wait_for_button_release()
+    if type == "Quick":
+        settings.SetQuickPressAction(   action = "set_group_or_light",
+                                        mode = mode,
+                                        number = number)
+    if type == "Long":
+        settings.SetLongPressAction(    action = "set_group_or_light",
+                                        mode = mode,
+                                        number = number)
+    hb_display.display_2lines(mode+" "+number, "Set!", 17)
+    time.sleep(1)
+    return -1 #Because I already set it
 
 def new_scene_creator(g_scenesdir):
     #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
@@ -1630,18 +1654,43 @@ def clock_sub_menu():
         hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
     elif action == 3:
         # Toggle lights
-        print "inside TOGGLE LIGHTS"
-        discard,wholejson = get_huejson_value("g",0,"bri")
-        if discard == -1:
-            hb_display.display_custom("Error: can't JSON")
-            time.sleep(1)
-            return
-        if(wholejson['state']['any_on'] == True):
-            #print("lights were on. not now")
-            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+        toggle_hue_groups(0)
+    elif action == "set_group_or_light":
+        if result == 0:
+            mode, number = settings.get_quick_press_action_SGoL()
         else:
-            #print("lights were off. not now")
-            hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+            mode, number = settings.get_long_press_action_SGoL()
+        if mode == "g":
+            toggle_hue_groups(number)
+        elif mode == "l":
+            toggle_hue_lights(number)
+
+def toggle_hue_groups(group,bri = 256):
+    discard,wholejson = get_huejson_value("g",group,"bri")
+    if discard == -1:
+        hb_display.display_custom("Error: can't JSON")
+        time.sleep(1)
+        return
+    if(wholejson['state']['any_on'] == True):
+        #print("lights were on. not now")
+        hue_groups(lnum = group,lon = "false",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+    else:
+        #print("lights were off. not now")
+        hue_groups(lnum = group,lon = "true",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+
+def toggle_hue_lights(light,bri = 256):
+    discard,wholejson = get_huejson_value("l",light,"bri")
+    if discard == -1:
+        hb_display.display_custom("Error: can't JSON")
+        time.sleep(1)
+        return
+    if(wholejson['state']['on'] == True):
+        #print("lights were on. not now")
+        hue_lights(lnum = light,lon = "false",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+    else:
+        #print("lights were off. not now")
+        hue_lights(lnum = light,lon = "true",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+
 
 def mainloop_test():
     timeout = 0
