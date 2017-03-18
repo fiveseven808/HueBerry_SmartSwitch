@@ -1,6 +1,6 @@
 import authenticate
 blah = authenticate.Authenticate()
-result = blah.search_for_bridge_test(debug = 1)
+result = blah.search_for_all_bridges(debug = 1)
 print result
 
 ip = result
