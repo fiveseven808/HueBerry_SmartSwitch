@@ -1,25 +1,15 @@
 #!/usr/bin/env python
-__version__ = "v047-0317.57.a"
+__version__ = "v048-0319.57.a"
 """
-2017-03-12 //57
-+ Enabled Scene Explorer.
-    + Added the ability to delete scenes without a computer (FINALLY!)
-    + Added an obvious way to reprogram scenes (instead of holding down)
-2017-03-13 //57
-+ Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
-+ Fixed authentication issues... Can do initial pair at least.
-+ Cleaned up some bits of code
-2017-03-14 //57
-+ Merged main function branch, so now a function instead of just a mess
-+ Began work on attempting to port the single value menus to a generic scheme
-+ Announcement on Reddit! Happy pi day!
-2017-03-15 //57
-+ Attempting to create prototypes for dual bridge configuration
-+ Scene Explorer bug fix
 2017-03-17 //57
 * Attempting to add a scene browser to Quick Actions
 + Messy hodge podge, but you can now control individual rooms and lights with quick actions!!!! YAY!!!!
 + Reworked the settings menu so it's not so long and ridiculous
+2017-03-19 //57
++ Added the ability to select a scene for Quick actions
+* Needs a lot of work on the code side though to get readable
+* Fixed a bug with binarydecision (would crash if you clicked on the question)
+
 
 --------
 Things to do
@@ -1282,14 +1272,14 @@ def quick_action_settings():
 
 def set_action(type):
     result = 0
-    menu_layout = ("Choose " + str(type), "Action:", "BD_TYPE",
+    menu_layout = ( "Choose " + str(type), "Action:", "BD_TYPE",
                     "Set to", "Do nothing", lambda: bd_set_result(1),
                     "Set to", "Turn all on", lambda: bd_set_result(2),
                     "Set to", "Turn all off", lambda: bd_set_result(3),
                     "Set to", "Toggle all", lambda: bd_set_result(4),
-                    # "Load a", "Specific Scene", lambda:scene_pick_menu(),
-                     "Toggle a", "Specific Light", lambda:light_group_pick_menu(type = type, mode = "l"),
-                     "Toggle a", "Specific Group", lambda:light_group_pick_menu(type = type, mode = "g"),
+                    "Load a", "Specific Scene", lambda:scene_pick_menu(type = type, g_scenesdir = g_scenesdir),
+                    "Toggle a", "Specific Light", lambda:light_group_pick_menu(type = type, mode = "l"),
+                    "Toggle a", "Specific Group", lambda:light_group_pick_menu(type = type, mode = "g"),
                     "Back to", "Previous Menu", lambda: bd_set_result(-1))
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     result = menu.run_2_line_menu()
@@ -1309,6 +1299,20 @@ def light_group_pick_menu(type, mode):
                                         mode = mode,
                                         number = number)
     hb_display.display_2lines(mode+" "+number, "Set!", 17)
+    time.sleep(1)
+    return -1 #Because I already set it
+
+def scene_pick_menu(type, g_scenesdir):
+    selected_file, scene_name = scene_explorer( g_scenesdir = g_scenesdir,
+                                                selection_only = 1)
+    encoder.wait_for_button_release()
+    if type == "Quick":
+        settings.SetQuickPressAction(   action = "set_quick_scene",
+                                        number = selected_file)
+    if type == "Long":
+        settings.SetLongPressAction(    action = "set_quick_scene",
+                                        number = selected_file)
+    hb_display.display_2lines(scene_name, "Scene Set!", 17)
     time.sleep(1)
     return -1 #Because I already set it
 
@@ -1339,6 +1343,8 @@ def scene_explorer(g_scenesdir,selection_only = 0):
             total_screens, total_plus_offset, scene_files = get_scene_total(g_scenesdir, offset)
             scene_refresh = 0
         menudepth = total_plus_offset + post_offset - 1
+        if selection_only == 1:
+            menudepth = menudepth - 1
         # Cycle through different displays
         if(encoder.pos > menudepth):
             encoder.pos = menudepth
@@ -1346,14 +1352,20 @@ def scene_explorer(g_scenesdir,selection_only = 0):
             encoder.pos = 0
         display = encoder.pos
         if (old_display != display):
-            if (display >= offset and display <= (total_plus_offset-1)):
-                hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
-                                            "Run | Hold-Edit",
-                                            size = 15)
-            else:
-                hb_display.display_2lines(  "Back to",
-                                            "Settings Menu",
-                                            size = 17)
+            if selection_only == 0:
+                if (display >= offset and display <= (total_plus_offset-1)):
+                    hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
+                                                "Run | Hold-Edit",
+                                                size = 15)
+                else:
+                    hb_display.display_2lines(  "Back to",
+                                                "Settings Menu",
+                                                size = 17)
+            elif selection_only == 1:
+                if (display >= offset and display <= (total_plus_offset-1)):
+                    hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
+                                                "Select",
+                                                size = 15)
             old_display = display
         pos,pushed = encoder.get_state()
         if(pushed):
@@ -1381,7 +1393,8 @@ def scene_explorer(g_scenesdir,selection_only = 0):
                     time.sleep(0.25)
                     exitvar = True
             elif selection_only == 1:
-                return selected_file, scene_files[display-offset]
+                return str(g_scenesdir) + str(scene_files[display-offset]), scene_files[display-offset]
+                # return selected_file, scene_name #Equivilant
             scene_refresh = 1
             old_display = -1 #to refresh
         time.sleep(0.01)
@@ -1400,10 +1413,9 @@ def scene_manager(file_location, file_name):
 
 def delete_scene(file_location, file_name):
     print file_location
-    decision_result = binarydecision(
-                        lambda: hb_display.display_2lines("Really delete",
-                                                            str(file_name) + "?",
-                                                            size = 17),
+    decision_result = binarydecision(lambda: hb_display.display_2lines("Really delete",
+                                                                        str(file_name) + "?",
+                                                                        size = 17),
                         answer1 = "[ Yes ]",
                         answer2 = "[ No ]")
     if (decision_result == 2):
@@ -1675,6 +1687,13 @@ def clock_sub_menu():
             toggle_hue_groups(number)
         elif mode == "l":
             toggle_hue_lights(number)
+    elif action == "set_quick_scene":
+        if result == 0:
+            selected_file = settings.get_quick_press_action_SQS()
+        else:
+            selected_file = settings.get_long_press_action_SQS()
+        os.popen("\"" + str(selected_file) + "\"")
+
 
 def toggle_hue_groups(group,bri = 256):
     discard,wholejson = get_huejson_value("g",group,"bri")

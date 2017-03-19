@@ -93,6 +93,7 @@ class Menu_Creator(object):
         pushed = 0
         menu_timeout = 30
         depth_divisor = 3 # how many menu items per line. i.e. 1 title + 1 function = 2
+        return_status = 0
         self.encoder.wait_for_button_release()
         while True:
             total_screens = len(self.menu_layout)
