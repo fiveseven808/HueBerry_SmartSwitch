@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v048-0319.57.a"
+__version__ = "v048-0320.57.a"
 """
 2017-03-17 //57
 * Attempting to add a scene browser to Quick Actions
@@ -1094,7 +1094,10 @@ def wifi_settings():
     encoder.pos = 0 #Reset to top menu
     timeout = 0
     os.popen("wpa_cli scan")
-    os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
+    time.sleep(3) # to allow the scan results to populate
+    os.popen("wpa_cli scan_results > /tmp/wifi_all")
+    # Only display WPS enabled points
+    os.popen("cat /tmp/wifi_all | grep WPS | sort -r -k3 -n > /tmp/wifi")
     ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
     powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
     macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
