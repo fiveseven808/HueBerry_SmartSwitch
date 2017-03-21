@@ -1,14 +1,10 @@
 #!/usr/bin/env python
-__version__ = "v048-0320.57.a"
+__version__ = "v049-0321.57.b"
 """
-2017-03-17 //57
-* Attempting to add a scene browser to Quick Actions
-+ Messy hodge podge, but you can now control individual rooms and lights with quick actions!!!! YAY!!!!
-+ Reworked the settings menu so it's not so long and ridiculous
-2017-03-19 //57
-+ Added the ability to select a scene for Quick actions
-* Needs a lot of work on the code side though to get readable
-* Fixed a bug with binarydecision (would crash if you clicked on the question)
+2017-03-20 //57
+* Reworked settings module
++ Added scene names to quick actions!
++ When a scene is selected, it will be displayed as you hold down the quick action button
 
 
 --------
@@ -1265,8 +1261,8 @@ def toggle_time_format_stub():
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
-    menu_layout = ("Change quick", "Press action", lambda: settings.SetQuickPressAction(set_action("Quick")),
-                    "Change long", "Press action", lambda: settings.SetLongPressAction(set_action("Long")),
+    menu_layout = ("Change quick", "Press action", lambda: settings.set_quick_press_action(set_action("Quick")),
+                    "Change long", "Press action", lambda: settings.set_long_press_action(set_action("Long")),
                     "Back to", "Pref Menu", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
@@ -1294,11 +1290,11 @@ def light_group_pick_menu(type, mode):
                             selection_only = 1)
     encoder.wait_for_button_release()
     if type == "Quick":
-        settings.SetQuickPressAction(   action = "set_group_or_light",
+        settings.set_quick_press_action(action = "set_group_or_light",
                                         mode = mode,
                                         number = number)
     if type == "Long":
-        settings.SetLongPressAction(    action = "set_group_or_light",
+        settings.set_long_press_action( action = "set_group_or_light",
                                         mode = mode,
                                         number = number)
     hb_display.display_2lines(mode+" "+number, "Set!", 17)
@@ -1310,11 +1306,13 @@ def scene_pick_menu(type, g_scenesdir):
                                                 selection_only = 1)
     encoder.wait_for_button_release()
     if type == "Quick":
-        settings.SetQuickPressAction(   action = "set_quick_scene",
-                                        number = selected_file)
+        settings.set_quick_press_action(action = "set_quick_scene",
+                                        number = scene_name,
+                                        file_name = selected_file)
     if type == "Long":
-        settings.SetLongPressAction(    action = "set_quick_scene",
-                                        number = selected_file)
+        settings.set_long_press_action( action = "set_quick_scene",
+                                        number = scene_name,
+                                        file_name = selected_file)
     hb_display.display_2lines(scene_name, "Scene Set!", 17)
     time.sleep(1)
     return -1 #Because I already set it
@@ -1666,12 +1664,17 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 def clock_sub_menu():
-    result = holding_button(1500,settings.GetQuickPressActionString(),settings.GetLongPressActionString(),21)
+    result = holding_button(1500,settings.get_quick_press_action_string(),settings.get_long_press_action_string(),21)
     if (result == 0):
-        action = settings.GetQuickPressAction()
+        action_dict = settings.get_quick_press_action_dict()
     else:
-        action = settings.GetLongPressAction()
-
+        action_dict = settings.get_long_press_action_dict()
+    action = action_dict["action"]
+    mode = action_dict["mode"]
+    number = action_dict["number"]
+    selected_file = action_dict["file_name"]
+    #print action_dict
+    #sys.exit()
     if action == 1:
         # Turn lights on
         hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
@@ -1682,19 +1685,11 @@ def clock_sub_menu():
         # Toggle lights
         toggle_hue_groups(0)
     elif action == "set_group_or_light":
-        if result == 0:
-            mode, number = settings.get_quick_press_action_SGoL()
-        else:
-            mode, number = settings.get_long_press_action_SGoL()
         if mode == "g":
             toggle_hue_groups(number)
         elif mode == "l":
             toggle_hue_lights(number)
     elif action == "set_quick_scene":
-        if result == 0:
-            selected_file = settings.get_quick_press_action_SQS()
-        else:
-            selected_file = settings.get_long_press_action_SQS()
         os.popen("\"" + str(selected_file) + "\"")
 
 

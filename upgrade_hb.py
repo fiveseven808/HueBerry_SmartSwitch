@@ -146,18 +146,12 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v048-0320.57.a
+    \rUpgrade level: v049-0321.57.a
     //57
-        2017-03-17 //57
-        * Attempting to add a scene browser to Quick Actions
-        + Messy hodge podge, but you can now control individual rooms and lights with quick actions!!!! YAY!!!!
-        + Reworked the settings menu so it's not so long and ridiculous
-        2017-03-19 //57
-        + Added the ability to select a scene for Quick actions
-        * Needs a lot of work on the code side though to get readable
-        * Fixed a bug with binarydecision (would crash if you clicked on the question)
-        2017-03-19 //57
-        * Fixed a bug where wifi APs wouldn't show up sometimes. Also reordered them.
+        2017-03-20 //57
+        * Reworked settings module
+        + Added scene names to quick actions!
+        + When a scene is selected, it will be displayed as you hold down the quick action button
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
