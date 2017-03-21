@@ -15,9 +15,6 @@ import os
     - Screen saver options
         - date and time move in random positions on the screen?
         - Turn off display after 5 minutes of inactivity? adjustable minutes of inactivity?
-    - Rewrite scene selection and string return to be flexible.
-      I want to return the name of the scene selected or the group being controlled
-      Also the group or light being controlled...
 """
 class Settings(object):
 
