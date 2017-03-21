@@ -17,7 +17,7 @@ import os
         - Turn off display after 5 minutes of inactivity? adjustable minutes of inactivity?
     - Rewrite scene selection and string return to be flexible.
       I want to return the name of the scene selected or the group being controlled
-      Also the group or light being controlled... 
+      Also the group or light being controlled...
 """
 class Settings(object):
 
@@ -31,11 +31,19 @@ class Settings(object):
     __quick_press_mode = "g"
     __quick_press_number = 0
     __quick_press_selected_file = None
+    __quick_press_dict = {  'action': 1,
+                            'mode': "g",
+                            'number':0,
+                            'selected_file': None}
 
     __long_press_action = 2
     __long_press_mode = "g"
     __long_press_number = 0
     __long_press_selected_file = None
+    __long_press_dict = {   'action': 1,
+                            'mode': "g",
+                            'number':0,
+                            'selected_file': None}
 
 
     # Constructor. Loads the previosu version of the object, if there is any
@@ -76,10 +84,17 @@ class Settings(object):
         else:
             return
         self.__quick_press_action = action
+        self.__quick_press_dict ={  'action': action,
+                                    'mode': mode,
+                                    'number':number
+                                    'selected_file': number}
         self.Save()
 
     def GetQuickPressAction(self):
         return self.__quick_press_action
+
+    def get_quick_press_action_dict(self):
+        return self.__quick_press_dict
 
     def get_quick_press_action_SGoL(self):
         return self.__quick_press_mode, self.__quick_press_number
@@ -117,10 +132,17 @@ class Settings(object):
         else:
             return
         self.__long_press_action = action
+        self.__long_press_dict ={   'action': action,
+                                    'mode': mode,
+                                    'number':number
+                                    'selected_file': number}
         self.Save()
 
     def GetLongPressAction(self):
         return self.__long_press_action
+
+    def get_long_press_action_dict(self):
+        return self.__long_press_dict
 
     def get_long_press_action_SGoL(self):
         return self.__long_press_mode, self.__long_press_number
