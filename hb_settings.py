@@ -65,7 +65,7 @@ class Settings(object):
     def GetTimeFormat(self):
         return self.__time_format
 
-    def SetQuickPressAction(self, action, mode = 0, number = 0, file_name = None):
+    def set_quick_press_action(self, action, mode = 0, number = 0, file_name = None):
         if action < 0:
             return
         self.__quick_press_dict ={  'action': action,
@@ -76,6 +76,24 @@ class Settings(object):
 
     def get_quick_press_action_dict(self):
         return self.__quick_press_dict
+
+    def get_quick_press_action_string(self):
+        return self.__get_quick_action_string(self.__quick_press_dict)
+
+    def set_long_press_action(self, action, mode = 0, number = 0, file_name = None):
+        if action < 0:
+            return
+        self.__long_press_dict ={   'action': action,
+                                    'mode': mode,
+                                    'number':number,
+                                    'file_name': file_name}
+        self.Save()
+
+    def get_long_press_action_dict(self):
+        return self.__long_press_dict
+
+    def get_long_press_action_string(self):
+        return self.__get_quick_action_string(self.__long_press_dict)
 
     def __get_quick_action_string(self, press_dict):
         if press_dict["action"] == "set_group_or_light":
@@ -92,25 +110,6 @@ class Settings(object):
             return "Toggle all"
         else:
             return "False value"
-
-    def get_quick_press_action_string(self):
-        return self.__get_quick_action_string(self.__quick_press_dict)
-
-    def SetLongPressAction(self, action, mode = 0, number = 0, file_name = None):
-        if action < 0:
-            return
-        self.__long_press_dict ={   'action': action,
-                                    'mode': mode,
-                                    'number':number,
-                                    'file_name': file_name}
-        self.Save()
-
-    def get_long_press_action_dict(self):
-        return self.__long_press_dict
-
-    def get_long_press_action_string(self):
-        return self.__get_quick_action_string(self.__long_press_dict)
-
 # For testing
 if __name__ == "__main__":
     import hb_settings

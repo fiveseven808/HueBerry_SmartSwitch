@@ -1265,8 +1265,8 @@ def toggle_time_format_stub():
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
-    menu_layout = ("Change quick", "Press action", lambda: settings.SetQuickPressAction(set_action("Quick")),
-                    "Change long", "Press action", lambda: settings.SetLongPressAction(set_action("Long")),
+    menu_layout = ("Change quick", "Press action", lambda: settings.set_quick_press_action(set_action("Quick")),
+                    "Change long", "Press action", lambda: settings.set_long_press_action(set_action("Long")),
                     "Back to", "Pref Menu", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
@@ -1294,11 +1294,11 @@ def light_group_pick_menu(type, mode):
                             selection_only = 1)
     encoder.wait_for_button_release()
     if type == "Quick":
-        settings.SetQuickPressAction(   action = "set_group_or_light",
+        settings.set_quick_press_action(action = "set_group_or_light",
                                         mode = mode,
                                         number = number)
     if type == "Long":
-        settings.SetLongPressAction(    action = "set_group_or_light",
+        settings.set_long_press_action( action = "set_group_or_light",
                                         mode = mode,
                                         number = number)
     hb_display.display_2lines(mode+" "+number, "Set!", 17)
@@ -1310,11 +1310,11 @@ def scene_pick_menu(type, g_scenesdir):
                                                 selection_only = 1)
     encoder.wait_for_button_release()
     if type == "Quick":
-        settings.SetQuickPressAction(   action = "set_quick_scene",
+        settings.set_quick_press_action(action = "set_quick_scene",
                                         number = scene_name,
                                         file_name = selected_file)
     if type == "Long":
-        settings.SetLongPressAction(    action = "set_quick_scene",
+        settings.set_long_press_action( action = "set_quick_scene",
                                         number = scene_name,
                                         file_name = selected_file)
     hb_display.display_2lines(scene_name, "Scene Set!", 17)
