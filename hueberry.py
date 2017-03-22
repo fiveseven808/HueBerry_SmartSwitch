@@ -7,6 +7,7 @@ __version__ = "v049-0321.57.b"
 + When a scene is selected, it will be displayed as you hold down the quick action button
 + Added Screen blanking to preferences menu
 + If enabled, screen will shut off in 30 seconds if on main menu
++ Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
 
 
 --------
@@ -130,7 +131,7 @@ def get_group_names():
     lstate_a = []
     #hb_display.display_2lines("starting","group names",17)
     #debugmsg("starting curl")
-    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+    os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
     #debugmsg("finished curl")
     #hb_display.display_2lines("finished","curl",17)
     cmdout = os.popen("cat groups").read()
@@ -146,7 +147,7 @@ def get_group_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
             cmdout = os.popen("cat groups").read()
             retry = retry + 1
     #debugmsg("passed ifstatement")
@@ -165,7 +166,7 @@ def get_group_names():
     return result_array,num_groups,lstate_a,keyvalues
 
 def get_light_names():
-    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+    os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
     light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     if not light_names:
         #print "not brite"
@@ -178,7 +179,7 @@ def get_light_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
             retry = retry + 1
     num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
@@ -288,9 +289,9 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     hb_display.display_2lines("Building","Scene Script!",15)
     while index < len(result_array):
         if(ltt == 4 and lstate_a[index] == False):
-            scenecmd = "curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
+            scenecmd = "curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
         else:
-            scenecmd = "curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + ",\"bri\":" + str(bri_array[index]) + ",\"sat\":" + str(sat_array[index]) + ",\"xy\":" + str(xy_array[index]) + ",\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(hue_array[index]) + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
+            scenecmd = "curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + ",\"bri\":" + str(bri_array[index]) + ",\"sat\":" + str(sat_array[index]) + ",\"xy\":" + str(xy_array[index]) + ",\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(hue_array[index]) + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
         #hb_display.display_2lines("Writing","Lights " + str(index + 1) + " of " + str(len(result_array)),15)
         print(scenecmd)
         groupnum = index + 1
@@ -308,9 +309,9 @@ def get_house_scene_by_light(selected_filendirect,ltt):
 def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     debugmsg("entering hue lights")
     if ('hue' in options):
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
     else:
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
     debugmsg(result)
     if not result:
         #print "not brite"
@@ -324,11 +325,11 @@ def hue_groups(lnum, lon = -1, lbri = -1, lsat = -1, lx = -1, ly = -1, lct = -1,
     debugmsg("entering hue groups")
     if ('hue' in options):
         #debugmsg("hue and before result")
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
+        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
         #debugmsg("hue and after result")
     else:
         #debugmsg("everything else and before result")
-        result = os.popen("curl -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
+        result = os.popen("curl --connect-timeout 2 -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
         #debugmsg("everything else and after result")
     debugmsg(result)
     if not result:
@@ -579,9 +580,9 @@ def get_huejson_value(g_or_l,num,type):
     #This function returns -1 if there is nothing returned when the bridge is queried
     #hb_display.display_custom("Loading "+str(type)+"...")
     if(g_or_l == "g"):
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
+        os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
     if(g_or_l == "l"):
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
+        os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
     wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
     #print wholejson
     if not wholejson:
@@ -1702,7 +1703,7 @@ def clock_sub_menu():
         elif mode == "l":
             toggle_hue_lights(number)
     elif action == "set_quick_scene":
-        print "Checking if add wifi file exists in: " + str(selected_file)
+        print "Checking if file exists in: " + str(selected_file)
         if os.path.exists(selected_file):
             os.popen("\"" + str(selected_file) + "\"")
         else:
@@ -1825,7 +1826,7 @@ def mainloop_test():
                 # Turn off all lights
                 hb_display.display_2lines("Turning all","lights OFF slowly",12)
                 #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
-                debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
+                debug = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
                 #print(debug)
                 time.sleep(1)
                 debugmsg("turning all lights off")
