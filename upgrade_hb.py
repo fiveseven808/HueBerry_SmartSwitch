@@ -154,6 +154,7 @@ class Upgrader(object):
         + When a scene is selected, it will be displayed as you hold down the quick action button
         + Added Screen blanking to preferences menu
         + If enabled, screen will shut off in 30 seconds if on main menu
+        + Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
