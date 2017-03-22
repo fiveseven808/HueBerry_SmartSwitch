@@ -23,7 +23,8 @@ class Settings(object):
     # Settings-variables that are saved to the file
     __time_format = True
     # 0:do nothing, 1:turn all lights on, 2:turn all lights off, 3:toggle all lights
-    # Should be able to select a specific scene, later project
+    __screen_blanking = False
+
     __quick_press_dict = {  'action': 1,
                             'mode': "g",
                             'number':0,
@@ -58,9 +59,16 @@ class Settings(object):
         self.__time_format = not self.__time_format
         self.Save()
 
+    def toggle_screen_blanking(self):
+        self.__screen_blanking = not self.__screen_blanking
+        self.Save()
+
     # Gets the time format
     def GetTimeFormat(self):
         return self.__time_format
+
+    def get_screen_blanking(self):
+        return self.__screen_blanking
 
     def set_quick_press_action(self, action, mode = 0, number = 0, file_name = None):
         if action < 0:

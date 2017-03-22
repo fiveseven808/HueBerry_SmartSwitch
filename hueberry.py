@@ -5,12 +5,14 @@ __version__ = "v049-0321.57.b"
 * Reworked settings module
 + Added scene names to quick actions!
 + When a scene is selected, it will be displayed as you hold down the quick action button
++ Added Screen blanking to preferences menu
++ If enabled, screen will shut off in 30 seconds if on main menu
 
 
 --------
 Things to do
 Short term goals:
-* Allow the quick actions to use a scene!
+*
 Long term goals:
 * Handle adding Wifi without screen? (try except displaying on a screen?)
 * If no screen is detected, signal via the onboard led that wifi adding is complete?
@@ -1211,7 +1213,7 @@ def system_menu():
 def preferences_menu():
     menu_layout = ("Toggle time", "Mode 24/12h", lambda: toggle_time_format_stub(),
                     "Change", "Quick actions", lambda: quick_action_settings(),
-                    #"Set Screen", "Saver", lambda: screensaver_settings(),
+                    "Toggle Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
                     "Back to", "Settings", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
@@ -1269,6 +1271,15 @@ def quick_action_settings():
     encoder.wait_for_button_release()
     return
 
+def screensaver_settings():
+    settings.toggle_screen_blanking()
+    if (settings.get_screen_blanking()):
+        hb_display.display_2lines("Screen Blanking", "Enabled", 17)
+    else:
+        hb_display.display_2lines("Screen Blanking", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
 def set_action(type):
     result = 0
     menu_layout = ( "Choose " + str(type), "Action:", "BD_TYPE",
@@ -1289,6 +1300,7 @@ def light_group_pick_menu(type, mode):
     number = light_control( mode = mode,
                             selection_only = 1)
     encoder.wait_for_button_release()
+    # [unimplemented] Ask if you want to set a custom brightness?
     if type == "Quick":
         settings.set_quick_press_action(action = "set_group_or_light",
                                         mode = mode,
@@ -1664,7 +1676,7 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 def clock_sub_menu():
-    result = holding_button(1500,settings.get_quick_press_action_string(),settings.get_long_press_action_string(),21)
+    result = holding_button(1000,settings.get_quick_press_action_string(),settings.get_long_press_action_string(),21)
     if (result == 0):
         action_dict = settings.get_quick_press_action_dict()
     else:
@@ -1690,7 +1702,12 @@ def clock_sub_menu():
         elif mode == "l":
             toggle_hue_lights(number)
     elif action == "set_quick_scene":
-        os.popen("\"" + str(selected_file) + "\"")
+        print "Checking if add wifi file exists in: " + str(selected_file)
+        if os.path.exists(selected_file):
+            os.popen("\"" + str(selected_file) + "\"")
+        else:
+            hb_display.display_max_text(str(number)+"     Does not exist :(",centered = 1, offset = 1)
+            time.sleep(2)
 
 
 def toggle_hue_groups(group,bri = 256):
@@ -1733,6 +1750,7 @@ def mainloop_test():
     debugmsg("Starting hueBerry program version " + __file__)
     offset = 5 #clock (0) + 4 presets
     post_offset = 3 #settings, light, group menu after scenes)
+    timeout_secs = 0
     while True:
         if (scene_refresh == 1):
             total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
@@ -1746,13 +1764,19 @@ def mainloop_test():
         display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
         #Display Selected Menu
         if(display == 0):
-            cur_min = int(time.strftime("%M"))
-            if(old_min != cur_min or refresh == 1):
-                hb_display.display_time(settings.GetTimeFormat())
-                old_min = cur_min
-                refresh = 0
-            timeout = 0
-            #Sleep to conserve CPU Cycles
+            if settings.get_screen_blanking() and timeout_secs >= menu_timeout:
+                if screen_dark == 0:
+                    hb_display.display_custom("")
+                    screen_dark = 1
+            else:
+                screen_dark = 0
+                cur_min = int(time.strftime("%M"))
+                if(old_min != cur_min or refresh == 1):
+                    hb_display.display_time(settings.GetTimeFormat())
+                    old_min = cur_min
+                    refresh = 0
+                timeout = 0
+                #Sleep to conserve CPU Cycles
             time.sleep(0.01)
         if (old_display != display):
             if(display == 1):

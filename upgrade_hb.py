@@ -152,6 +152,8 @@ class Upgrader(object):
         * Reworked settings module
         + Added scene names to quick actions!
         + When a scene is selected, it will be displayed as you hold down the quick action button
+        + Added Screen blanking to preferences menu
+        + If enabled, screen will shut off in 30 seconds if on main menu
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
