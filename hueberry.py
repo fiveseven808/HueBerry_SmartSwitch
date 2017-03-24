@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v049-0321.57.b"
+__version__ = "v049-0324.57.b"
 """
 2017-03-20 //57
 * Reworked settings module
@@ -8,6 +8,8 @@ __version__ = "v049-0321.57.b"
 + Added Screen blanking to preferences menu
 + If enabled, screen will shut off in 30 seconds if on main menu
 + Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
+2017-03-24:
++ Fixed screensaver timeout on action 
 
 
 --------
@@ -1092,10 +1094,12 @@ def wifi_settings(debug_file = None):
     #global pos
     encoder.pos = 0 #Reset to top menu
     timeout = 0
-<<<<<<< HEAD
     if debug_file == None:
         os.popen("wpa_cli scan")
-        os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
+        time.sleep(3) # to allow the scan results to populate
+        os.popen("wpa_cli scan_results > /tmp/wifi_all")
+        # Only display WPS enabled points
+        os.popen("cat /tmp/wifi_all | grep WPS | sort -r -k3 -n > /tmp/wifi")
         ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
         powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
         macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
@@ -1103,16 +1107,6 @@ def wifi_settings(debug_file = None):
         ssids = os.popen("cat " + str(debugfile) + " | awk '{print $5}'").read()
         powers = os.popen("cat " + str(debugfile) + " | awk '{print $3}'").read()
         macs = os.popen("cat " + str(debugfile) + " | awk '{print $1}'").read()
-=======
-    os.popen("wpa_cli scan")
-    time.sleep(3) # to allow the scan results to populate
-    os.popen("wpa_cli scan_results > /tmp/wifi_all")
-    # Only display WPS enabled points
-    os.popen("cat /tmp/wifi_all | grep WPS | sort -r -k3 -n > /tmp/wifi")
-    ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
-    powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
-    macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
->>>>>>> origin/dev
     ssid_array = ssids.split('\n')
     mac_array = macs.split('\n')
     p_array = powers.split('\n')
@@ -1776,6 +1770,21 @@ def mainloop_test():
         elif(encoder.pos < 0):
             encoder.pos = 0
         display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+
+        # Check to see if display has timed out
+        secs = int(round(time.time()))
+        timeout_secs = secs - prev_secs
+        if debug_argument == 1:
+            print("Screen timeout seconds = "+str(timeout_secs))
+        if(display != 0 and displaytemp != display):
+            prev_secs = secs
+            displaytemp = display
+        elif(display != 0 and timeout_secs >= menu_timeout):
+            encoder.pos = 0
+            display_temp = 0
+        elif(display == 0):
+            displaytemp = display
+
         #Display Selected Menu
         if(display == 0):
             if settings.get_screen_blanking() and timeout_secs >= menu_timeout:
@@ -1815,19 +1824,6 @@ def mainloop_test():
         elif(display != 0):
             time.sleep(0.005)
             old_min = 60
-
-        secs = int(round(time.time()))
-        timeout_secs = secs - prev_secs
-        if(display != 0 and displaytemp != display):
-            prev_secs = secs
-            displaytemp = display
-        elif(display != 0 and timeout_secs >= menu_timeout):
-            encoder.pos = 0
-            display_temp = 0
-        elif(display == 0):
-            displaytemp = display
-        #if(display != 0):
-        #    print timeout_secs
 
         # Poll button press and trigger action based on current display
         pos,pushed = encoder.get_state() # after loading everything, get state#
@@ -1899,7 +1895,7 @@ def mainloop_test():
             time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
             encoder.pos = 0
-            prev_secs = secs #just performed action, reset the screensaver timer
+            prev_secs = int(round(time.time()))  #just performed action, reset the screensaver timer
 
 if __name__ == "__main__":
     #------------------------------------------------------------------------------------------------------------------------------

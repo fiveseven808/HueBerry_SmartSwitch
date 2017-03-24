@@ -146,15 +146,16 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v049-0321.57.a
-    //57
-        2017-03-20 //57
+    \rUpgrade level: v049-0324.57.a
+        2017-03-20:
         * Reworked settings module
         + Added scene names to quick actions!
         + When a scene is selected, it will be displayed as you hold down the quick action button
         + Added Screen blanking to preferences menu
         + If enabled, screen will shut off in 30 seconds if on main menu
         + Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
+        2017-03-24:
+        + Fixed screensaver timeout on action 
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
