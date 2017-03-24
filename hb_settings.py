@@ -15,9 +15,6 @@ import os
     - Screen saver options
         - date and time move in random positions on the screen?
         - Turn off display after 5 minutes of inactivity? adjustable minutes of inactivity?
-    - Rewrite scene selection and string return to be flexible.
-      I want to return the name of the scene selected or the group being controlled
-      Also the group or light being controlled... 
 """
 class Settings(object):
 
@@ -26,16 +23,17 @@ class Settings(object):
     # Settings-variables that are saved to the file
     __time_format = True
     # 0:do nothing, 1:turn all lights on, 2:turn all lights off, 3:toggle all lights
-    # Should be able to select a specific scene, later project
-    __quick_press_action = 1
-    __quick_press_mode = "g"
-    __quick_press_number = 0
-    __quick_press_selected_file = None
+    __screen_blanking = False
 
-    __long_press_action = 2
-    __long_press_mode = "g"
-    __long_press_number = 0
-    __long_press_selected_file = None
+    __quick_press_dict = {  'action': 1,
+                            'mode': "g",
+                            'number':0,
+                            'file_name': None}
+
+    __long_press_dict = {   'action': 1,
+                            'mode': "g",
+                            'number':0,
+                            'file_name': None}
 
 
     # Constructor. Loads the previosu version of the object, if there is any
@@ -61,76 +59,62 @@ class Settings(object):
         self.__time_format = not self.__time_format
         self.Save()
 
+    def toggle_screen_blanking(self):
+        self.__screen_blanking = not self.__screen_blanking
+        self.Save()
+
     # Gets the time format
     def GetTimeFormat(self):
         return self.__time_format
 
-    def SetQuickPressAction(self, action, mode = 0, number = 0 ):
-        if action >= 0 and action <= 3:
-            pass # set action number is implicit
-        elif action == "set_group_or_light":
-            self.__quick_press_mode = mode
-            self.__quick_press_number = number
-        elif action == "set_quick_scene":
-            self.__quick_press_selected_file = number
-        else:
+    def get_screen_blanking(self):
+        return self.__screen_blanking
+
+    def set_quick_press_action(self, action, mode = 0, number = 0, file_name = None):
+        if action < 0:
             return
-        self.__quick_press_action = action
+        self.__quick_press_dict ={  'action': action,
+                                    'mode': mode,
+                                    'number':number,
+                                    'file_name': file_name}
         self.Save()
 
-    def GetQuickPressAction(self):
-        return self.__quick_press_action
+    def get_quick_press_action_dict(self):
+        return self.__quick_press_dict
 
-    def get_quick_press_action_SGoL(self):
-        return self.__quick_press_mode, self.__quick_press_number
+    def get_quick_press_action_string(self):
+        return self.__get_quick_action_string(self.__quick_press_dict)
 
-    def get_quick_press_action_SQS(self):
-        return self.__quick_press_selected_file
+    def set_long_press_action(self, action, mode = 0, number = 0, file_name = None):
+        if action < 0:
+            return
+        self.__long_press_dict ={   'action': action,
+                                    'mode': mode,
+                                    'number':number,
+                                    'file_name': file_name}
+        self.Save()
 
-    def __getQuickActionString(self, action, type = 0):
-        if action == 0:
+    def get_long_press_action_dict(self):
+        return self.__long_press_dict
+
+    def get_long_press_action_string(self):
+        return self.__get_quick_action_string(self.__long_press_dict)
+
+    def __get_quick_action_string(self, press_dict):
+        if press_dict["action"] == "set_group_or_light":
+            return "Toggle "+str(press_dict["mode"])+" " +str(press_dict["number"])
+        if press_dict["action"] == "set_quick_scene":
+            return "Running Scene: "+str(press_dict["number"])
+        if press_dict["action"] == 0:
             return "Do nothing"
-        elif action == 1:
+        elif press_dict["action"] == 1:
             return "Turn all on"
-        elif action == 2:
+        elif press_dict["action"] == 2:
             return "Turn all off"
-        elif action == 3:
+        elif press_dict["action"] == 3:
             return "Toggle all"
-        elif action == "set_group_or_light":
-            return "Toggle a group or light"
-        elif action == "set_quick_scene":
-            return "Running a Scene"
         else:
             return "False value"
-
-    def GetQuickPressActionString(self):
-        return self.__getQuickActionString(self.__quick_press_action, type = "quickpress")
-
-    def SetLongPressAction(self, action, mode = 0, number = 0 ):
-        if action >= 0 and action <= 3:
-            pass # set action number is implicit
-        elif action == "set_group_or_light":
-            self.__long_press_mode = mode
-            self.__long_press_number = number
-        elif action == "set_quick_scene":
-            self.__long_press_selected_file = number
-        else:
-            return
-        self.__long_press_action = action
-        self.Save()
-
-    def GetLongPressAction(self):
-        return self.__long_press_action
-
-    def get_long_press_action_SGoL(self):
-        return self.__long_press_mode, self.__long_press_number
-
-    def get_long_press_action_SQS(self):
-        return self.__long_press_selected_file
-
-    def GetLongPressActionString(self):
-        return self.__getQuickActionString(self.__long_press_action, type = "longpress")
-
 # For testing
 if __name__ == "__main__":
     import hb_settings

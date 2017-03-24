@@ -1,20 +1,19 @@
 #!/usr/bin/env python
-__version__ = "v048-0319.57.a"
+__version__ = "v049-0321.57.b"
 """
-2017-03-17 //57
-* Attempting to add a scene browser to Quick Actions
-+ Messy hodge podge, but you can now control individual rooms and lights with quick actions!!!! YAY!!!!
-+ Reworked the settings menu so it's not so long and ridiculous
-2017-03-19 //57
-+ Added the ability to select a scene for Quick actions
-* Needs a lot of work on the code side though to get readable
-* Fixed a bug with binarydecision (would crash if you clicked on the question)
+2017-03-20 //57
+* Reworked settings module
++ Added scene names to quick actions!
++ When a scene is selected, it will be displayed as you hold down the quick action button
++ Added Screen blanking to preferences menu
++ If enabled, screen will shut off in 30 seconds if on main menu
++ Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
 
 
 --------
 Things to do
 Short term goals:
-* Allow the quick actions to use a scene!
+*
 Long term goals:
 * Handle adding Wifi without screen? (try except displaying on a screen?)
 * If no screen is detected, signal via the onboard led that wifi adding is complete?
@@ -132,7 +131,7 @@ def get_group_names():
     lstate_a = []
     #hb_display.display_2lines("starting","group names",17)
     #debugmsg("starting curl")
-    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+    os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
     #debugmsg("finished curl")
     #hb_display.display_2lines("finished","curl",17)
     cmdout = os.popen("cat groups").read()
@@ -148,7 +147,7 @@ def get_group_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
             cmdout = os.popen("cat groups").read()
             retry = retry + 1
     #debugmsg("passed ifstatement")
@@ -167,7 +166,7 @@ def get_group_names():
     return result_array,num_groups,lstate_a,keyvalues
 
 def get_light_names():
-    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+    os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
     light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     if not light_names:
         #print "not brite"
@@ -180,7 +179,7 @@ def get_light_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
             retry = retry + 1
     num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
@@ -290,9 +289,9 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     hb_display.display_2lines("Building","Scene Script!",15)
     while index < len(result_array):
         if(ltt == 4 and lstate_a[index] == False):
-            scenecmd = "curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
+            scenecmd = "curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
         else:
-            scenecmd = "curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + ",\"bri\":" + str(bri_array[index]) + ",\"sat\":" + str(sat_array[index]) + ",\"xy\":" + str(xy_array[index]) + ",\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(hue_array[index]) + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
+            scenecmd = "curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + ",\"bri\":" + str(bri_array[index]) + ",\"sat\":" + str(sat_array[index]) + ",\"xy\":" + str(xy_array[index]) + ",\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(hue_array[index]) + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
         #hb_display.display_2lines("Writing","Lights " + str(index + 1) + " of " + str(len(result_array)),15)
         print(scenecmd)
         groupnum = index + 1
@@ -310,9 +309,9 @@ def get_house_scene_by_light(selected_filendirect,ltt):
 def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     debugmsg("entering hue lights")
     if ('hue' in options):
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
     else:
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
     debugmsg(result)
     if not result:
         #print "not brite"
@@ -326,11 +325,11 @@ def hue_groups(lnum, lon = -1, lbri = -1, lsat = -1, lx = -1, ly = -1, lct = -1,
     debugmsg("entering hue groups")
     if ('hue' in options):
         #debugmsg("hue and before result")
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
+        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
         #debugmsg("hue and after result")
     else:
         #debugmsg("everything else and before result")
-        result = os.popen("curl -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
+        result = os.popen("curl --connect-timeout 2 -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
         #debugmsg("everything else and after result")
     debugmsg(result)
     if not result:
@@ -581,9 +580,9 @@ def get_huejson_value(g_or_l,num,type):
     #This function returns -1 if there is nothing returned when the bridge is queried
     #hb_display.display_custom("Loading "+str(type)+"...")
     if(g_or_l == "g"):
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
+        os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
     if(g_or_l == "l"):
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
+        os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
     wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
     #print wholejson
     if not wholejson:
@@ -1093,6 +1092,7 @@ def wifi_settings(debug_file = None):
     #global pos
     encoder.pos = 0 #Reset to top menu
     timeout = 0
+<<<<<<< HEAD
     if debug_file == None:
         os.popen("wpa_cli scan")
         os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
@@ -1103,6 +1103,16 @@ def wifi_settings(debug_file = None):
         ssids = os.popen("cat " + str(debugfile) + " | awk '{print $5}'").read()
         powers = os.popen("cat " + str(debugfile) + " | awk '{print $3}'").read()
         macs = os.popen("cat " + str(debugfile) + " | awk '{print $1}'").read()
+=======
+    os.popen("wpa_cli scan")
+    time.sleep(3) # to allow the scan results to populate
+    os.popen("wpa_cli scan_results > /tmp/wifi_all")
+    # Only display WPS enabled points
+    os.popen("cat /tmp/wifi_all | grep WPS | sort -r -k3 -n > /tmp/wifi")
+    ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
+    powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
+    macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
+>>>>>>> origin/dev
     ssid_array = ssids.split('\n')
     mac_array = macs.split('\n')
     p_array = powers.split('\n')
@@ -1217,7 +1227,7 @@ def system_menu():
 def preferences_menu():
     menu_layout = ("Toggle time", "Mode 24/12h", lambda: toggle_time_format_stub(),
                     "Change", "Quick actions", lambda: quick_action_settings(),
-                    #"Set Screen", "Saver", lambda: screensaver_settings(),
+                    "Toggle Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
                     "Back to", "Settings", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
@@ -1267,13 +1277,22 @@ def toggle_time_format_stub():
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
-    menu_layout = ("Change quick", "Press action", lambda: settings.SetQuickPressAction(set_action("Quick")),
-                    "Change long", "Press action", lambda: settings.SetLongPressAction(set_action("Long")),
+    menu_layout = ("Change quick", "Press action", lambda: settings.set_quick_press_action(set_action("Quick")),
+                    "Change long", "Press action", lambda: settings.set_long_press_action(set_action("Long")),
                     "Back to", "Pref Menu", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
+
+def screensaver_settings():
+    settings.toggle_screen_blanking()
+    if (settings.get_screen_blanking()):
+        hb_display.display_2lines("Screen Blanking", "Enabled", 17)
+    else:
+        hb_display.display_2lines("Screen Blanking", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
 
 def set_action(type):
     result = 0
@@ -1295,12 +1314,13 @@ def light_group_pick_menu(type, mode):
     number = light_control( mode = mode,
                             selection_only = 1)
     encoder.wait_for_button_release()
+    # [unimplemented] Ask if you want to set a custom brightness?
     if type == "Quick":
-        settings.SetQuickPressAction(   action = "set_group_or_light",
+        settings.set_quick_press_action(action = "set_group_or_light",
                                         mode = mode,
                                         number = number)
     if type == "Long":
-        settings.SetLongPressAction(    action = "set_group_or_light",
+        settings.set_long_press_action( action = "set_group_or_light",
                                         mode = mode,
                                         number = number)
     hb_display.display_2lines(mode+" "+number, "Set!", 17)
@@ -1312,11 +1332,13 @@ def scene_pick_menu(type, g_scenesdir):
                                                 selection_only = 1)
     encoder.wait_for_button_release()
     if type == "Quick":
-        settings.SetQuickPressAction(   action = "set_quick_scene",
-                                        number = selected_file)
+        settings.set_quick_press_action(action = "set_quick_scene",
+                                        number = scene_name,
+                                        file_name = selected_file)
     if type == "Long":
-        settings.SetLongPressAction(    action = "set_quick_scene",
-                                        number = selected_file)
+        settings.set_long_press_action( action = "set_quick_scene",
+                                        number = scene_name,
+                                        file_name = selected_file)
     hb_display.display_2lines(scene_name, "Scene Set!", 17)
     time.sleep(1)
     return -1 #Because I already set it
@@ -1668,12 +1690,17 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 def clock_sub_menu():
-    result = holding_button(1500,settings.GetQuickPressActionString(),settings.GetLongPressActionString(),21)
+    result = holding_button(1000,settings.get_quick_press_action_string(),settings.get_long_press_action_string(),21)
     if (result == 0):
-        action = settings.GetQuickPressAction()
+        action_dict = settings.get_quick_press_action_dict()
     else:
-        action = settings.GetLongPressAction()
-
+        action_dict = settings.get_long_press_action_dict()
+    action = action_dict["action"]
+    mode = action_dict["mode"]
+    number = action_dict["number"]
+    selected_file = action_dict["file_name"]
+    #print action_dict
+    #sys.exit()
     if action == 1:
         # Turn lights on
         hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
@@ -1684,20 +1711,17 @@ def clock_sub_menu():
         # Toggle lights
         toggle_hue_groups(0)
     elif action == "set_group_or_light":
-        if result == 0:
-            mode, number = settings.get_quick_press_action_SGoL()
-        else:
-            mode, number = settings.get_long_press_action_SGoL()
         if mode == "g":
             toggle_hue_groups(number)
         elif mode == "l":
             toggle_hue_lights(number)
     elif action == "set_quick_scene":
-        if result == 0:
-            selected_file = settings.get_quick_press_action_SQS()
+        print "Checking if file exists in: " + str(selected_file)
+        if os.path.exists(selected_file):
+            os.popen("\"" + str(selected_file) + "\"")
         else:
-            selected_file = settings.get_long_press_action_SQS()
-        os.popen("\"" + str(selected_file) + "\"")
+            hb_display.display_max_text(str(number)+"     Does not exist :(",centered = 1, offset = 1)
+            time.sleep(2)
 
 
 def toggle_hue_groups(group,bri = 256):
@@ -1740,6 +1764,7 @@ def mainloop_test():
     debugmsg("Starting hueBerry program version " + __file__)
     offset = 5 #clock (0) + 4 presets
     post_offset = 3 #settings, light, group menu after scenes)
+    timeout_secs = 0
     while True:
         if (scene_refresh == 1):
             total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
@@ -1753,13 +1778,19 @@ def mainloop_test():
         display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
         #Display Selected Menu
         if(display == 0):
-            cur_min = int(time.strftime("%M"))
-            if(old_min != cur_min or refresh == 1):
-                hb_display.display_time(settings.GetTimeFormat())
-                old_min = cur_min
-                refresh = 0
-            timeout = 0
-            #Sleep to conserve CPU Cycles
+            if settings.get_screen_blanking() and timeout_secs >= menu_timeout:
+                if screen_dark == 0:
+                    hb_display.display_custom("")
+                    screen_dark = 1
+            else:
+                screen_dark = 0
+                cur_min = int(time.strftime("%M"))
+                if(old_min != cur_min or refresh == 1):
+                    hb_display.display_time(settings.GetTimeFormat())
+                    old_min = cur_min
+                    refresh = 0
+                timeout = 0
+                #Sleep to conserve CPU Cycles
             time.sleep(0.01)
         if (old_display != display):
             if(display == 1):
@@ -1808,7 +1839,7 @@ def mainloop_test():
                 # Turn off all lights
                 hb_display.display_2lines("Turning all","lights OFF slowly",12)
                 #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
-                debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
+                debug = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
                 #print(debug)
                 time.sleep(1)
                 debugmsg("turning all lights off")

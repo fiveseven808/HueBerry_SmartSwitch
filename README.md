@@ -6,6 +6,7 @@ HueBerry: Smart Switch
 
 ###### Video updated 8/13/2016 *(Outdated)*
 
+## [Discord Channel here!](https://discordapp.com/channels/293554031731802123/)
 
 ## Summary: Updated 2/7/2017
 The hueBerry is a dedicated device based on a Raspberry Pi Zero to QUICKLY record and change between Whole house scene! Want to transition your entire home to "bed time" over 30 seconds? now you can! Want in instantaneous "emergency" mode? Now you can do that with ease! It also lets you to control the color temperature and Hue and saturation of individual groups through a quick and friendly interface! No fumbling with a phone or table or PC, just spin and click and spin!
@@ -82,6 +83,6 @@ This is an open source beta program supplied with no guarantee.
 
 **Donations:**
 
-If this project has been useful to you, I'd appreciate it if you would buy me a drink! :D 
+If this project has been useful to you, I'd appreciate it if you would buy me a drink! :D
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7V4SEHWVDNQL6)
