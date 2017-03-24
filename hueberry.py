@@ -1088,16 +1088,21 @@ def flashlight_mode():
             break
         time.sleep(0.1)
 
-def wifi_settings():
+def wifi_settings(debug_file = None):
     hb_display.display_custom("scanning for wifi...")
     #global pos
     encoder.pos = 0 #Reset to top menu
     timeout = 0
-    os.popen("wpa_cli scan")
-    os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
-    ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
-    powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
-    macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
+    if debug_file == None:
+        os.popen("wpa_cli scan")
+        os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
+        ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
+        powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
+        macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
+    elif debug_file:
+        ssids = os.popen("cat " + str(debugfile) + " | awk '{print $5}'").read()
+        powers = os.popen("cat " + str(debugfile) + " | awk '{print $3}'").read()
+        macs = os.popen("cat " + str(debugfile) + " | awk '{print $1}'").read()
     ssid_array = ssids.split('\n')
     mac_array = macs.split('\n')
     p_array = powers.split('\n')
@@ -1725,7 +1730,7 @@ def toggle_hue_lights(light,bri = 256):
 def mainloop_test():
     timeout = 0
     displaytemp = 0
-    prev_secs = 0
+    prev_secs = int(round(time.time())) # set to current time
     old_min = 60
     old_display = 0
     refresh = 1
@@ -1863,6 +1868,7 @@ def mainloop_test():
             time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
             encoder.pos = 0
+            prev_secs = secs #just performed action, reset the screensaver timer
 
 if __name__ == "__main__":
     #------------------------------------------------------------------------------------------------------------------------------
