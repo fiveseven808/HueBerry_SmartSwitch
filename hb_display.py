@@ -11,13 +11,21 @@ class display(object):
     # Will work to integrate this into hueberry.py soon
     # For now, this is just a proof of concept
 
-    def __init__(self, console=0, mirror = 0, rotation = 0):
+    def __init__(self, console=0, mirror = 0, rotation = 0, spi_display = 0):
         self.console = console
         self.mirror = mirror
         self.rotate_angle = rotation
         if (self.console == 0 or self.mirror == 1):
             import Adafruit_SSD1306
-            self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
+            if spi_display == 0:
+                self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
+            elif spi_display == 1:
+                import Adafruit_GPIO.SPI as SPI
+                RST = 24
+                DC = 23
+                SPI_PORT = 0
+                SPI_DEVICE = 0
+                self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
             self.disp.begin()
             self.width = self.disp.width
             self.height = self.disp.height

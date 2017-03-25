@@ -9,7 +9,7 @@ __version__ = "v049-0324.57.b"
 + If enabled, screen will shut off in 30 seconds if on main menu
 + Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
 2017-03-24:
-+ Fixed screensaver timeout on action 
++ Fixed screensaver timeout on action
 
 
 --------
@@ -77,6 +77,7 @@ simulation_arg = 0
 rotate = 0
 curses_test = 0
 util_mode = 0
+spi_display = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -96,6 +97,8 @@ for arg in sys.argv:
         curses_test = 1
     if arg in ("-s","--simulate"):
         simulation_arg = 1
+    if arg in ("-spi"):
+        spi_display = 1
     if arg in ("-h","--help"):
         print_usage()
         sys.exit()
@@ -1041,7 +1044,7 @@ def devinfo_screen():
                     "Get hue Hub", "Info", lambda: get_hue_devinfo(),
                     "Version Number", str(__version__), lambda: bd_set_result(0),
                     "Back to", "Settings", "exit")
-    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1199,24 +1202,43 @@ def settings_menu(g_scenesdir,util_mode = 0):
                         "Plugin", "Manager", lambda: plugin_manager(plugins_dir),
                         #"Preferences", "[ Menu ]", lambda: preferences_menu(),
                         "Back to", "Main Menu", "exit")
-    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     scene_refresh = 1
     return scene_refresh
 
 def system_menu():
-    menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                    "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                    "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                    "Restart", "hueBerry", lambda: restart_hueberry(),
-                    "Flashlight", "Function", lambda: flashlight_mode(),
-                    "Connect to", "WiFi", lambda: wifi_settings(),
-                    "Back to", "Main Menu", "exit")
-    system_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    if spi_display == 1:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        "Exit to","Terminal", lambda: exit_dump_to_spi(),
+                        "Back to", "Main Menu", "exit")
+    else:
+        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
+                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
+                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
+                        "Restart", "hueBerry", lambda: restart_hueberry(),
+                        "Flashlight", "Function", lambda: flashlight_mode(),
+                        "Connect to", "WiFi", lambda: wifi_settings(),
+                        #"Exit to","Terminal", lambda: exit_dump_to_spi(),
+                        "Back to", "Main Menu", "exit")
+    system_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     system_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
+
+def exit_dump_to_spi():
+    os.popen("sudo modprobe fbtft_device name=adafruit13m debug=1 speed=2000000 gpios=reset:24,dc:23")
+    os.popen("con2fbmap 1 1")
+    os.popen("sudo setfont /home/pi/tom-thumb.psf")
+    while True:
+        time.sleep(1)
+    exit()
 
 def preferences_menu():
     menu_layout = ("Toggle time", "Mode 24/12h", lambda: toggle_time_format_stub(),
@@ -1224,7 +1246,7 @@ def preferences_menu():
                     "Toggle Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
                     "Back to", "Settings", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1274,7 +1296,7 @@ def quick_action_settings():
     menu_layout = ("Change quick", "Press action", lambda: settings.set_quick_press_action(set_action("Quick")),
                     "Change long", "Press action", lambda: settings.set_long_press_action(set_action("Long")),
                     "Back to", "Pref Menu", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1299,7 +1321,7 @@ def set_action(type):
                     "Toggle a", "Specific Light", lambda:light_group_pick_menu(type = type, mode = "l"),
                     "Toggle a", "Specific Group", lambda:light_group_pick_menu(type = type, mode = "g"),
                     "Back to", "Previous Menu", lambda: bd_set_result(-1))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return result - 1
@@ -1427,7 +1449,7 @@ def scene_manager(file_location, file_name):
                     #"Rename", "Scene", lambda: rename_scene(file_location, file_name),
                     "Re-Program", "w/Current State", lambda: reprogram_scene(file_location, file_name),
                     "Back to", "Scene Explorer", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1570,7 +1592,7 @@ def user_upgrade_menu():
                     "View", "Changelog", lambda: user_upgrade_changelog(),
                     "Choose", "[ Upgrade Now! ]", lambda: bd_set_result(1),
                     "Choose", "[ Cancel ]", lambda: bd_set_result(2))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     bd_result = menu.run_2_line_menu()
     if bd_result == 0:
         hb_display.display_2lines(  "Returning to",
@@ -1660,7 +1682,7 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
     menu_layout = (lambda: binary_decision_question_function(), None, "BD_TYPE",
                     "Choose", str(answer1), lambda: bd_set_result(1),
                     "Choose", str(answer2), lambda: bd_set_result(2))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     bd_result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return bd_result
@@ -1929,7 +1951,7 @@ if __name__ == "__main__":
     if(mirror_mode == 1):
         hb_display = hb_display.display(console = 1,mirror = mirror_mode)
     else:
-        hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
+        hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate, spi_display = spi_display)
     # Create Encoder Object
     if (debug_argument == 0):
         encoder = hb_encoder.RotaryClass()

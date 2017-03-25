@@ -3,7 +3,7 @@ import hb_display
 import time
 
 class Menu_Creator(object):
-    def __init__(self, menu_layout, debug = 0, mirror_mode = 0, rotate = 0):
+    def __init__(self, menu_layout, debug = 0, mirror_mode = 0, rotate = 0, spi_display = 0):
         debug_argument = debug
         self.offset = 0 #carryover
         self.post_offset = 0 #carryover
@@ -14,7 +14,7 @@ class Menu_Creator(object):
         if(mirror_mode == 1):
             self.hb_display = hb_display.display(console = 1,mirror = mirror_mode)
         else:
-            self.hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
+            self.hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate, spi_display = spi_display)
         # Create Encoder Object
         if (debug_argument == 0):
             self.encoder = hb_encoder.RotaryClass()
