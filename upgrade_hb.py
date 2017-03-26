@@ -139,7 +139,7 @@ class Upgrader(object):
         x = individual_file
         print("Installing " +str(x))
         self.hb_display.display_max_text("Installing " +str(x))
-        self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/"+str(self.branch)+"/"+str(x))
+        self.myrun("rm "+str(x)+"; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/"+str(self.branch)+"/"+str(x))
         print("Done installing " +str(x)+"\n")
         self.hb_display.display_max_text("Done installing " +str(x)+" file\n\n")
 
