@@ -26,7 +26,17 @@ class display(object):
                 SPI_PORT = 0
                 SPI_DEVICE = 0
                 self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
-            self.disp.begin()
+            try:
+                self.disp.begin()
+            except:
+                print("Something went wrong... Will try to load SSD1306 as SPI")
+                import Adafruit_GPIO.SPI as SPI
+                RST = 24
+                DC = 23
+                SPI_PORT = 0
+                SPI_DEVICE = 0
+                self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
+                self.disp.begin()
             self.width = self.disp.width
             self.height = self.disp.height
         else:
