@@ -1234,6 +1234,7 @@ def system_menu():
 
 def exit_dump_to_spi():
     os.popen("sudo modprobe fbtft_device name=adafruit13m debug=1 speed=2000000 gpios=reset:24,dc:23")
+    time.sleep(1)
     os.popen("con2fbmap 1 1")
     os.popen("sudo setfont /home/pi/tom-thumb.psf")
     while True:

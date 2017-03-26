@@ -1,0 +1,15 @@
+#!/bin/bash
+
+con2fbmap 1 0
+sudo modprobe -r fbtft_device
+sudo modprobe -r fb_ssd1306
+sudo modprobe -r fbtft
+
+sudo modprobe -r spi_bcm2835
+sudo modprobe spi_bcm2835
+
+sudo pkill python
+sudo python /home/pi/scripts/smartswitch/hueberry.py -spi &
+
+
+
