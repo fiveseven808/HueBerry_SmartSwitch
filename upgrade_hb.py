@@ -24,6 +24,9 @@ class Upgrader(object):
                             'console_colors',
                             'everything_else',
                             'authenticate']
+        self.everything_else = ['r2hb',
+                                'tom-thumb.psf',
+                                'splashscreen.py']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -120,10 +123,8 @@ class Upgrader(object):
                 self.download_hb_module(x)
             if x == 'hb_menu':
                 self.download_hb_module(x)
-            if x == 'everything_else':
-                self.download_everything_else('r2hb')
-                self.download_everything_else('tom-thumb.psf')
-                self.download_everything_else('splashscreen.py')
+        for x in self.everything_else:
+                self.download_everything_else(x)
         #print baremetal
 
     def download_hb_module(self,module):
@@ -150,6 +151,9 @@ class Upgrader(object):
         for x in self.req_modules:
             self.hb_display.display_max_text("Updating Permissions for: "+str(x))
             self.myrun("sudo chown pi "+str(x)+".py")
+        for x in self.everything_else:
+            self.hb_display.display_max_text("Updating Permissions for: "+str(x))
+            self.myrun("sudo chown pi "+str(x))
         #self.hb_display.display_2lines("Upgrade Finished!","Rebooting...",13)
 
 
