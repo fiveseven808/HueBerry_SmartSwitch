@@ -148,6 +148,7 @@ class Upgrader(object):
         self.myrun("sudo mv new_upgrade_hb.py upgrade_hb.py")
         self.myrun("sudo chown pi upgrade_hb.py")
         self.myrun("sudo chown pi upgrade_hb_old.py")
+        self.myrun("sudo chmod +x r2hb")
         for x in self.req_modules:
             self.hb_display.display_max_text("Updating Permissions for: "+str(x))
             self.myrun("sudo chown pi "+str(x)+".py")
