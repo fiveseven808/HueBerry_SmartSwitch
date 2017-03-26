@@ -1238,7 +1238,13 @@ def exit_dump_to_spi():
     os.popen("con2fbmap 1 1")
     os.popen("sudo setfont /home/pi/tom-thumb.psf")
     while True:
-        time.sleep(1)
+        time.sleep(2)
+        pos,pushed = encoder.get_state()
+        if pushed == 1:
+            print("\n\nStarting hueBerry!...")
+            time.sleep(2)
+            os.popen("sudo /home/pi/r2hb")
+            break
     exit()
 
 def preferences_menu():
