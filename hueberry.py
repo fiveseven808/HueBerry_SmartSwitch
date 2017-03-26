@@ -1236,14 +1236,14 @@ def exit_dump_to_spi():
     os.popen("sudo modprobe fbtft_device name=adafruit13m debug=1 speed=2000000 gpios=reset:24,dc:23")
     time.sleep(1)
     os.popen("con2fbmap 1 1")
-    os.popen("sudo setfont /home/pi/tom-thumb.psf")
+    os.popen("sudo setfont tom-thumb.psf")
     while True:
         time.sleep(2)
         pos,pushed = encoder.get_state()
         if pushed == 1:
             print("\n\nStarting hueBerry!...")
             time.sleep(2)
-            os.popen("sudo /home/pi/r2hb")
+            os.popen("sudo "+str(hb_path)+"/r2hb")
             break
     exit()
 
@@ -1930,10 +1930,11 @@ if __name__ == "__main__":
     #------------------------------------------------------------------------------------------------------------------------------
     # Main Loop I think
     global logfile
+    hb_path = os.path.dirname(os.path.realpath(__file__))
     if wsl_env == 0:
-        logfile = "/home/pi/hueberry.log"
+        logfile = str(hb_path)+"/hueberry.log"
     else:
-        logfile = "~/hueberry.log"
+        logfile = str(hb_path)+"/hueberry.log"
 
     global debug_state
     debug_state = 1

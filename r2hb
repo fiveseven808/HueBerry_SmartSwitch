@@ -11,4 +11,4 @@ sudo modprobe -r spi_bcm2835
 sudo modprobe spi_bcm2835
 
 sudo pkill python
-sudo python /home/pi/scripts/smartswitch/hueberry.py -spi &
+sudo python hueberry.py -spi &

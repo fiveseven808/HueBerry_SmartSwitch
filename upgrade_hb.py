@@ -22,6 +22,7 @@ class Upgrader(object):
                             #'hbplugin'
                             'hueberry',
                             'console_colors',
+                            'everything_else',
                             'authenticate']
         self.debug_argument = console
         self.mirror_mode = mirror
@@ -119,6 +120,10 @@ class Upgrader(object):
                 self.download_hb_module(x)
             if x == 'hb_menu':
                 self.download_hb_module(x)
+            if x == 'everything_else':
+                self.download_everything_else('r2hb')
+                self.download_everything_else('tom-thumb.psf')
+                self.download_everything_else('splashscreen.py')
         #print baremetal
 
     def download_hb_module(self,module):
@@ -128,6 +133,14 @@ class Upgrader(object):
         self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/"+str(self.branch)+"/"+str(x)+".py")
         print("Done installing " +str(x)+"\n")
         self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
+
+    def download_everything_else(self,individual_file):
+        x = individual_file
+        print("Installing " +str(x))
+        self.hb_display.display_max_text("Installing " +str(x))
+        self.myrun("rm "+str(x)+".py; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/"+str(self.branch)+"/"+str(x))
+        print("Done installing " +str(x)+"\n")
+        self.hb_display.display_max_text("Done installing " +str(x)+" file\n\n")
 
     def out_with_the_old(self):
         self.myrun("sudo mv upgrade_hb.py upgrade_hb_old.py")
@@ -155,7 +168,9 @@ class Upgrader(object):
         + If enabled, screen will shut off in 30 seconds if on main menu
         + Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
         2017-03-24:
-        + Fixed screensaver timeout on action 
+        + Fixed screensaver timeout on action
+        2017-03-26:
+        + Added SPI OLED mode as well as the ability to drop to console and return!
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
