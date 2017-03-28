@@ -1798,6 +1798,16 @@ def mainloop_test():
             encoder.pos = menudepth
         elif(encoder.pos < 0):
             encoder.pos = 0
+        """
+        if (    screen_dark == 1 and
+                encoder.pos != display and
+                settings.get_twist_wake_setting() == 1):
+            encoder.pos = 0
+            prev_secs = int(round(time.time()))
+            refresh = 1
+        else:
+            display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+        """
         display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
 
         # Check to see if display has timed out
