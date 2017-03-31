@@ -1181,27 +1181,16 @@ def wifi_settings(debug_file = None):
             time.sleep(0.01)
 
 def settings_menu(g_scenesdir,util_mode = 0):
+    ml = ()
+    ml = ml + ("System", "[ Menu ]", lambda: system_menu())
+    ml = ml + ("Check for", "Upgrades?", lambda: user_init_upgrade_precheck())
     if util_mode == 0:
-        menu_layout = ("System", "[ Menu ]", lambda: system_menu(),
-                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
-                        "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                        "[ Scene ]", "[ Explorer ]", lambda: scene_explorer(g_scenesdir),
-                        #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
-                        "Preferences", "[ Menu ]", lambda: preferences_menu(),
-                        "Back to", "Main Menu", "exit")
-    elif util_mode == 1:
-        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                        #"Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                        "Restart", "hueBerry", lambda: restart_hueberry(),
-                        "Flashlight", "Function", lambda: flashlight_mode(),
-                        "Connect to", "WiFi", lambda: wifi_settings(),
-                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
-                        #"Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
-                        "Plugin", "Manager", lambda: plugin_manager(plugins_dir),
-                        #"Preferences", "[ Menu ]", lambda: preferences_menu(),
-                        "Back to", "Main Menu", "exit")
+        ml = ml + ("Create a", "New Scene", lambda: create_scene_stub(g_scenesdir))
+    ml = ml + ("[ Scene ]", "[ Explorer ]", lambda: scene_explorer(g_scenesdir))
+    #ml = ml + ("Plugin", "Manager", lambda: plugin_manager(plugins_dir))
+    ml = ml + ("Preferences", "[ Menu ]", lambda: preferences_menu())
+    ml = ml + ("Back to", "Main Menu", "exit")
+    menu_layout = ml
     settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
@@ -1209,24 +1198,18 @@ def settings_menu(g_scenesdir,util_mode = 0):
     return scene_refresh
 
 def system_menu():
+    ml = ()
+    ml = ml + ("Device", "Info", lambda: devinfo_screen())
+    if util_mode == 0:
+        ml = ml + ("Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub())
+    ml = ml + ("Shutdown", "hueBerry", lambda: shutdown_hueberry())
+    ml = ml + ("Restart", "hueBerry", lambda: restart_hueberry())
+    ml = ml + ("Flashlight", "Function", lambda: flashlight_mode())
+    ml = ml + ("Connect to", "WiFi", lambda: wifi_settings())
     if spi_display == 1:
-        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                        "Restart", "hueBerry", lambda: restart_hueberry(),
-                        "Flashlight", "Function", lambda: flashlight_mode(),
-                        "Connect to", "WiFi", lambda: wifi_settings(),
-                        "Exit to","Terminal", lambda: exit_dump_to_spi(),
-                        "Back to", "Main Menu", "exit")
-    else:
-        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                        "Restart", "hueBerry", lambda: restart_hueberry(),
-                        "Flashlight", "Function", lambda: flashlight_mode(),
-                        "Connect to", "WiFi", lambda: wifi_settings(),
-                        #"Exit to","Terminal", lambda: exit_dump_to_spi(),
-                        "Back to", "Main Menu", "exit")
+        ml = ml + ("Exit to","Terminal", lambda: exit_dump_to_spi())
+    ml = ml + ("Back to", "Main Menu", "exit")
+    menu_layout = ml
     system_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     system_menu.run_2_line_menu()
     encoder.wait_for_button_release()
@@ -1920,7 +1903,7 @@ def mainloop_test():
                     time.sleep(5)
             elif(display == (menudepth-2)):
                 encoder.pos = 0
-                scene_refresh = settings_menu(g_scenesdir)
+                scene_refresh = settings_menu(g_scenesdir,util_mode = util_mode)
                 #InteliDraw_Test()
                 scene_refresh = 1 # lol override. this might be useful lol
             elif(display == (menudepth-1)):
