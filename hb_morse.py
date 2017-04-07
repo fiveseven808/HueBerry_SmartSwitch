@@ -106,7 +106,7 @@ def dot(console_var = 0, mirror = 0):
         led_on()
         time.sleep(DIT)
         led_off()
-    elif console_var == 1 or mirror == 1:
+    if console_var == 1 or mirror == 1:
         print_no_newline(".")
         time.sleep(DIT)
     time.sleep(INTER_ELEMENT_GAP)
@@ -116,7 +116,7 @@ def dash(console_var = 0, mirror = 0):
         led_on()
         time.sleep(DAH)
         led_off()
-    elif console_var == 1 or mirror == 1:
+    if console_var == 1 or mirror == 1:
         print_no_newline("-")
         time.sleep(DAH)
     time.sleep(INTER_ELEMENT_GAP)
