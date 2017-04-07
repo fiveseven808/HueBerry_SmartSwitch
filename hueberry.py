@@ -42,7 +42,7 @@ nothing found?
 def print_usage():
     usage = """
     How to run:
-        sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [util] [-h,--help]
+        sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [-util] [-r180] [-spi] [-h,--help]
 
     -d              Sets the program to output and take input from the console
                     (input does not work yet)
@@ -58,6 +58,10 @@ def print_usage():
 
     -util           Turns on HB-Utility mode. No hue related options avaliable.
                     Faster boot time too
+
+    -r180           Flip the display 180 degrees
+
+    -spi            Run hueBerry with a SPI driven SSD1306 display vs I2C
 
     -h,--help       Displays this help text
     """
@@ -102,6 +106,9 @@ for arg in sys.argv:
     if arg in ("-h","--help"):
         print_usage()
         sys.exit()
+
+if not os.geteuid() == 0 and CONSOLE == 0:
+    sys.exit('hueBerry must be run as root due to file access limitations')
 
 if debug_argument != 1:
     os.popen("python splashscreen.py &")
