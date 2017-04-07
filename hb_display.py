@@ -35,13 +35,13 @@ class display(object):
                 DC = 23
                 SPI_PORT = 0
                 SPI_DEVICE = 0
-            try:
-                self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
-                self.disp.begin()
-            except:
-                print("No display connected? \nOutputting IP address as morse code LOL")
-                import hb_morse
-                hb_morse.ip2morse()
+                try:
+                    self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
+                    self.disp.begin()
+                except:
+                    print("No display connected? \nOutputting IP address as morse code LOL")
+                    import hb_morse
+                    hb_morse.ip2morse()
             self.width = self.disp.width
             self.height = self.disp.height
         else:
