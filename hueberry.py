@@ -45,7 +45,6 @@ def print_usage():
         sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [-util] [-r180] [-spi] [-h,--help]
 
     -d              Sets the program to output and take input from the console
-                    (input does not work yet)
 
     -m              Turns on mirror mode. Outputs to the
                     display as well as the terminal.
@@ -82,6 +81,7 @@ rotate = 0
 curses_test = 0
 util_mode = 0
 spi_display = 0
+rootless = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -103,11 +103,13 @@ for arg in sys.argv:
         simulation_arg = 1
     if arg in ("-spi"):
         spi_display = 1
+    if arg in ("-nr","-noroot"):
+        rootless = 1
     if arg in ("-h","--help"):
         print_usage()
         sys.exit()
 
-if not os.geteuid() == 0 and CONSOLE == 0:
+if not os.geteuid() == 0 and rootless == 0:
     sys.exit('hueBerry must be run as root due to file access limitations')
 
 if debug_argument != 1:
@@ -1942,16 +1944,28 @@ if __name__ == "__main__":
     menu_timeout = 30 #seconds
     print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
     #Create Required directories if they do not exist.
-    maindirectory = "/boot/hueBerry/"
-    #maindirectory = os.environ['HOME'] + "/"
-    if (os.path.isdir(maindirectory) == False):
-        os.popen("sudo mkdir /boot/hueBerry")
-        print "Created Directory: " + str(maindirectory)
+    if rootless == 0:
+        maindirectory = "/boot/hueBerry/"
+        #maindirectory = os.environ['HOME'] + "/"
+        if (os.path.isdir(maindirectory) == False):
+            os.popen("sudo mkdir /boot/hueBerry")
+            print "Created Directory: " + str(maindirectory)
 
-    g_scenesdir = str(maindirectory) + "scenes/"
-    if (os.path.isdir(g_scenesdir) == False):
-        os.popen("sudo mkdir /boot/hueBerry/scenes")
-        print "Created Directory: " + str(g_scenesdir)
+        g_scenesdir = str(maindirectory) + "scenes/"
+        if (os.path.isdir(g_scenesdir) == False):
+            os.popen("sudo mkdir /boot/hueBerry/scenes")
+            print "Created Directory: " + str(g_scenesdir)
+    elif rootless == 1: # Running without rootless
+        maindirectory = hb_path + "/ROOTLESS/"
+        #maindirectory = os.environ['HOME'] + "/"
+        if (os.path.isdir(maindirectory) == False):
+            os.popen("mkdir \"" + str(maindirectory) + "\"")
+            print "Created Directory: " + str(maindirectory)
+
+        g_scenesdir = str(maindirectory) + "scenes/"
+        if (os.path.isdir(g_scenesdir) == False):
+            os.popen("mkdir \"" + str(g_scenesdir) + "\"")
+            print "Created Directory: " + str(g_scenesdir)
     print "Main Directory is: " + str(maindirectory)
     print "Scripts Directory is: " + str(g_scenesdir)
     #Instantiate the hueberry display object
