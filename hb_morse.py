@@ -46,7 +46,8 @@ def led_off():
 def led_on():
     os.popen("echo 0 | sudo tee /sys/class/leds/led0/brightness").read() #turn led on
 
-CODE = {' ': ' ',
+CODE = {'\n': ' ',
+        ' ': ' ',
         "'": '.----.',
         '(': '-.--.-',
         ')': '-.--.-',
@@ -121,6 +122,7 @@ def dash(console_var = 0):
 def ip2morse(console_var = 0):
     #get wifi ip address
     ipaddress = os.popen("ifconfig wlan0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}'").read()
+    print ipaddress
     while True:
         send2morse(console_var,ipaddress)
 
