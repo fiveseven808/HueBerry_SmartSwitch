@@ -5,11 +5,10 @@ import time
 import os
 
 class display(object):
-    """ hueBerry Display API v0.1 """
-    # My first class ever! yay!
-    # This is a bundle of shit, but it's my bundle of shit
-    # Will work to integrate this into hueberry.py soon
-    # For now, this is just a proof of concept
+    """ hueBerry Display API """
+    # This class will create a display object and allow
+    # hueBerry style text menus to be drawn on an i2c or spi SSD1306 display
+    # as well as a few more text drawing functions
 
     def __init__(self, console=0, mirror = 0, rotation = 0, spi_display = 0):
         self.console = console
@@ -41,7 +40,7 @@ class display(object):
                 except:
                     print("No display connected? \nOutputting IP address as morse code LOL")
                     import hb_morse
-                    hb_morse.ip2morse()
+                    hb_morse.ip2morse(mirror = 1)
             self.width = self.disp.width
             self.height = self.disp.height
         else:
