@@ -1,5 +1,5 @@
 """
-Python installer for hueberry. Probably not the best thing in the world...
+Python installer for hueberry. Probably now, the best thing in the world!
 """
 import sys
 import os
