@@ -7,7 +7,7 @@ hueBerry: Setup instructions for Developers
 
 
 ## Getting Started: Updated 1/29/2017
-Getting started with the hueBerry from a bare-metal pi is fairly simple. Here, I will attempt to guide you from start to finish! 
+Getting started with the hueBerry from a bare-metal pi is fairly simple. Here, I will attempt to guide you from start to finish!
 
 **Requirements:**
 
@@ -15,11 +15,11 @@ Getting started with the hueBerry from a bare-metal pi is fairly simple. Here, I
   * Adafruit_SSD1306 library
   * pigpio library
   * SSD1306 compatible display (128x64 resolution)
-  * Rotary encoder switch thing 
+  * Rotary encoder with switch
   * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hCld2env4vI/edit?usp=sharing)
 
-**Do you meet the dev-kit minimum requirements?** Do you have a display, encoder, pi, and network connection? If so, you may continue! Otherwise, go back and get those components. 
-	
+**Do you meet the dev-kit minimum requirements?** Do you have a display, encoder, pi, and network connection? If so, you may continue! Otherwise, go back and get those components.
+
 ## Bare-Metal Instructions:
 
 * [Install the latest Raspbian distribution](https://www.raspberrypi.org/documentation/installation/installing-images/)
@@ -44,22 +44,22 @@ unzip master.zip
 cd pigpio-master
 make -j4
 sudo make install
-sudo pigpiod 
+sudo pigpiod
 ```
 * You may want to add `sudo pigpiod` to your startup file (I used /etc/rc.local)
 * Modify your `/boot/config.txt` file to enable I2c and speed up the bus
 ```
 # Uncomment some or all of these to enable the optional hardware interfaces
 dtparam=i2c_arm=on
-dtparam=i2c_baudrate=400000
+dtparam=i2c_baudrate=1600000
 #dtparam=i2s=on
 dtparam=spi=off
-``` 
+```
 * *Optional* Disable GUI (to speed up boot?) and lower GPU mem to 8mb
 ```
 gpu_mem=8
 start_x=0
-``` 
+```
 * *Optional* Overclock your SD card bus to get faster boot speeds
 ```
 dtparam=sd_overclock=100
@@ -75,20 +75,20 @@ sudo python hueberry.py
 * Follow instructions on the screen to pair your hueBerry and bridge
  1. On first run, it should ask you to pair with your Philips hue Bridge.
  1. Follow the onscreen instructions
-* Enjoy! 
+* Enjoy!
  * *If the above instructions do not work, please contact the maintainer to correct this accordingly*
- 
-## OR! 
-![Installer Alpha](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/hueBerry%20Photos/Installer/1st_alpha.PNG?raw=true)
-If you understand all of the instructions above then a new option is now avaliable for you. 
-**[Just download the installer](https://github.com/fiveseven808/HueBerry_SmartSwitch/raw/dev/install_hueBerry.py)**
-and run `sudo python install_hueBerry.py`. The reason why you should understand of the instructions above first is because 
-this installer is not fully tested and is in a pre-alpha state of usability. 
-But it would be really cool if it worked, so I'll leave it here for now. 
 
- 
-	
-**License:** 
+## OR!
+![Installer Beta](https://github.com/fiveseven808/HueBerry_SmartSwitch/blob/dev/hueBerry%20Photos/Installer/1st_alpha.PNG?raw=true)
+If you understand all of the instructions above then a new option is now available for you.
+**[Just download the installer](https://github.com/fiveseven808/HueBerry_SmartSwitch/raw/dev/install_hueBerry.py)**
+and run `sudo python install_hueBerry.py`. You should understand of the instructions above first is because
+this installer is not fully tested and is in a beta state of usability.
+But for all tests done so far it works, so I'll leave it here for now.
+
+
+
+**License:**
 
 [Creative Commons Attribution-NonCommercial 4.0 International ](https://creativecommons.org/licenses/by-nc/4.0/)  
 This is an open source beta program supplied with no guarantee.
