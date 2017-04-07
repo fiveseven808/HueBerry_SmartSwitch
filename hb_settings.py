@@ -34,6 +34,7 @@ class Settings(object):
                             'mode': "g",
                             'number':0,
                             'file_name': None}
+    __demo_state = False
 
 
     # Constructor. Loads the previosu version of the object, if there is any
@@ -115,6 +116,15 @@ class Settings(object):
             return "Toggle all"
         else:
             return "False value"
+
+    def toggle_demo_state(self):
+        self.__demo_state = not self.__demo_state
+        self.Save()
+
+    def get_demo_state(self):
+        return self.__demo_state
+
+
 # For testing
 if __name__ == "__main__":
     import hb_settings

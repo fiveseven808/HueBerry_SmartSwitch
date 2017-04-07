@@ -69,6 +69,10 @@ Temporary Items
 #hueBerry files
 auth.*
 groups
+demo_groups
 lights
+brite
+demo_lights
 *.log
 new_upgrade_hb.py
+ROOTLESS/

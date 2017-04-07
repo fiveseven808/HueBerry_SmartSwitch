@@ -145,16 +145,37 @@ print "Finished Importing all modules! hopefully this will work!"
 #sys.exit()
 
 #--------------------------------------------------------------------------
+def get_groups_or_lights_file(g_or_l):
+    demo_mode = settings.get_demo_state()
+    if g_or_l == "g":
+        if demo_mode == 0:
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            #debugmsg("finished curl")
+            #hb_display.display_2lines("finished","curl",17)
+            cmdout = os.popen("cat groups").read()
+            #debugmsg(cmdout)
+        elif demo_mode == 1:
+            cmdout = os.popen("cat demo_groups").read()
+    elif g_or_l == "l":
+        if demo_mode == 0:
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            cmdout = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+        elif demo_mode == 1:
+            cmdout = os.popen("cat demo_lights  | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+    elif g_or_l == "l_file":
+        if demo_mode == 0:
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            cmdout = os.popen("cat lights").read()
+        elif demo_mode == 1:
+            cmdout = os.popen("cat demo_lights").read()
+    return cmdout
+
 def get_group_names():
     result_array = []
     lstate_a = []
     #hb_display.display_2lines("starting","group names",17)
     #debugmsg("starting curl")
-    os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
-    #debugmsg("finished curl")
-    #hb_display.display_2lines("finished","curl",17)
-    cmdout = os.popen("cat groups").read()
-    #debugmsg(cmdout)
+    cmdout = get_groups_or_lights_file("g")
     if not cmdout:
         #print "not brite"
         retry = 1
@@ -185,8 +206,7 @@ def get_group_names():
     return result_array,num_groups,lstate_a,keyvalues
 
 def get_light_names():
-    os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
-    light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+    light_names = get_groups_or_lights_file("l")
     if not light_names:
         #print "not brite"
         retry = 1
@@ -231,7 +251,7 @@ def get_house_scene_by_light(selected_filendirect,ltt):
         time.sleep(2)
         return "failed"
     #hb_display.display_custom("ran get light names")
-    cmdout = os.popen("cat lights").read()
+    cmdout = get_groups_or_lights_file("l_file")
     #os.popen("cat scene_template.py >> custom_scene" + selected_filendirect + ".py" )
     wat = json.loads(cmdout)
     #Just trying to figure out how to sort this and make it a little nicer... bleh
@@ -326,12 +346,16 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     return status
 
 def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
-    debugmsg("entering hue lights")
-    if ('hue' in options):
-        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+    #debugmsg("entering hue lights")
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        if ('hue' in options):
+            result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        else:
+            result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        #debugmsg(result)
     else:
-        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
-    debugmsg(result)
+        result = "DEMO"
     if not result:
         #print "not brite"
         hb_display.display_2lines("An error in ","hue_lights",17)
@@ -341,16 +365,20 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     return result
 
 def hue_groups(lnum, lon = -1, lbri = -1, lsat = -1, lx = -1, ly = -1, lct = -1, ltt = -1,**options):
-    debugmsg("entering hue groups")
-    if ('hue' in options):
-        #debugmsg("hue and before result")
-        result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
-        #debugmsg("hue and after result")
+    #debugmsg("entering hue groups")
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        if ('hue' in options):
+            #debugmsg("hue and before result")
+            result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
+            #debugmsg("hue and after result")
+        else:
+            #debugmsg("everything else and before result")
+            result = os.popen("curl --connect-timeout 2 -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
+            #debugmsg("everything else and after result")
     else:
-        #debugmsg("everything else and before result")
-        result = os.popen("curl --connect-timeout 2 -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
-        #debugmsg("everything else and after result")
-    debugmsg(result)
+        result = "DEMO"
+    #debugmsg(result)
     if not result:
         #print "not brite"
         hb_display.display_2lines("An error in ","hue_groups",17)
@@ -598,10 +626,20 @@ def get_huejson_value(g_or_l,num,type):
     #If successful, the function will return back the requested value
     #This function returns -1 if there is nothing returned when the bridge is queried
     #hb_display.display_custom("Loading "+str(type)+"...")
-    if(g_or_l == "g"):
-        os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
-    if(g_or_l == "l"):
-        os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        if(g_or_l == "g"):
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
+        if(g_or_l == "l"):
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
+    else:
+        # THIS ACTUALLY DOESNT WORK
+        # BRITE IS ACTUALLY SUPPOSED TO BE AN INDIVIDUAL LIGHT OR GROUP
+        if(g_or_l == "g"):
+            os.popen("cat demo_groups > brite")
+        if(g_or_l == "l"):
+            os.popen("cat demo_lights > brite")
+    os.popen("chown pi brite")
     wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
     #print wholejson
     if not wholejson:
@@ -1249,11 +1287,23 @@ def preferences_menu():
                     "Change", "Quick actions", lambda: quick_action_settings(),
                     "Toggle Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
+                    "Toggle", "DEMO MODE", lambda: toggle_demo(),
                     "Back to", "Settings", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
+
+def toggle_demo():
+    # Put something here to toggle the demo mode...
+    settings.toggle_demo_state()
+    if (settings.get_demo_state()):
+        hb_display.display_2lines("DEMO State", "Enabled", 17)
+    else:
+        hb_display.display_2lines("DEMO State", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
 
 def user_init_upgrade_precheck():
     result = holding_button(2000,"Hold to FORCE", "Will FORCE UPDATE", 21)
