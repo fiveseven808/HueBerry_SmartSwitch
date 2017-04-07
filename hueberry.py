@@ -63,7 +63,7 @@ def print_usage():
     -spi            Run hueBerry with a SPI driven SSD1306 display vs I2C
 
     -nr, --noroot   Allows hueBerry to run as a normal user with REDUCED functionality
-                    The following features WILL NOT WORK:
+                    The following features WILL NOT WORK and may crash the program:
                     OTA Updater, Add wifi via txt file, Update via file on sd card,
                     View IP (possibly), Connect to Wifi, Exit to terminal
 
