@@ -688,10 +688,11 @@ def get_huejson_value(g_or_l,num,type):
             value = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
         if(type == "type"):
             value = wholejson['type']
-        if g_or_l == "g":
-            value = wholejson[num]["action"][type]
-        if g_or_l == "l":
-            value = wholejson[num]["state"][type]
+        if demo_mode == 1:
+            if g_or_l == "g":
+                value = wholejson[num]["action"][type]
+            if g_or_l == "l":
+                value = wholejson[num]["state"][type]
     except:
         value = None
     #print value
