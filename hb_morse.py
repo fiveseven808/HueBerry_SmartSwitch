@@ -147,7 +147,7 @@ def send2morse(console_var, input, mirror = 0):
                         dot(console_var, mirror)
                     else:
                         time.sleep(MEDIUM_GAP)
-                if console_var == 1:
+                if console_var == 1 or mirror == 1:
                     print_no_newline(" ")
                 time.sleep(DAH)
         print_no_newline(" ")
