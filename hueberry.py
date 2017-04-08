@@ -533,16 +533,11 @@ def l_control(light):
     if(brite == -1):
         #print "No lights avaliable"
         return
-    brite = int(brite)      #make integer
-    if brite < 10 and brite >= 0:
-        brite = 10
-    demo_mode = settings.get_demo_state()
-    if demo_mode == 0:
-        if (wholejson['state']['on'] == False):
-            brite = 0
-    else:
-        if (wholejson[light]['state']['on'] == False):
-            brite = 0
+    #brite = int(brite)      #make integer
+    #if brite < 10 and brite >= 0:
+    #    brite = 10
+    brite = det_if_g_or_l_off("l",light)
+    brite = int(brite)
     brite = brite/10        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     #global pos
@@ -586,16 +581,13 @@ def g_control(group):
         return
     #else:
     #    print "guess it was brite"
-    brite = int(brite)      #make integer
-    if brite < 10 and brite >= 0:
-        brite = 10
-    demo_mode = settings.get_demo_state()
-    if demo_mode == 0:
-        if (wholejson['state']['any_on'] == False):
-            brite = 0
-    else:
-        if (wholejson[group]['state']['any_on'] == False):
-            brite = 0
+    #brite = int(brite)      #make integer
+    #if brite < 10 and brite >= 0:
+    #   brite = 10
+
+    brite = det_if_g_or_l_off("g",group)
+    brite = int(brite)
+
     brite = brite/10.16        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     #global pos
@@ -635,7 +627,7 @@ def g_control(group):
         millsdiff = mills - prev_mills
         if(millsdiff > 5000):
             #If 5.0 seconds have passed and nothing has happened, go and refresh the display and reset the miliseconds
-            rot_bri,wholejson = get_huejson_value("g",group,"bri")
+            rot_bri = det_if_g_or_l_off("g",group)
             #print "the rot bri is: "+str(rot_bri)
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
             prev_mills = mills
@@ -643,6 +635,26 @@ def g_control(group):
         if(pushed):
             exitvar = True
         time.sleep(0.01)
+
+def det_if_g_or_l_off(g_or_l,number):
+    bri,wholejson = get_huejson_value(g_or_l,number,"bri")
+    #print wholejson
+    demo_mode = settings.get_demo_state()
+    if g_or_l == "g":
+        if demo_mode == 0:
+            if (wholejson['state']['any_on'] == False):
+                bri = 0
+        else:
+            if (wholejson[group]['state']['any_on'] == False):
+                bri = 0
+    if g_or_l == "l":
+        if demo_mode == 0:
+            if (wholejson['state']['on'] == False):
+                bri = 0
+        else:
+            if (wholejson[group]['state']['on'] == False):
+                bri = 0
+    return bri
 
 def get_huejson_value(g_or_l,num,type):
     #g_or_l:
