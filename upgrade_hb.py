@@ -167,18 +167,17 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v049-0324.57.a
-        2017-03-20:
-        * Reworked settings module
-        + Added scene names to quick actions!
-        + When a scene is selected, it will be displayed as you hold down the quick action button
-        + Added Screen blanking to preferences menu
-        + If enabled, screen will shut off in 30 seconds if on main menu
-        + Added cURL timeout so if the the bridge doesn't exist, it doesn't freeze the hueberry
-        2017-03-24:
-        + Fixed screensaver timeout on action
-        2017-03-26:
-        + Added SPI OLED mode as well as the ability to drop to console and return!
+    \rUpgrade level: v050-0407.57.a
+        2017-04-07 //57
+        * Mega Alpha version
+        * Forgot to add release notes LOL
+        + Intelligent Display handling (kind of)
+        + Check I2C display, if not, then SPI, if not then morse code IP address via onboard LED!
+        + Rotate display is a thing now (not tested well)
+        + Dynamic menu struture implemented
+        + Enforced running as root
+        + Created a non-root mode
+        + Added a demo mode (super alpha)
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
