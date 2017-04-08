@@ -515,8 +515,13 @@ def l_control(light):
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
-    if (wholejson['state']['on'] == False):
-        brite = 0
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        if (wholejson['state']['on'] == False):
+            brite = 0
+    else:
+        if (wholejson[light]['state']['on'] == False):
+            brite = 0
     brite = brite/10        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     #global pos
@@ -527,10 +532,9 @@ def l_control(light):
     refresh = 1
     prev_mills = 0
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > max_rot_val):
+        if(encoder.pos > max_rot_val):
             encoder.pos = max_rot_val
-        elif(pos < 0):
+        elif(encoder.pos < 0):
             encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
@@ -549,6 +553,7 @@ def l_control(light):
             prev_mills = mills
         elif(millsdiff > 100):
             prev_mills = mills
+        pos,pushed = encoder.get_state()
         if(pushed):
             exitvar = True
         time.sleep(0.01)
@@ -563,8 +568,13 @@ def g_control(group):
     brite = int(brite)      #make integer
     if brite < 10 and brite >= 0:
         brite = 10
-    if (wholejson['state']['any_on'] == False):
-        brite = 0
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        if (wholejson['state']['any_on'] == False):
+            brite = 0
+    else:
+        if (wholejson[group]['state']['any_on'] == False):
+            brite = 0
     brite = brite/10.16        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
     #global pos
@@ -577,10 +587,9 @@ def g_control(group):
     refresh = 1
     prev_mills = 0
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > max_rot_val):
+        if(encoder.pos > max_rot_val):
             encoder.pos = max_rot_val
-        elif(pos < 0):
+        elif(encoder.pos < 0):
             encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
@@ -609,6 +618,7 @@ def g_control(group):
             #print "the rot bri is: "+str(rot_bri)
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
             prev_mills = mills
+        pos,pushed = encoder.get_state()
         if(pushed):
             exitvar = True
         time.sleep(0.01)
@@ -646,16 +656,25 @@ def get_huejson_value(g_or_l,num,type):
         #raise NameError("shit")
         return -1,{}
     wholejson = json.loads(wholejson)
-    if(type == "bri"):
-        value = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "ct"):
-        value = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "hue"):
-        value = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "sat"):
-        value = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "type"):
-        value = wholejson['type']
+    try:
+        if(type == "bri"):
+            value = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+        if(type == "ct"):
+            value = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+        if(type == "hue"):
+            value = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+        if(type == "sat"):
+            value = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
+        if(type == "type"):
+            value = wholejson['type']
+        if g_or_l == "g":
+            value = wholejson[num]["action"][type]
+        if g_or_l == "l":
+            value = wholejson[num]["state"][type]
+    except:
+        value = None
+    #print value
+    #exit()
     os.popen("rm brite")
     if not value:
         if(g_or_l == "l"):
@@ -751,7 +770,11 @@ def ct_control(device,mode):
     brite,wholejson = get_huejson_value(mode,device,"ct")
     hb_display.display_custom("loading ct...")
     encoder.wait_for_button_release()
-    type = wholejson['type']
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+            type = wholejson['type']
+    else:
+            type = wholejson[device]['type']
     #print type
     if (brite == -1 and type != "Color light"):
         #print "not brite"
