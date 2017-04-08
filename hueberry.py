@@ -645,14 +645,14 @@ def det_if_g_or_l_off(g_or_l,number):
             if (wholejson['state']['any_on'] == False):
                 bri = 0
         else:
-            if (wholejson[group]['state']['any_on'] == False):
+            if (wholejson[number]['state']['any_on'] == False):
                 bri = 0
     if g_or_l == "l":
         if demo_mode == 0:
             if (wholejson['state']['on'] == False):
                 bri = 0
         else:
-            if (wholejson[group]['state']['on'] == False):
+            if (wholejson[number]['state']['on'] == False):
                 bri = 0
     return bri
 
@@ -715,7 +715,7 @@ def get_huejson_value(g_or_l,num,type):
             hb_display.display_2lines("No devices","in lights",17)
         if(g_or_l == "g"):
             hb_display.display_2lines("No devices","in groups",17)
-        time.sleep(3)
+        time.sleep(1)
         value = -1
     return value,wholejson
 
@@ -811,7 +811,18 @@ def ct_control(device,mode):
             type = wholejson[device]['type']
     #print type
     if (brite == -1 and type != "Color light"):
-        #print "not brite"
+        print "something happened"
+        if (mode == "l"):
+            try:
+                hb_display.display_max_text("Light [" + str(wholejson['name']) + "] isn't CT-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Light [" + str(wholejson[device]['name']) + "] isn't CT-able", centered = 1, offset = 2)
+        elif (mode == "g"):
+            try:
+                hb_display.display_max_text("Group [" + str(wholejson['name']) + "] isn't CT-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Group [" + str(wholejson[device]['name']) + "] isn't CT-able", centered = 1, offset = 2)
+        time.sleep(2)
         return
     elif(type == "Color light"):
        print("color light was found")
@@ -895,25 +906,27 @@ def ct_control(device,mode):
 
 def hue_control(device,mode):
     brite,wholejson = get_huejson_value(mode,device,"hue")
+    #print wholejson
     hb_display.display_custom("loading hue...")
     encoder.wait_for_button_release()
     if brite == -1:
-        #print "not brite"
-        return
-    bri_length = len(brite)
-    print bri_length
-    if (bri_length > 0):
-        brite = int(brite)      #make integer
-        brite = brite / 1310
-        brite = int(round(brite))      #convert the float down to int agian
-    else:
         print "something happened"
         if (mode == "l"):
-            hb_display.display_custom("Light " + str(device) + " isn't HUE-able")
+            try:
+                hb_display.display_max_text("Light [" + str(wholejson['name']) + "] isn't HUE-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Light [" + str(wholejson[device]['name']) + "] isn't HUE-able", centered = 1, offset = 2)
         elif (mode == "g"):
-            hb_display.display_custom("Group " + str(device) + " isn't HUE-able")
-        time.sleep(.5)
+            try:
+                hb_display.display_max_text("Group [" + str(wholejson['name']) + "] isn't HUE-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Group [" + str(wholejson[device]['name']) + "] isn't HUE-able", centered = 1, offset = 2)
+        time.sleep(2)
         return
+    print brite
+    brite = int(brite)      #make integer
+    brite = brite / 1310
+    brite = int(round(brite))      #convert the float down to int agian
     #global pos
     encoder.pos = brite
     exitvar = False
@@ -962,19 +975,9 @@ def sat_control(device,mode):
     if brite == -1:
         time.sleep(3)
         return
-    bri_length = len(brite)
-    print bri_length
-    if (bri_length > 0):
-        brite = int(brite)      #make integer
-        brite = brite / 10
-        brite = int(round(brite))      #convert the float down to int agian
-    else:
-        if (mode == "l"):
-            hb_display.display_custom("Light " + str(device) + " isn't SAT-able")
-        elif (mode == "g"):
-            hb_display.display_custom("Group " + str(device) + " isn't SAT-able")
-        time.sleep(.5)
-        return
+    brite = int(brite)      #make integer
+    brite = brite / 10
+    brite = int(round(brite))      #convert the float down to int agian
     #global pos
     encoder.pos = brite
     exitvar = False
