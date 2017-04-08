@@ -115,9 +115,6 @@ for arg in sys.argv:
         print_usage()
         sys.exit()
 
-if not os.geteuid() == 0 and rootless == 0:
-    sys.exit('\nhueBerry must be run as root due to file access limitations\nRun with -h for more details\n')
-
 if debug_argument != 1:
     os.popen("python splashscreen.py &")
 
@@ -156,19 +153,34 @@ def get_groups_or_lights_file(g_or_l):
             cmdout = os.popen("cat groups").read()
             #debugmsg(cmdout)
         elif demo_mode == 1:
-            cmdout = os.popen("cat demo_groups").read()
+            file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_groups'
+            print file_path
+            if os.path.exists(file_path):
+                cmdout = os.popen("cat demo_groups").read()
+            else:
+                cmdout = os.popen("cat groups").read()
     elif g_or_l == "l":
         if demo_mode == 0:
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             cmdout = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
         elif demo_mode == 1:
-            cmdout = os.popen("cat demo_lights  | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+            file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_lights'
+            print file_path
+            if os.path.exists(file_path):
+                cmdout = os.popen("cat demo_lights  | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+                print "yep"
+            else:
+                cmdout = os.popen("cat lights  | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
     elif g_or_l == "l_file":
         if demo_mode == 0:
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             cmdout = os.popen("cat lights").read()
         elif demo_mode == 1:
-            cmdout = os.popen("cat demo_lights").read()
+            file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_lights'
+            if os.path.exists(file_path):
+                cmdout = os.popen("cat demo_lights").read()
+            else:
+                cmdout = os.popen("cat lights").read()
     return cmdout
 
 def get_group_names():
@@ -222,8 +234,18 @@ def get_light_names():
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
             retry = retry + 1
-    num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
-    lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
+        lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
+    elif demo_mode == 1:
+        file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_lights'
+        if os.path.exists(file_path):
+            num_lights = os.popen("cat demo_lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
+            lstate = os.popen("cat demo_lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
+        else:
+            num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
+            lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
     #os.popen("rm lights")
     name_array = light_names.split('\n')
     num_array = num_lights.split('\n')
@@ -2008,6 +2030,8 @@ def mainloop_test():
             prev_secs = int(round(time.time()))  #just performed action, reset the screensaver timer
 
 if __name__ == "__main__":
+    if not os.geteuid() == 0 and rootless == 0:
+        sys.exit('\nhueBerry must be run as root due to file access limitations\nRun with -h for more details\n')
     #------------------------------------------------------------------------------------------------------------------------------
     # Main Loop I think
     global logfile
