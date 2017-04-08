@@ -20,6 +20,7 @@ class Upgrader(object):
                             'hb_settings',
                             'hb_menu',
                             #'hbplugin'
+                            'hb_morse',
                             'hueberry',
                             'console_colors',
                             'everything_else',
@@ -122,6 +123,8 @@ class Upgrader(object):
             if x == 'hb_settings':
                 self.download_hb_module(x)
             if x == 'hb_menu':
+                self.download_hb_module(x)
+            if x == 'hb_morse':
                 self.download_hb_module(x)
         for x in self.everything_else:
                 self.download_everything_else(x)
