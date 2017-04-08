@@ -154,7 +154,6 @@ def get_groups_or_lights_file(g_or_l):
             #debugmsg(cmdout)
         elif demo_mode == 1:
             file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_groups'
-            print file_path
             if os.path.exists(file_path):
                 cmdout = os.popen("cat demo_groups").read()
             else:
@@ -165,7 +164,6 @@ def get_groups_or_lights_file(g_or_l):
             cmdout = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
         elif demo_mode == 1:
             file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_lights'
-            print file_path
             if os.path.exists(file_path):
                 cmdout = os.popen("cat demo_lights  | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
                 print "yep"
