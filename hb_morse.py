@@ -24,7 +24,7 @@ Usage:
     import hb_morse.py
     hb_morse.i2pmorse(mirror = 1)
 """
-DIT = 0.2                   # Short Mark: Single Time Unit
+DIT = 0.1                   # Short Mark: Single Time Unit
 DAH = DIT * 3               # Longer Mark
 INTER_ELEMENT_GAP = DIT     # Between Characters
 SHORT_GAP = DAH             # Between Letters
