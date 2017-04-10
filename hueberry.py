@@ -148,16 +148,9 @@ def get_groups_or_lights_file(g_or_l):
     if g_or_l == "g":
         if demo_mode == 0:
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
-            #debugmsg("finished curl")
-            #hb_display.display_2lines("finished","curl",17)
             cmdout = os.popen("cat groups").read()
-            #debugmsg(cmdout)
         elif demo_mode == 1:
-            file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_groups'
-            if os.path.exists(file_path):
-                cmdout = os.popen("cat demo_groups").read()
-            else:
-                cmdout = os.popen("cat groups").read()
+            cmdout = cat_maybe_demo_file('demo_groups', g_or_l)
     elif g_or_l == "l":
         if demo_mode == 0:
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
@@ -174,11 +167,18 @@ def get_groups_or_lights_file(g_or_l):
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             cmdout = os.popen("cat lights").read()
         elif demo_mode == 1:
-            file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_lights'
-            if os.path.exists(file_path):
-                cmdout = os.popen("cat demo_lights").read()
-            else:
-                cmdout = os.popen("cat lights").read()
+            cmdout = cat_maybe_demo_file('demo_lights', 'l')
+    return cmdout
+
+def cat_maybe_demo_file(filename, g_or_l):
+    file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/' + filename
+    if os.path.exists(file_path):
+        cmdout = os.popen("cat " + filename).read()
+    else:
+        if g_or_l == 'g':
+            cmdout = os.popen("cat groups").read()
+        if g_or_l == 'l':
+            cmdout = os.popen("cat lights").read()
     return cmdout
 
 def get_group_names():
@@ -669,37 +669,32 @@ def get_huejson_value(g_or_l,num,type):
     #If successful, the function will return back the requested value
     #This function returns -1 if there is nothing returned when the bridge is queried
     #hb_display.display_custom("Loading "+str(type)+"...")
-    demo_mode = settings.get_demo_state()
+    try:
+        demo_mode = settings.get_demo_state()
+    except:
+        demo_mode = 1 # if we can't load settings, we're probably running tests
     if demo_mode == 0:
         if(g_or_l == "g"):
-            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
+            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num))
         if(g_or_l == "l"):
-            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
+            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num))
     else:
-        # THIS ACTUALLY DOESNT WORK
-        # BRITE IS ACTUALLY SUPPOSED TO BE AN INDIVIDUAL LIGHT OR GROUP
         if(g_or_l == "g"):
-            os.popen("cat demo_groups > brite")
+            wholejson = cat_maybe_demo_file("demo_groups", g_or_l)
         if(g_or_l == "l"):
-            os.popen("cat demo_lights > brite")
-    os.popen("chown pi brite")
-    wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
-    #print wholejson
+            wholejson = cat_maybe_demo_file("demo_lights", g_or_l)
     if not wholejson:
         #raise NameError("shit")
         return -1,{}
     wholejson = json.loads(wholejson)
     try:
-        if(type == "bri"):
-            value = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-        if(type == "ct"):
-            value = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-        if(type == "hue"):
-            value = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-        if(type == "sat"):
-            value = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-        if(type == "type"):
+        if(type == "type" and demo_mode == 0):
             value = wholejson['type']
+        if demo_mode == 0:
+            if g_or_l == "g":
+                value = wholejson["action"][type]
+            if g_or_l == "l":
+                value = wholejson["state"][type]
         if demo_mode == 1:
             if g_or_l == "g":
                 value = wholejson[num]["action"][type]
@@ -707,15 +702,15 @@ def get_huejson_value(g_or_l,num,type):
                 value = wholejson[num]["state"][type]
     except:
         value = None
-    #print value
-    #exit()
-    os.popen("rm brite")
     if not value:
-        if(g_or_l == "l"):
-            hb_display.display_2lines("No devices","in lights",17)
-        if(g_or_l == "g"):
-            hb_display.display_2lines("No devices","in groups",17)
-        time.sleep(1)
+        try:
+            if(g_or_l == "l"):
+                hb_display.display_2lines("No devices","in lights",17)
+            if(g_or_l == "g"):
+                hb_display.display_2lines("No devices","in groups",17)
+            time.sleep(1)
+        except:
+            pass # no display is defined, i.e. testing
         value = -1
     return value,wholejson
 
