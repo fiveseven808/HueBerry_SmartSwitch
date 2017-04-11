@@ -871,7 +871,9 @@ def ct_control(device,mode):
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
             if ct4colorlights == True:
                 set_non_ctable_bulbs_in_group(group = device, raw_temp = raw_temp)
-                #huecmd.start()
+            elif ct4colorlights == "whole_group":
+                #print("affecting whole group")
+                huecmd.start()
             new_xy = hue
             prev_xy = new_xy
             prev_mills = mills
@@ -1341,6 +1343,7 @@ def preferences_menu():
                     "Toggle Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
                     "Toggle CT for", "Color Lights", lambda: toggle_ct4colorlights(),
+                    "Enable CT func for", "Whole Group", lambda: ct4colorlights_whole_group(),
                     "Toggle", "DEMO MODE", lambda: toggle_demo(),
                     "Back to", "Settings", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
@@ -1354,6 +1357,12 @@ def toggle_ct4colorlights():
         hb_display.display_2lines("CT for CL", "Enabled", 17)
     else:
         hb_display.display_2lines("CT for CL", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
+def ct4colorlights_whole_group():
+    settings.ct_for_color_lights_actions('whole_group')
+    hb_display.display_2lines("CT for WHOLE GROUP", "Enabled", 17)
     time.sleep(1)
     encoder.wait_for_button_release()
 

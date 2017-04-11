@@ -129,6 +129,9 @@ class Settings(object):
         if action == 'toggle':
             self.__ct_for_color_lights = not self.__ct_for_color_lights
             self.Save()
+        if action == 'whole_group':
+            self.__ct_for_color_lights = action
+            self.Save()
         if action == 'get':
             return self.__ct_for_color_lights
 
