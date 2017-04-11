@@ -35,6 +35,7 @@ class Settings(object):
                             'number':0,
                             'file_name': None}
     __demo_state = False
+    __ct_for_color_lights = False
 
 
     # Constructor. Loads the previosu version of the object, if there is any
@@ -123,6 +124,14 @@ class Settings(object):
 
     def get_demo_state(self):
         return self.__demo_state
+
+    def ct_for_color_lights_actions(self,action):
+        if action == 'toggle':
+            self.__ct_for_color_lights = not self.__ct_for_color_lights
+            self.Save()
+        if action == 'get':
+            return self.__ct_for_color_lights
+
 
 
 # For testing

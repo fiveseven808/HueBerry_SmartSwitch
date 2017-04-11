@@ -144,7 +144,10 @@ print "Finished Importing all modules! hopefully this will work!"
 
 #--------------------------------------------------------------------------
 def get_groups_or_lights_file(g_or_l):
-    demo_mode = settings.get_demo_state()
+    try:
+        demo_mode = settings.get_demo_state()
+    except:
+        demo_mode = 1 #becuase probably being run as a module for test
     if g_or_l == "g":
         if demo_mode == 0:
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
@@ -184,11 +187,8 @@ def cat_maybe_demo_file(filename, g_or_l):
 def get_group_names():
     result_array = []
     lstate_a = []
-    #hb_display.display_2lines("starting","group names",17)
-    #debugmsg("starting curl")
     cmdout = get_groups_or_lights_file("g")
     if not cmdout:
-        #print "not brite"
         retry = 1
         while not cmdout:
             if retry >= 3:
@@ -201,18 +201,12 @@ def get_group_names():
             os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
             cmdout = os.popen("cat groups").read()
             retry = retry + 1
-    #debugmsg("passed ifstatement")
-    #print cmdout
-    #os.popen("rm groups")
     wat = json.loads(cmdout)
     keyvalues =  wat.keys()
-    #print keyvalues
     for x, v  in wat.items():
         result_array.append(wat[x]['name'])
         lstate_a.append(wat[x]['action']['on'])
     num_groups = len(result_array)
-    #print num_groups
-    #print result_array
     arraysize = len(keyvalues)
     return result_array,num_groups,lstate_a,keyvalues
 
@@ -279,8 +273,7 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     #test_wat = sorted(wat.items())
     #pprint.pprint(test_wat)
     #hb_display.display_custom("used jsonloads")
-    keyvalues =  wat.keys()
-    arraysize = len(keyvalues)
+    arraysize = len(wat.keys())
     lstate_a = []
     result_array = []
     bri_array = []
@@ -289,14 +282,9 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     ct_array = []
     sat_array = []
     xy_array = []
-    #hb_display.display_custom("blanked varliables")
-    #time.sleep(3)
     for x, v  in wat.items():
             result_array.append(wat[x]['name'])
             lstate_a.append(wat[x]['state']['on'])
-            #debugmsg v
-    #hb_display.display_custom("ran first for")
-    #time.sleep(3)
     for x, v  in wat.items():
         hb_display.display_2lines("Building Array for","Light " + str(x) + " of " + str(len(result_array)),15)
         try:
@@ -540,7 +528,6 @@ def l_control(light):
     brite = int(brite)
     brite = brite/10        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
-    #global pos
     encoder.pos = brite
     exitvar = False
     max_rot_val = 25
@@ -579,23 +566,13 @@ def g_control(group):
     if(brite == -1):
         #print "No lights avaliable"
         return
-    #else:
-    #    print "guess it was brite"
-    #brite = int(brite)      #make integer
-    #if brite < 10 and brite >= 0:
-    #   brite = 10
-
     brite = det_if_g_or_l_off("g",group)
     brite = int(brite)
-
     brite = brite/10.16        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
-    #global pos
-    #pos = brite
     encoder.pos = brite
     exitvar = False
     max_rot_val = 25
-    #bri_pre = encoder.pos * 10
     bri_pre = encoder.pos * 10.16
     refresh = 1
     prev_mills = 0
@@ -606,20 +583,17 @@ def g_control(group):
             encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        #rot_bri = encoder.pos * 10
         rot_bri = encoder.pos * 10.16
         if(bri_pre != rot_bri or refresh ==  1 ):
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.54)) + "%",17)
             refresh = 0
         if rot_bri <= 0 and rot_bri != bri_pre:
             #print"turning off?"
-            #hue_groups(lnum = group,lon = "false",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
             bri_pre = rot_bri
         elif(rot_bri != bri_pre and millsdiff > 200):
             #print"millsdiff > 200"
-            #hue_groups(lnum = group,lon = "true",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
             bri_pre = rot_bri
@@ -656,7 +630,7 @@ def det_if_g_or_l_off(g_or_l,number):
                 bri = 0
     return bri
 
-def get_huejson_value(g_or_l,num,type):
+def get_huejson_value(g_or_l = 'g',num = 0,type = 'bri'):
     #g_or_l:
     #   Provide "l" if looking up a Light value
     #   Provide "g" if looking up a Group value
@@ -687,15 +661,22 @@ def get_huejson_value(g_or_l,num,type):
         #raise NameError("shit")
         return -1,{}
     wholejson = json.loads(wholejson)
+    num = str(num)
     try:
         if(type == "type" and demo_mode == 0):
             value = wholejson['type']
-        if demo_mode == 0:
+        elif(type == "type" and demo_mode == 1):
+            value = wholejson[num]['type']
+        elif(type == "lights" and demo_mode == 0):
+            value = wholejson[type]
+        elif(type == "lights" and demo_mode == 1):
+            value = wholejson[num][type]
+        elif demo_mode == 0:
             if g_or_l == "g":
                 value = wholejson["action"][type]
             if g_or_l == "l":
                 value = wholejson["state"][type]
-        if demo_mode == 1:
+        elif demo_mode == 1:
             if g_or_l == "g":
                 value = wholejson[num]["action"][type]
             if g_or_l == "l":
@@ -838,6 +819,7 @@ def ct_control(device,mode):
     prev_mills = 0
     prev_xy = 0
     new_xy = 0
+    ct4colorlights = settings.ct_for_color_lights_actions('get')
     while exitvar == False:
         pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
@@ -887,7 +869,9 @@ def ct_control(device,mode):
             hue,sat = ct_to_hue_sat(raw_temp)
             #print hue
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
-            #huecmd.start()
+            if ct4colorlights == True:
+                set_non_ctable_bulbs_in_group(group = device, raw_temp = raw_temp)
+                #huecmd.start()
             new_xy = hue
             prev_xy = new_xy
             prev_mills = mills
@@ -898,6 +882,20 @@ def ct_control(device,mode):
         if(pushed):
             exitvar = True
         time.sleep(0.01)
+
+def set_non_ctable_bulbs_in_group(group,raw_temp = 5000):
+    # Ideally, if this function works, it will attempt to set the CT of all the color but
+    # non CTable bulbs in a given group.
+    hue,sat = ct_to_hue_sat(raw_temp)
+    lights,wholejson = get_huejson_value('g',group,'lights')
+    print lights
+    lightsjson = json.loads(get_groups_or_lights_file('l_file'))
+    #print lightsjson
+    for n in lights:
+        #print n, lightsjson[n]['type']
+        if lightsjson[n]['type'] == 'Color Light':
+            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':n,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+            huecmd.start()
 
 def hue_control(device,mode):
     brite,wholejson = get_huejson_value(mode,device,"hue")
@@ -1342,12 +1340,22 @@ def preferences_menu():
                     "Change", "Quick actions", lambda: quick_action_settings(),
                     "Toggle Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
+                    "Toggle CT for", "Color Lights", lambda: toggle_ct4colorlights(),
                     "Toggle", "DEMO MODE", lambda: toggle_demo(),
                     "Back to", "Settings", "exit")
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
+
+def toggle_ct4colorlights():
+    settings.ct_for_color_lights_actions('toggle')
+    if (settings.ct_for_color_lights_actions('get')):
+        hb_display.display_2lines("CT for CL", "Enabled", 17)
+    else:
+        hb_display.display_2lines("CT for CL", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
 
 def toggle_demo():
     # Put something here to toggle the demo mode...
@@ -1719,15 +1727,18 @@ def user_upgrade_changelog():
     return
 
 def debugmsg(message):
-    global logfile
-    global debug_state
-    if wsl_env == 0:
-        if debug_state == 1:
-            current_time = time.strftime("%m / %d / %Y %-H:%M")
-            with open(logfile, "a") as myfile:
-                myfile.write(current_time + " " + message + "\n")
-        else:
-            return
+    try:
+        global logfile
+        global debug_state
+        if wsl_env == 0:
+            if debug_state == 1:
+                current_time = time.strftime("%m / %d / %Y %-H:%M")
+                with open(logfile, "a") as myfile:
+                    myfile.write(current_time + " " + message + "\n")
+            else:
+                return
+    except:
+        pass #Give up if not set, probably running as a module
 
 def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #If this function is activated, then we're checking for the button being held
