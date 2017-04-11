@@ -649,9 +649,9 @@ def get_huejson_value(g_or_l = 'g',num = 0,type = 'bri'):
         demo_mode = 1 # if we can't load settings, we're probably running tests
     if demo_mode == 0:
         if(g_or_l == "g"):
-            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num))
+            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num)).read()
         if(g_or_l == "l"):
-            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num))
+            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num)).read()
     else:
         if(g_or_l == "g"):
             wholejson = cat_maybe_demo_file("demo_groups", g_or_l)
@@ -660,6 +660,7 @@ def get_huejson_value(g_or_l = 'g',num = 0,type = 'bri'):
     if not wholejson:
         #raise NameError("shit")
         return -1,{}
+    print wholejson
     wholejson = json.loads(wholejson)
     num = str(num)
     try:
