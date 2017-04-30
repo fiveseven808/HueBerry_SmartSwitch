@@ -167,7 +167,10 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v050-0407.57.a
+    \rUpgrade level: v050-0430.57.a
+        2017-04-30 //57
+        + Fixed a bug preventing scenes from being created
+
         2017-04-07 //57
         * Mega Alpha version
         * Forgot to add release notes LOL
