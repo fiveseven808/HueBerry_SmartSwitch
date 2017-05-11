@@ -130,7 +130,6 @@ import json
 import colorsys
 import math
 import pprint
-
 import hb_display
 import hb_encoder
 import hb_hue

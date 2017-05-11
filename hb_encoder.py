@@ -10,11 +10,11 @@ temp = os.popen("cat /etc/os-release | grep raspbian").read()
 result_array = temp.split('\n')
 num_groups = len(result_array) - 1
 if(num_groups != 4):
-    print(bcolors.RED+"This OS is not Raspbian. RPi specific modules will not be loaded."+bcolors.ENDC)
+    print(bcolors.RED+"hb_encoder: This OS is not Raspbian. RPi specific modules will not be loaded."+bcolors.ENDC)
     #time.sleep(1)
     #sys.exit()
 else:
-    print(bcolors.GRN+"Looks like you're running Rasbian! Loading RPi specific modules!"+bcolors.ENDC)
+    print(bcolors.GRN+"hb_encoder: Looks like you're running Rasbian! Loading RPi specific modules!"+bcolors.ENDC)
     import RPi.GPIO as GPIO
     import pigpio
     import rotary_encoder

@@ -1,4 +1,8 @@
-import Adafruit_SSD1306
+try:
+    import Adafruit_SSD1306
+except:
+    print("splashscreen.py: Could not load requirements. Is this part of an import? ")
+    exit()
 from PIL import Image
 
 # 128x64 display with hardware I2C
