@@ -1,6 +1,28 @@
 #!/usr/bin/env python
 __version__ = "v050-0430.57.a"
 """
+2017-07-24 //57
+* Have not touched this code in 3 months it seems... I don't remember how this
+    works lol. Will attempt to add scene updater tool...
+* Scene updater tool will work as follows:
+    * User replaces lights in system.
+    * Navigate to and run Scene Updater
+    * Selects how many lights to replace (and option to cancel)
+    * Select 1st light to replace (and option to go back or cancel)
+    * Select 1st light to replace with (and option to go back or cancel)
+    * Select n light to replace (and option to go back or cancel)
+    * Select n light to replace with (and option to go back or cancel)
+    * Dict? List? Array? Will be created like {(lights:1, 15),(lights:2, 16),(lights:10, 17)}
+    * Menu title: Lights to be replaced
+        * Mappings will be displayed in a scrollable style (and option to cancel)
+        * Future features:
+            * Detect if a mapping error has occured (multiple lights mapped to same light, etc)
+            * Click to edit individual Mappings
+        * Submit button
+        * Binary decision menu to confirm that it will affect all scenes
+    * Will parse/grep/replace the "*lights/1*" string with the "*lights/15*"
+        string in all files in the scenes directory
+
 2017-04-30 //57
 + Fixed a bug preventing scenes from being created
 
