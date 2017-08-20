@@ -1,5 +1,18 @@
 """
 HueBerry CLI
+
+The purpose of this file/module is to provide an external API 
+or command line interface with the hueberry commands.
+
+Goals:
+    Scenes
+        Run/execute them
+        Modiy them
+        Create them
+        Delete them
+        Sync them? 
+        Update them? 
+        
 """
 import hueberry
 
