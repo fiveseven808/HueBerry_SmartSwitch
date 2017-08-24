@@ -1,14 +1,18 @@
 #!/usr/bin/python
-import hb_display
-import sys
+#import hb_display
+#import sys  
+import os 
 
-with open(FileName) as f:
-  newText=f.read().replace('A', 'Orange')
+scene_dir = '/boot/hueBerry/scenes'
+for filename in os.listdir(scene_dir):
+        if filename.endswith(".sh"): 
+            print(os.path.join(scene_dir, filename))
+            print(filename)
+            
+            continue
+        else:
+            continue
 
-with open(FileName, "w") as f:
-  f.write(newText)
-
-  
 """
 What do I want this file to do? lol
 
@@ -46,7 +50,7 @@ library?
 just include some functions lol. 
 """
 #we'll have like, something that'll be like
-def hb_SceneUpgrader(old_light, new_light, scene_dir)
+def SceneUpgrader(scene_dir = '/boot/hueBerry/scenes', old_light = 12, new_light = 12):
     """
     Start opening up the files in scenedir one by one 
     for each scene in scene_dir 
@@ -57,10 +61,33 @@ def hb_SceneUpgrader(old_light, new_light, scene_dir)
         close the file 
         display out and show status? 
     """
+    #currently this just does a thing for one scene
+    FileName = "./1_scene.sh"
+    #old_light = 12
+    #new_light = 12
+
+    prevlight = 'lights/'+str(old_light)+'/'
+    newlight = 'lights/'+str(new_light)+'/'
+
+    for filename in os.listdir(scene_dir):
+        if filename.endswith(".sh"): 
+            print(os.path.join(scene_dir, filename))
+            fullpath = os.path.join(scene_dir, filename)
+            with open(fullpath) as f:
+                newText=f.read().replace(prevlight, newlight)
+            with open(fullpath, "w") as f:
+                f.write(newText)
+            with open(fullpath, "a") as f:
+                f.write('\n'+'#echo "This file has been modified by Scene Upgrader: Light:' + str(old_light) + ' is now Light:' + str(new_light) + '"')
+            continue
+        else:
+            continue
+
+    status = 1
     return status
 
 #and we'll also have something like this
-def hb_SetIgnore(light_or_group, number_to_ignore, scene_number)
+def SetIgnore(light_or_group, number_to_ignore, scene_number):
     """
     if scene_number == 0
         run though and ignore all scenes
@@ -72,4 +99,5 @@ def hb_SetIgnore(light_or_group, number_to_ignore, scene_number)
         expect that number_to_ignore is an array (since it'd be too hard to have this call a function to figure out whats in that group)
         handle and cycle through the array? (although maybe this can also handle the above function... so maybe above is not needed?) 
     """
+    status = 1
     return status
