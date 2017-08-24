@@ -52,20 +52,11 @@ just include some functions lol.
 #we'll have like, something that'll be like
 def SceneUpgrader(scene_dir = '/boot/hueBerry/scenes', old_light = 12, new_light = 12):
     """
-    Start opening up the files in scenedir one by one 
-    for each scene in scene_dir 
-        display out and show status? 
-        open the file for reading and writing
-        display out and show status? 
-        use the replace function to replace old_light with new_light
-        close the file 
-        display out and show status? 
+    Usage: hb_sceneUpdater.SceneUpgrader(old_light = 22, new_light = 57, scene_dir = './')
+    Possible upgrades:
+        use hb_display to output status while upgrading? 
+        or just a non progress thing, since it technically should be pretty instant LOL
     """
-    #currently this just does a thing for one scene
-    FileName = "./1_scene.sh"
-    #old_light = 12
-    #new_light = 12
-
     prevlight = 'lights/'+str(old_light)+'/'
     newlight = 'lights/'+str(new_light)+'/'
 
@@ -78,12 +69,13 @@ def SceneUpgrader(scene_dir = '/boot/hueBerry/scenes', old_light = 12, new_light
             with open(fullpath, "w") as f:
                 f.write(newText)
             with open(fullpath, "a") as f:
-                f.write('\n'+'#echo "This file has been modified by Scene Upgrader: Light:' + str(old_light) + ' is now Light:' + str(new_light) + '"')
+                append_text = '\n'+'#echo "This file has been modified by Scene Upgrader: Light:' + str(old_light) + ' is now Light:' + str(new_light) + '"'
+                f.write(append_text)
             continue
         else:
             continue
 
-    status = 1
+    status = 'All scenes have been upgraded! Light:' + str(old_light) + ' is now Light:' + str(new_light)
     return status
 
 #and we'll also have something like this
