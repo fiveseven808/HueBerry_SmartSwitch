@@ -76,3 +76,4 @@ demo_lights
 *.log
 new_upgrade_hb.py
 ROOTLESS/
+*.sh

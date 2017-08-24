@@ -94,6 +94,9 @@ def print_usage():
                     View IP (possibly), Connect to Wifi, Exit to terminal
 
     -h,--help       Displays this help text
+    
+    ex: python hueberry.py -d -nb -wsl -nr
+    This will allow hueberry to run in WSL without the hue system or root
     """
     print(usage)
 
@@ -1442,7 +1445,7 @@ def toggle_time_format_stub():
 
 
 #----------------------------------------------------------------------------
-
+#       Quick Actions stuff
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
@@ -1511,7 +1514,10 @@ def scene_pick_menu(type, g_scenesdir):
     hb_display.display_2lines(scene_name, "Scene Set!", 17)
     time.sleep(1)
     return -1 #Because I already set it
-
+    
+#----------------------------------------------------------------------------
+#       New Scene Creator
+#----------------------------------------------------------------------------
 def new_scene_creator(g_scenesdir):
     #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
     total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir, offset = 0)
@@ -1522,15 +1528,18 @@ def new_scene_creator(g_scenesdir):
     result = get_house_scene_by_light(new_scene_name, ltt)
     debugmsg("ran NEW scene by individual creation with result = " + result)
     return
-
+    
+#----------------------------------------------------------------------------
+#       Scene Explorer stuff
+#----------------------------------------------------------------------------
 def scene_explorer(g_scenesdir,selection_only = 0):
-    #This function will act like a browser so you can delete or rename certain scenes?
+    #This function will act like a browser so you can delete or rename certain scenes
     encoder.wait_for_button_release()
     display = 0
     offset = 0 #or 1? for like... instructions so you know where you are?
     scene_refresh = 1
     encoder.pos = 0
-    post_offset = 1 # idk what this is
+    post_offset = 2 # idk what this is. probably to put menu items after the calculated stuff?
     old_display = -1
     exitvar = False
     while exitvar == False:
@@ -1548,15 +1557,22 @@ def scene_explorer(g_scenesdir,selection_only = 0):
             encoder.pos = 0
         display = encoder.pos
         if (old_display != display):
+            # Normal Mode Scene Explorer Mode
             if selection_only == 0:
                 if (display >= offset and display <= (total_plus_offset-1)):
                     hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
                                                 "Run | Hold-Edit",
                                                 size = 15)
+                # Item located at menudepth - 1
+                elif (display > (total_plus_offset-1) and display <= (menudepth - 1)):
+                    hb_display.display_2lines(  "placeholder",
+                                                "goes back?",
+                                                size = 17)
                 else:
                     hb_display.display_2lines(  "Back to",
                                                 "Settings Menu",
                                                 size = 17)
+            # Selection Mode (Re-use case)
             elif selection_only == 1:
                 if (display >= offset and display <= (total_plus_offset-1)):
                     hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
@@ -1565,6 +1581,7 @@ def scene_explorer(g_scenesdir,selection_only = 0):
             old_display = display
         pos,pushed = encoder.get_state()
         if(pushed):
+            # Normal Mode Scene Explorer Mode
             if selection_only == 0:
                 if(display >= offset and display < total_plus_offset):
                     #print display, offset
@@ -1588,6 +1605,7 @@ def scene_explorer(g_scenesdir,selection_only = 0):
                 else:
                     time.sleep(0.25)
                     exitvar = True
+            # Selection Mode (Re-use case)
             elif selection_only == 1:
                 return str(g_scenesdir) + str(scene_files[display-offset]), scene_files[display-offset]
                 # return selected_file, scene_name #Equivilant
@@ -1628,6 +1646,10 @@ def reprogram_scene(file_location, file_name):
     ltt = set_scene_transition_time()
     result = get_house_scene_by_light(file_location,ltt)
     return
+    
+#----------------------------------------------------------------------------
+#       END | Scene Explorer stuff | END
+#----------------------------------------------------------------------------
 
 def check_wifi_file(maindirectory):
     ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
