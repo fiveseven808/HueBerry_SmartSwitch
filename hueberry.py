@@ -448,12 +448,18 @@ def light_control(mode,selection_only = 0):
     elif (mode == "l"):
         hb_display.display_custom("loading lights...")
         name_array,num_lights,lstate_a,total = get_light_names()
+    elif (mode == "light_select"):
+        hb_display.display_custom("loading light explorer...")
+        name_array,num_lights,lstate_a,total = get_light_names()
     #global pos
     encoder.pos = 0 #Reset to top menu
     old_display = 0
     refresh = 1
     exitvar = False
     menudepth = total + 1
+    if (mode == "light_select"):
+        menudepth = menudepth - 1
+        #remove ability to reach "exit" menu if light_select
     encoder.wait_for_button_release()
     while exitvar == False:
         if(encoder.pos > menudepth):
@@ -1564,9 +1570,9 @@ def scene_explorer(g_scenesdir,selection_only = 0):
                                                 "Run | Hold-Edit",
                                                 size = 15)
                 # Item located at menudepth - 1
-                elif (display > (total_plus_offset-1) and display <= (menudepth - 1)):
-                    hb_display.display_2lines(  "placeholder",
-                                                "goes back?",
+                elif (display <= (menudepth - 1)):
+                    hb_display.display_2lines(  "Scene Upgrader",
+                                                "Thing...",
                                                 size = 17)
                 else:
                     hb_display.display_2lines(  "Back to",
@@ -1583,7 +1589,7 @@ def scene_explorer(g_scenesdir,selection_only = 0):
         if(pushed):
             # Normal Mode Scene Explorer Mode
             if selection_only == 0:
-                if(display >= offset and display < total_plus_offset):
+                if(display >= offset and display < (total_plus_offset)):
                     #print display, offset
                     selected_scenenumber = display-offset+1
                     #print selected_scenenumber
@@ -1602,6 +1608,12 @@ def scene_explorer(g_scenesdir,selection_only = 0):
                         #debugmsg("Running: " + str(scene_files[display-offset]))
                     elif result == 1:
                         scene_manager(selected_file,str(scene_files[display-offset]))
+                # Item located at menudepth - 1
+                elif (display <= (menudepth - 1)):
+                    #Run scene updater
+                    output = scene_upgrade_menu(g_scenesdir)
+                    hb_display.display_custom(output)
+                    time.sleep(3)
                 else:
                     time.sleep(0.25)
                     exitvar = True
@@ -1647,6 +1659,35 @@ def reprogram_scene(file_location, file_name):
     result = get_house_scene_by_light(file_location,ltt)
     return
     
+def scene_upgrade_menu(scenes_dir):
+    #take the scene dir and then ask what light is now what light
+    # i.e. light 6 is now going to become light 7. 
+    #recursive function???
+    menu_layout = ("Scene Upgrade", "Menu! ->", lambda: bd_set_result(0), #do nothing lol
+                    "Start Old bulb", "To New Bulb", lambda: scene_upgrade_phase1(scenes_dir),
+                    "Set Group", "To Ignore", lambda: scene_upgrade_phase1(scenes_dir),
+                    "Back to", "Scene Explorer", "exit")
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
+    result = menu.run_2_line_menu()
+    result = "startUpgrade"
+    if (result[1] == "startUpgrade"):
+        #do present a menu to select the old bulb
+        
+    encoder.wait_for_button_release()
+    return
+    
+def scene_upgrade_phase1(scenes_dir):
+    #This needs to be a bulb explorer, not scene  eplorer
+    selected_file, scene_name = scene_explorer( g_scenesdir = g_scenesdir,
+                                                selection_only = 1)
+    encoder.wait_for_button_release()
+    # say something like "now pick the new bulb!"
+    #then bring up the bulb explorer
+    #then say like, upgrading scenes: or something
+    #then say that the scene is upgraded! 
+    hb_display.display_2lines(scene_name, "Scene Set!", 17)
+    time.sleep(1)
+    return -1
 #----------------------------------------------------------------------------
 #       END | Scene Explorer stuff | END
 #----------------------------------------------------------------------------

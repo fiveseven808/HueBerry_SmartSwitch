@@ -23,6 +23,7 @@ class Upgrader(object):
                             'hb_morse',
                             'hueberry',
                             'console_colors',
+                            'hb_sceneUpdater',
                             'everything_else',
                             'authenticate']
         self.everything_else = ['r2hb',
@@ -126,6 +127,8 @@ class Upgrader(object):
                 self.download_hb_module(x)
             if x == 'hb_morse':
                 self.download_hb_module(x)
+            if x == 'hb_sceneUpdater':
+                self.download_hb_module(x)
         for x in self.everything_else:
                 self.download_everything_else(x)
         #print baremetal
@@ -167,7 +170,11 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v050-0430.57.a
+    \rUpgrade level: v050-0826.57.a
+        2017-08-26 //57
+        + Added hb_sceneUpdater module. Not really integrated yet..
+        * DEV RELEASE ONLY. DO NOT UPDATE THIS. 
+        
         2017-04-30 //57
         + Fixed a bug preventing scenes from being created
 
