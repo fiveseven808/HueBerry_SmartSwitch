@@ -170,24 +170,19 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v050-0826.57.a
+    \rUpgrade level: v051-0905.57.a
+        2017-09-05 //57
+        * I really want to update the master branch... So this is some simple modifications to undo the dev features
+        - Scene upgrader removed and placeholder in place right now
+        + Added WPBack's 3d printable model of the hueBerry case!!!
+        + Want to push to master! 
+        
         2017-08-26 //57
         + Added hb_sceneUpdater module. Not really integrated yet..
         * DEV RELEASE ONLY. DO NOT UPDATE THIS. 
         
         2017-04-30 //57
         + Fixed a bug preventing scenes from being created
-
-        2017-04-07 //57
-        * Mega Alpha version
-        * Forgot to add release notes LOL
-        + Intelligent Display handling (kind of)
-        + Check I2C display, if not, then SPI, if not then morse code IP address via onboard LED!
-        + Rotate display is a thing now (not tested well)
-        + Dynamic menu struture implemented
-        + Enforced running as root
-        + Created a non-root mode
-        + Added a demo mode (super alpha)
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-__version__ = "v050-0430.57.a"
+__version__ = "v051-0905.57.a"
 """
 2017-09-05 //57
 * I really want to update the master branch... So this is some simple modifications to undo the dev features
