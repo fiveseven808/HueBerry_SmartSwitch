@@ -10,15 +10,15 @@ hueBerry: Setup instructions for Developers
 Getting started with the hueBerry from a bare-metal pi is fairly simple. Here, I will attempt to guide you from start to finish!
 
 **Requirements:**
-
-  * Raspberry Pi (I used a Zero)
+  * Optional: [3D Printable Case!!! Courtsey of Daniel Back](https://www.thingiverse.com/thing:2180872)
+  * Raspberry Pi (I used a Zero W)
   * Adafruit_SSD1306 library
   * pigpio library
   * SSD1306 compatible display (128x64 resolution)
-  * Rotary encoder with switch
+  * Rotary encoder with momentary swtich
   * Full BOM located [here](https://docs.google.com/spreadsheets/d/18q5wE9IcbJ1D823ktt4ZN7Fp1JHZutR4hCld2env4vI/edit?usp=sharing)
 
-**Do you meet the dev-kit minimum requirements?** Do you have a display, encoder, pi, and network connection? If so, you may continue! Otherwise, go back and get those components.
+**Do you meet the dev-kit minimum requirements?** Do you have a display, encoder, pi, and network connection? If so, you may continue! Otherwise, go back and get those components OR you can now run hueBerry in an emulated console session! 
 
 ## Bare-Metal Instructions:
 
