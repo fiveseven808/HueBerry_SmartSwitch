@@ -1,0 +1,14 @@
+#!/bin/bash
+# This tiny bash script kills the SPI console output and then refresh the SPI module
+# After that, it kills all python programs and starts the hueberry again in SPI mode
+
+con2fbmap 1 0
+sudo modprobe -r fbtft_device
+sudo modprobe -r fb_ssd1306
+sudo modprobe -r fbtft
+
+sudo modprobe -r spi_bcm2835
+sudo modprobe spi_bcm2835
+
+sudo pkill python
+sudo python hueberry.py -spi &

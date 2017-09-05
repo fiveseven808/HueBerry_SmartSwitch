@@ -5,20 +5,42 @@ import time
 import os
 
 class display(object):
-    """ hueBerry Display API v0.1 """
-    # My first class ever! yay!
-    # This is a bundle of shit, but it's my bundle of shit
-    # Will work to integrate this into hueberry.py soon
-    # For now, this is just a proof of concept
+    """ hueBerry Display API """
+    # This class will create a display object and allow
+    # hueBerry style text menus to be drawn on an i2c or spi SSD1306 display
+    # as well as a few more text drawing functions
 
-    def __init__(self, console=0, mirror = 0, rotation = 0):
+    def __init__(self, console=0, mirror = 0, rotation = 0, spi_display = 0):
         self.console = console
         self.mirror = mirror
         self.rotate_angle = rotation
         if (self.console == 0 or self.mirror == 1):
             import Adafruit_SSD1306
-            self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
-            self.disp.begin()
+            if spi_display == 0:
+                self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=24)
+            elif spi_display == 1:
+                import Adafruit_GPIO.SPI as SPI
+                RST = 24
+                DC = 23
+                SPI_PORT = 0
+                SPI_DEVICE = 0
+                self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
+            try:
+                self.disp.begin()
+            except:
+                print("Something went wrong... Will try to load SSD1306 as SPI")
+                import Adafruit_GPIO.SPI as SPI
+                RST = 24
+                DC = 23
+                SPI_PORT = 0
+                SPI_DEVICE = 0
+                try:
+                    self.disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, dc=DC, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=8000000))
+                    self.disp.begin()
+                except:
+                    print("No display connected? \nOutputting IP address as morse code LOL")
+                    import hb_morse
+                    hb_morse.ip2morse(mirror = 1)
             self.width = self.disp.width
             self.height = self.disp.height
         else:

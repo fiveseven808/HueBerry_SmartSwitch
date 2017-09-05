@@ -1,26 +1,53 @@
 #!/usr/bin/env python
-__version__ = "v047-0315.57.a"
+__version__ = "v051-0905.57.a"
 """
-2017-03-12 //57
-+ Enabled Scene Explorer.
-    + Added the ability to delete scenes without a computer (FINALLY!)
-    + Added an obvious way to reprogram scenes (instead of holding down)
-2017-03-13 //57
-+ Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
-+ Fixed authentication issues... Can do initial pair at least.
-+ Cleaned up some bits of code
-2017-03-14 //57
-+ Merged main function branch, so now a function instead of just a mess
-+ Began work on attempting to port the single value menus to a generic scheme
-+ Announcement on Reddit! Happy pi day!
-2017-03-15 //57
-+ Attempting to create prototypes for dual bridge configuration
-+ Scene Explorer bug fix
+2017-09-05 //57
+* I really want to update the master branch... So this is some simple modifications to undo the dev features
+- Scene upgrader removed and placeholder in place right now
++ Added WPBack's 3d printable model of the hueBerry case!!!
++ Want to push to master! 
+
+2017-07-24 //57
+* Have not touched this code in 3 months it seems... I don't remember how this
+    works lol. Will attempt to add scene updater tool...
+* Scene updater tool will work as follows:
+    * User replaces lights in system.
+    * Navigate to and run Scene Updater
+    * Selects how many lights to replace (and option to cancel)
+    * Select 1st light to replace (and option to go back or cancel)
+    * Select 1st light to replace with (and option to go back or cancel)
+    * Select n light to replace (and option to go back or cancel)
+    * Select n light to replace with (and option to go back or cancel)
+    * Dict? List? Array? Will be created like {(lights:1, 15),(lights:2, 16),(lights:10, 17)}
+    * Menu title: Lights to be replaced
+        * Mappings will be displayed in a scrollable style (and option to cancel)
+        * Future features:
+            * Detect if a mapping error has occured (multiple lights mapped to same light, etc)
+            * Click to edit individual Mappings
+        * Submit button
+        * Binary decision menu to confirm that it will affect all scenes
+    * Will parse/grep/replace the "*lights/1*" string with the "*lights/15*"
+        string in all files in the scenes directory
+
+2017-04-30 //57
++ Fixed a bug preventing scenes from being created
+
+2017-04-07 //57
+* Mega Alpha version
+* Forgot to add release notes LOL
++ Intelligent Display handling (kind of)
++ Check I2C display, if not, then SPI, if not then morse code IP address via onboard LED!
++ Rotate display is a thing now (not tested well)
++ Dynamic menu struture implemented
++ Enforced running as root
++ Created a non-root mode
++ Added a demo mode (super alpha)
+
 
 --------
 Things to do
 Short term goals:
-* Allow the quick actions to use a scene!
+*
 Long term goals:
 * Handle adding Wifi without screen? (try except displaying on a screen?)
 * If no screen is detected, signal via the onboard led that wifi adding is complete?
@@ -47,10 +74,9 @@ nothing found?
 def print_usage():
     usage = """
     How to run:
-        sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [util] [-h,--help]
+        sudo python hueberry.py [-d] [-m] [-s] [-nb] [-wsl] [-util] [-r180] [-spi] [-h,--help]
 
     -d              Sets the program to output and take input from the console
-                    (input does not work yet)
 
     -m              Turns on mirror mode. Outputs to the
                     display as well as the terminal.
@@ -64,7 +90,19 @@ def print_usage():
     -util           Turns on HB-Utility mode. No hue related options avaliable.
                     Faster boot time too
 
+    -r180           Flip the display 180 degrees
+
+    -spi            Run hueBerry with a SPI driven SSD1306 display vs I2C
+
+    -nr, --noroot   Allows hueBerry to run as a normal user with REDUCED functionality
+                    The following features WILL NOT WORK and may crash the program:
+                    OTA Updater, Add wifi via txt file, Update via file on sd card,
+                    View IP (possibly), Connect to Wifi, Exit to terminal
+
     -h,--help       Displays this help text
+    
+    ex: python hueberry.py -d -nb -wsl -nr
+    This will allow hueberry to run in WSL without the hue system or root
     """
     print(usage)
 
@@ -82,6 +120,8 @@ simulation_arg = 0
 rotate = 0
 curses_test = 0
 util_mode = 0
+spi_display = 0
+rootless = 0
 for arg in sys.argv:
     if arg == '-d':
         debug_argument = 1
@@ -101,6 +141,10 @@ for arg in sys.argv:
         curses_test = 1
     if arg in ("-s","--simulate"):
         simulation_arg = 1
+    if arg in ("-spi"):
+        spi_display = 1
+    if arg in ("-nr","--noroot"):
+        rootless = 1
     if arg in ("-h","--help"):
         print_usage()
         sys.exit()
@@ -117,7 +161,6 @@ import json
 import colorsys
 import math
 import pprint
-
 import hb_display
 import hb_encoder
 import hb_hue
@@ -133,18 +176,52 @@ print "Finished Importing all modules! hopefully this will work!"
 #sys.exit()
 
 #--------------------------------------------------------------------------
+def get_groups_or_lights_file(g_or_l):
+    try:
+        demo_mode = settings.get_demo_state()
+    except:
+        demo_mode = 1 #becuase probably being run as a module for test
+    if g_or_l == "g":
+        if demo_mode == 0:
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            cmdout = os.popen("cat groups").read()
+        elif demo_mode == 1:
+            cmdout = cat_maybe_demo_file('demo_groups', g_or_l)
+    elif g_or_l == "l":
+        if demo_mode == 0:
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            cmdout = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+        elif demo_mode == 1:
+            file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_lights'
+            if os.path.exists(file_path):
+                cmdout = os.popen("cat demo_lights  | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+                print "yep"
+            else:
+                cmdout = os.popen("cat lights  | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+    elif g_or_l == "l_file":
+        if demo_mode == 0:
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            cmdout = os.popen("cat lights").read()
+        elif demo_mode == 1:
+            cmdout = cat_maybe_demo_file('demo_lights', 'l')
+    return cmdout
+
+def cat_maybe_demo_file(filename, g_or_l):
+    file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/' + filename
+    if os.path.exists(file_path):
+        cmdout = os.popen("cat " + filename).read()
+    else:
+        if g_or_l == 'g':
+            cmdout = os.popen("cat groups").read()
+        if g_or_l == 'l':
+            cmdout = os.popen("cat lights").read()
+    return cmdout
+
 def get_group_names():
     result_array = []
     lstate_a = []
-    #hb_display.display_2lines("starting","group names",17)
-    #debugmsg("starting curl")
-    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
-    #debugmsg("finished curl")
-    #hb_display.display_2lines("finished","curl",17)
-    cmdout = os.popen("cat groups").read()
-    #debugmsg(cmdout)
+    cmdout = get_groups_or_lights_file("g")
     if not cmdout:
-        #print "not brite"
         retry = 1
         while not cmdout:
             if retry >= 3:
@@ -154,27 +231,20 @@ def get_group_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups  > groups")
             cmdout = os.popen("cat groups").read()
             retry = retry + 1
-    #debugmsg("passed ifstatement")
-    #print cmdout
-    #os.popen("rm groups")
     wat = json.loads(cmdout)
     keyvalues =  wat.keys()
-    #print keyvalues
     for x, v  in wat.items():
         result_array.append(wat[x]['name'])
         lstate_a.append(wat[x]['action']['on'])
     num_groups = len(result_array)
-    #print num_groups
-    #print result_array
     arraysize = len(keyvalues)
     return result_array,num_groups,lstate_a,keyvalues
 
 def get_light_names():
-    os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
-    light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
+    light_names = get_groups_or_lights_file("l")
     if not light_names:
         #print "not brite"
         retry = 1
@@ -186,11 +256,21 @@ def get_light_names():
                 return 0,0,0,0
                 break
             hb_display.display_2lines("Bridge not responding","Retrying " + str(retry),15)
-            os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
+            os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/lights  > lights")
             light_names = os.popen("cat lights | grep -P -o '\"name\":\".*?\"' | grep -o ':\".*\"' | tr -d '\"' | tr -d ':'").read()
             retry = retry + 1
-    num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
-    lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
+        lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
+    elif demo_mode == 1:
+        file_path = str(os.path.dirname(os.path.abspath(__file__))) + '/demo_lights'
+        if os.path.exists(file_path):
+            num_lights = os.popen("cat demo_lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
+            lstate = os.popen("cat demo_lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
+        else:
+            num_lights = os.popen("cat lights | grep -P -o '\"[0-9]*?\"' | tr -d '\"'").read()
+            lstate = os.popen("cat lights | grep -o '\"on\":true,\|\"on\":false,' | tr -d '\"on\":' | tr -d ','").read()
     #os.popen("rm lights")
     name_array = light_names.split('\n')
     num_array = num_lights.split('\n')
@@ -219,15 +299,14 @@ def get_house_scene_by_light(selected_filendirect,ltt):
         time.sleep(2)
         return "failed"
     #hb_display.display_custom("ran get light names")
-    cmdout = os.popen("cat lights").read()
+    cmdout = get_groups_or_lights_file("l_file")
     #os.popen("cat scene_template.py >> custom_scene" + selected_filendirect + ".py" )
     wat = json.loads(cmdout)
     #Just trying to figure out how to sort this and make it a little nicer... bleh
     #test_wat = sorted(wat.items())
     #pprint.pprint(test_wat)
     #hb_display.display_custom("used jsonloads")
-    keyvalues =  wat.keys()
-    arraysize = len(keyvalues)
+    arraysize = len(wat.keys())
     lstate_a = []
     result_array = []
     bri_array = []
@@ -236,14 +315,9 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     ct_array = []
     sat_array = []
     xy_array = []
-    #hb_display.display_custom("blanked varliables")
-    #time.sleep(3)
     for x, v  in wat.items():
             result_array.append(wat[x]['name'])
             lstate_a.append(wat[x]['state']['on'])
-            #debugmsg v
-    #hb_display.display_custom("ran first for")
-    #time.sleep(3)
     for x, v  in wat.items():
         hb_display.display_2lines("Building Array for","Light " + str(x) + " of " + str(len(result_array)),15)
         try:
@@ -294,16 +368,18 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     sceneobj = open(scenefile,"w+")
     sceneobj.write("#!/bin/bash\n#\n#This is a scenefile generated by hueBerry\n\n")
     hb_display.display_2lines("Building","Scene Script!",15)
+    print wat.keys()
+    print wat
     while index < len(result_array):
         if(ltt == 4 and lstate_a[index] == False):
-            scenecmd = "curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
+            scenecmd = "curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + "}' " + api_url + "/lights/" + str(wat.keys()[index]) + "/state"
         else:
-            scenecmd = "curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + ",\"bri\":" + str(bri_array[index]) + ",\"sat\":" + str(sat_array[index]) + ",\"xy\":" + str(xy_array[index]) + ",\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(hue_array[index]) + "}' " + api_url + "/lights/" + str(keyvalues[index]) + "/state"
+            scenecmd = "curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lstate_a[index]).lower() + ",\"bri\":" + str(bri_array[index]) + ",\"sat\":" + str(sat_array[index]) + ",\"xy\":" + str(xy_array[index]) + ",\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(hue_array[index]) + "}' " + api_url + "/lights/" + str(wat.keys()[index]) + "/state"
         #hb_display.display_2lines("Writing","Lights " + str(index + 1) + " of " + str(len(result_array)),15)
         print(scenecmd)
         groupnum = index + 1
         # Writes to file in UTF-8 vs using str() as ASCII. This prevents errors I think
-        sceneobj.write("#echo \"Set Lights " + keyvalues[index].encode('utf-8') + " = " + result_array[index].encode('utf-8') + "\"\n")
+        sceneobj.write("#echo \"Set Lights " + wat.keys()[index].encode('utf-8') + " = " + result_array[index].encode('utf-8') + "\"\n")
         sceneobj.write(scenecmd + "\n")
         index += 1
     sceneobj.close
@@ -314,12 +390,16 @@ def get_house_scene_by_light(selected_filendirect,ltt):
     return status
 
 def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
-    debugmsg("entering hue lights")
-    if ('hue' in options):
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+    #debugmsg("entering hue lights")
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        if ('hue' in options):
+            result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        else:
+            result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
+        #debugmsg(result)
     else:
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/lights/" + str(lnum) + "/state" ).read()
-    debugmsg(result)
+        result = "DEMO"
     if not result:
         #print "not brite"
         hb_display.display_2lines("An error in ","hue_lights",17)
@@ -329,16 +409,20 @@ def hue_lights(lnum,lon,lbri,lsat,lx,ly,lct,ltt,**options):
     return result
 
 def hue_groups(lnum, lon = -1, lbri = -1, lsat = -1, lx = -1, ly = -1, lct = -1, ltt = -1,**options):
-    debugmsg("entering hue groups")
-    if ('hue' in options):
-        #debugmsg("hue and before result")
-        result = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
-        #debugmsg("hue and after result")
+    #debugmsg("entering hue groups")
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+        if ('hue' in options):
+            #debugmsg("hue and before result")
+            result = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"hue\":" + str(options['hue']) + "}' " + api_url + "/groups/" + str(lnum) + "/action" ).read()
+            #debugmsg("hue and after result")
+        else:
+            #debugmsg("everything else and before result")
+            result = os.popen("curl --connect-timeout 2 -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
+            #debugmsg("everything else and after result")
     else:
-        #debugmsg("everything else and before result")
-        result = os.popen("curl -s -m 1 -H \"Accept: application/json\" -X PUT --data '{\"on\":" + str(lon) + ",\"bri\":" + str(lbri) + ",\"sat\":" + str(lsat) + ",\"xy\":[" + str(lx) + "," + str(ly) + "],\"transitiontime\":" + str(ltt) + ",\"ct\":" + str(lct) + "}' " + api_url + "/groups/" + str(lnum) + "/action").read()
-        #debugmsg("everything else and after result")
-    debugmsg(result)
+        result = "DEMO"
+    #debugmsg(result)
     if not result:
         #print "not brite"
         hb_display.display_2lines("An error in ","hue_groups",17)
@@ -363,12 +447,15 @@ def hue_groups(lnum, lon = -1, lbri = -1, lsat = -1, lx = -1, ly = -1, lct = -1,
 #   Displays:
 #       Group or Light name as you scroll around. Allows you to change most attributes of the light
 #------------------------------------------------------------------------------------
-def light_control(mode):
+def light_control(mode,selection_only = 0):
     if (mode == "g"):
         hb_display.display_custom("loading groups...")
         name_array,total,lstate_a,keyvalues = get_group_names()
     elif (mode == "l"):
         hb_display.display_custom("loading lights...")
+        name_array,num_lights,lstate_a,total = get_light_names()
+    elif (mode == "light_select"):
+        hb_display.display_custom("loading light explorer...")
         name_array,num_lights,lstate_a,total = get_light_names()
     #global pos
     encoder.pos = 0 #Reset to top menu
@@ -376,11 +463,14 @@ def light_control(mode):
     refresh = 1
     exitvar = False
     menudepth = total + 1
+    if (mode == "light_select"):
+        menudepth = menudepth - 1
+        #remove ability to reach "exit" menu if light_select
+    encoder.wait_for_button_release()
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > menudepth):
+        if(encoder.pos > menudepth):
             encoder.pos = menudepth
-        elif(pos < 1):
+        elif(encoder.pos < 1):
             encoder.pos = 1
         display = encoder.pos
 
@@ -395,70 +485,75 @@ def light_control(mode):
         else:
             time.sleep(0.005)
 
+        pos,pushed = encoder.get_state()
         # Poll button press and trigger action based on current display
         if(pushed):
-            if(display <= total):
-                ctmode = 0
-                huemode = 0
-                ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
-                if(ctmode == 0):
-                    if(mode == "g"):
-                        g_control(keyvalues[display-1])
-                        ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
-                        if (ctmode ==0):
-                            hb_display.display_custom("returning from ct...")
-                    elif(mode == "l"):
-                        l_control(num_lights[display-1])
-                        ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
-                        if (ctmode ==0):
-                            hb_display.display_custom("returning from ct...")
-
-                if(ctmode == 1):
-                    if(mode == "g"):
-                        ct_control(keyvalues[display-1],"g")
-                        huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
-                        if (huemode == 1):
-                            hue_control(keyvalues[display-1],"g")
-                            huemode = 0
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning...")
-                        huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
-                        if (huemode == 1):
-                            sat_control(keyvalues[display-1],"g")
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning from sat...")
-
-                    elif(mode == "l"):
-                        ct_control(num_lights[display-1],"l")
-                        huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
-                        if (huemode == 1):
-                            hue_control(num_lights[display-1],"l")
-                            huemode = 0
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning...")
-                        huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
-                        if (huemode == 1):
-                            sat_control(num_lights[display-1],"l")
-                        elif(huemode ==0):
-                            hb_display.display_custom("returning...")
-                    #finished with sat for l or g
-                    pos,pushed = encoder.get_state()
-                    while(pushed):
-                        hb_display.display_custom("returning...")
-                        time.sleep(0.01)
+            if selection_only == 0:
+                if(display <= total):
+                    ctmode = 0
+                    huemode = 0
+                    ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
+                    if(ctmode == 0):
+                        if(mode == "g"):
+                            g_control(keyvalues[display-1])
+                            ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
+                            if (ctmode ==0):
+                                hb_display.display_custom("returning from ct...")
+                        elif(mode == "l"):
+                            l_control(num_lights[display-1])
+                            ctmode = holding_button(500,"Hold for ct...","Entering ct...",21)
+                            if (ctmode ==0):
+                                hb_display.display_custom("returning from ct...")
+                    if(ctmode == 1):
+                        if(mode == "g"):
+                            ct_control(keyvalues[display-1],"g")
+                            huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
+                            if (huemode == 1):
+                                hue_control(keyvalues[display-1],"g")
+                                huemode = 0
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning...")
+                            huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
+                            if (huemode == 1):
+                                sat_control(keyvalues[display-1],"g")
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning from sat...")
+                        elif(mode == "l"):
+                            ct_control(num_lights[display-1],"l")
+                            huemode = holding_button(500,"Hold for hue...","Entering hue...",21)
+                            if (huemode == 1):
+                                hue_control(num_lights[display-1],"l")
+                                huemode = 0
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning...")
+                            huemode = holding_button(500,"Hold for sat...","Entering sat...",21)
+                            if (huemode == 1):
+                                sat_control(num_lights[display-1],"l")
+                            elif(huemode ==0):
+                                hb_display.display_custom("returning...")
+                        #finished with sat for l or g
                         pos,pushed = encoder.get_state()
-                if(mode == "g"):
-                    name_array,total,lstate_a,keyvalues = get_group_names()
-                elif(mode == "l"):
-                    name_array,num_lights,lstate_a,total = get_light_names()
-                refresh = 1
-                encoder.pos = display
-
-            else:
-                time.sleep(0.25)
-                exitvar = True
-            time.sleep(0.01)
-            #prev_millis = int(round(time.time() * 1000))
+                        while(pushed):
+                            hb_display.display_custom("returning...")
+                            time.sleep(0.01)
+                            pos,pushed = encoder.get_state()
+                    if(mode == "g"):
+                        name_array,total,lstate_a,keyvalues = get_group_names()
+                    elif(mode == "l"):
+                        name_array,num_lights,lstate_a,total = get_light_names()
+                    refresh = 1
+                    encoder.pos = display
+                else:
+                    time.sleep(0.25)
+                    exitvar = True
+                time.sleep(0.01)
+                #prev_millis = int(round(time.time() * 1000))
+            elif selection_only == 1:
+                encoder.wait_for_button_release()
+                if (mode == "g"):
+                    return keyvalues[display-1]
+                elif (mode == "l"):
+                    return num_lights[display-1]
     return
 
 
@@ -467,14 +562,13 @@ def l_control(light):
     if(brite == -1):
         #print "No lights avaliable"
         return
-    brite = int(brite)      #make integer
-    if brite < 10 and brite >= 0:
-        brite = 10
-    if (wholejson['state']['on'] == False):
-        brite = 0
+    #brite = int(brite)      #make integer
+    #if brite < 10 and brite >= 0:
+    #    brite = 10
+    brite = det_if_g_or_l_off("l",light)
+    brite = int(brite)
     brite = brite/10        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
-    #global pos
     encoder.pos = brite
     exitvar = False
     max_rot_val = 25
@@ -482,10 +576,9 @@ def l_control(light):
     refresh = 1
     prev_mills = 0
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > max_rot_val):
+        if(encoder.pos > max_rot_val):
             encoder.pos = max_rot_val
-        elif(pos < 0):
+        elif(encoder.pos < 0):
             encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
@@ -504,6 +597,7 @@ def l_control(light):
             prev_mills = mills
         elif(millsdiff > 100):
             prev_mills = mills
+        pos,pushed = encoder.get_state()
         if(pushed):
             exitvar = True
         time.sleep(0.01)
@@ -513,46 +607,34 @@ def g_control(group):
     if(brite == -1):
         #print "No lights avaliable"
         return
-    #else:
-    #    print "guess it was brite"
-    brite = int(brite)      #make integer
-    if brite < 10 and brite >= 0:
-        brite = 10
-    if (wholejson['state']['any_on'] == False):
-        brite = 0
+    brite = det_if_g_or_l_off("g",group)
+    brite = int(brite)
     brite = brite/10.16        #trim it down to 25 values
     brite = int(brite)      #convert the float down to int agian
-    #global pos
-    #pos = brite
     encoder.pos = brite
     exitvar = False
     max_rot_val = 25
-    #bri_pre = encoder.pos * 10
     bri_pre = encoder.pos * 10.16
     refresh = 1
     prev_mills = 0
     while exitvar == False:
-        pos,pushed = encoder.get_state()
-        if(pos > max_rot_val):
+        if(encoder.pos > max_rot_val):
             encoder.pos = max_rot_val
-        elif(pos < 0):
+        elif(encoder.pos < 0):
             encoder.pos = 0
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
-        #rot_bri = encoder.pos * 10
         rot_bri = encoder.pos * 10.16
         if(bri_pre != rot_bri or refresh ==  1 ):
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(rot_bri/2.54)) + "%",17)
             refresh = 0
         if rot_bri <= 0 and rot_bri != bri_pre:
             #print"turning off?"
-            #hue_groups(lnum = group,lon = "false",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"false",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
             bri_pre = rot_bri
         elif(rot_bri != bri_pre and millsdiff > 200):
             #print"millsdiff > 200"
-            #hue_groups(lnum = group,lon = "true",lbri = rot_bri,lsat = "-1",lx = "-1",ly = "-1",ltt = "5", lct = "-1")
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':group,'lon':"true",'lbri':int(rot_bri),'lsat':"-1",'lx':"-1",'ly':"-1",'ltt':"5",'lct':"-1"})
             huecmd.start()
             bri_pre = rot_bri
@@ -560,15 +642,36 @@ def g_control(group):
         millsdiff = mills - prev_mills
         if(millsdiff > 5000):
             #If 5.0 seconds have passed and nothing has happened, go and refresh the display and reset the miliseconds
-            rot_bri,wholejson = get_huejson_value("g",group,"bri")
+            rot_bri = det_if_g_or_l_off("g",group)
             #print "the rot bri is: "+str(rot_bri)
             hb_display.display_2lines("Group " + str(group),"Bri: " + str(int(int(rot_bri)/2.54)) + "%",17)
             prev_mills = mills
+        pos,pushed = encoder.get_state()
         if(pushed):
             exitvar = True
         time.sleep(0.01)
 
-def get_huejson_value(g_or_l,num,type):
+def det_if_g_or_l_off(g_or_l,number):
+    bri,wholejson = get_huejson_value(g_or_l,number,"bri")
+    #print wholejson
+    demo_mode = settings.get_demo_state()
+    if g_or_l == "g":
+        if demo_mode == 0:
+            if (wholejson['state']['any_on'] == False):
+                bri = 0
+        else:
+            if (wholejson[number]['state']['any_on'] == False):
+                bri = 0
+    if g_or_l == "l":
+        if demo_mode == 0:
+            if (wholejson['state']['on'] == False):
+                bri = 0
+        else:
+            if (wholejson[number]['state']['on'] == False):
+                bri = 0
+    return bri
+
+def get_huejson_value(g_or_l = 'g',num = 0,type = 'bri'):
     #g_or_l:
     #   Provide "l" if looking up a Light value
     #   Provide "g" if looking up a Group value
@@ -581,33 +684,56 @@ def get_huejson_value(g_or_l,num,type):
     #If successful, the function will return back the requested value
     #This function returns -1 if there is nothing returned when the bridge is queried
     #hb_display.display_custom("Loading "+str(type)+"...")
-    if(g_or_l == "g"):
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num) + " > brite")
-    if(g_or_l == "l"):
-        os.popen("curl --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num) + " > brite")
-    wholejson = os.popen("cat brite").read() #in case i wana do something properly lol
-    print wholejson
+    try:
+        demo_mode = settings.get_demo_state()
+    except:
+        demo_mode = 1 # if we can't load settings, we're probably running tests
+    if demo_mode == 0:
+        if(g_or_l == "g"):
+            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET " + api_url + "/groups/" + str(num)).read()
+        if(g_or_l == "l"):
+            wholejson = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X GET  "+ api_url + "/lights/" + str(num)).read()
+    else:
+        if(g_or_l == "g"):
+            wholejson = cat_maybe_demo_file("demo_groups", g_or_l)
+        if(g_or_l == "l"):
+            wholejson = cat_maybe_demo_file("demo_lights", g_or_l)
     if not wholejson:
         #raise NameError("shit")
         return -1,{}
+    print wholejson
     wholejson = json.loads(wholejson)
-    if(type == "bri"):
-        value = os.popen("cat brite | grep -o '\"bri\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "ct"):
-        value = os.popen("cat brite | grep -o '\"ct\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "hue"):
-        value = os.popen("cat brite | grep -o '\"hue\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "sat"):
-        value = os.popen("cat brite | grep -o '\"sat\":[0-9]*' | grep -o ':.*' | tr -d ':'").read()
-    if(type == "type"):
-        value = wholejson['type']
-    os.popen("rm brite")
+    num = str(num)
+    try:
+        if(type == "type" and demo_mode == 0):
+            value = wholejson['type']
+        elif(type == "type" and demo_mode == 1):
+            value = wholejson[num]['type']
+        elif(type == "lights" and demo_mode == 0):
+            value = wholejson[type]
+        elif(type == "lights" and demo_mode == 1):
+            value = wholejson[num][type]
+        elif demo_mode == 0:
+            if g_or_l == "g":
+                value = wholejson["action"][type]
+            if g_or_l == "l":
+                value = wholejson["state"][type]
+        elif demo_mode == 1:
+            if g_or_l == "g":
+                value = wholejson[num]["action"][type]
+            if g_or_l == "l":
+                value = wholejson[num]["state"][type]
+    except:
+        value = None
     if not value:
-        if(g_or_l == "l"):
-            hb_display.display_2lines("No devices","in lights",17)
-        if(g_or_l == "g"):
-            hb_display.display_2lines("No devices","in groups",17)
-        time.sleep(3)
+        try:
+            if(g_or_l == "l"):
+                hb_display.display_2lines("No devices","in lights",17)
+            if(g_or_l == "g"):
+                hb_display.display_2lines("No devices","in groups",17)
+            time.sleep(1)
+        except:
+            pass # no display is defined, i.e. testing
         value = -1
     return value,wholejson
 
@@ -696,10 +822,25 @@ def ct_control(device,mode):
     brite,wholejson = get_huejson_value(mode,device,"ct")
     hb_display.display_custom("loading ct...")
     encoder.wait_for_button_release()
-    type = wholejson['type']
+    demo_mode = settings.get_demo_state()
+    if demo_mode == 0:
+            type = wholejson['type']
+    else:
+            type = wholejson[device]['type']
     #print type
     if (brite == -1 and type != "Color light"):
-        #print "not brite"
+        print "something happened"
+        if (mode == "l"):
+            try:
+                hb_display.display_max_text("Light [" + str(wholejson['name']) + "] isn't CT-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Light [" + str(wholejson[device]['name']) + "] isn't CT-able", centered = 1, offset = 2)
+        elif (mode == "g"):
+            try:
+                hb_display.display_max_text("Group [" + str(wholejson['name']) + "] isn't CT-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Group [" + str(wholejson[device]['name']) + "] isn't CT-able", centered = 1, offset = 2)
+        time.sleep(2)
         return
     elif(type == "Color light"):
        print("color light was found")
@@ -720,6 +861,7 @@ def ct_control(device,mode):
     prev_mills = 0
     prev_xy = 0
     new_xy = 0
+    ct4colorlights = settings.ct_for_color_lights_actions('get')
     while exitvar == False:
         pos,pushed = encoder.get_state()
         if(pos > max_rot_val):
@@ -769,7 +911,11 @@ def ct_control(device,mode):
             hue,sat = ct_to_hue_sat(raw_temp)
             #print hue
             huecmd = threading.Thread(target = hue_groups, kwargs={'lnum':device,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
-            #huecmd.start()
+            if ct4colorlights == True:
+                set_non_ctable_bulbs_in_group(group = device, raw_temp = raw_temp)
+            elif ct4colorlights == "whole_group":
+                #print("affecting whole group")
+                huecmd.start()
             new_xy = hue
             prev_xy = new_xy
             prev_mills = mills
@@ -781,27 +927,43 @@ def ct_control(device,mode):
             exitvar = True
         time.sleep(0.01)
 
+def set_non_ctable_bulbs_in_group(group,raw_temp = 5000):
+    # Ideally, if this function works, it will attempt to set the CT of all the color but
+    # non CTable bulbs in a given group.
+    hue,sat = ct_to_hue_sat(raw_temp)
+    lights,wholejson = get_huejson_value('g',group,'lights')
+    print lights
+    lightsjson = json.loads(get_groups_or_lights_file('l_file'))
+    #print lightsjson
+    for n in lights:
+        #print n, lightsjson[n]['type']
+        if lightsjson[n]['type'] == 'Color Light':
+            huecmd = threading.Thread(target = hue_lights, kwargs={'lnum':n,'lon':"true",'lbri':"-1",'lsat':sat,'lx':"-1",'ly':"-1",'ltt':"4",'lct':"-1",'hue':hue})
+            huecmd.start()
+
 def hue_control(device,mode):
     brite,wholejson = get_huejson_value(mode,device,"hue")
+    #print wholejson
     hb_display.display_custom("loading hue...")
     encoder.wait_for_button_release()
     if brite == -1:
-        #print "not brite"
-        return
-    bri_length = len(brite)
-    print bri_length
-    if (bri_length > 0):
-        brite = int(brite)      #make integer
-        brite = brite / 1310
-        brite = int(round(brite))      #convert the float down to int agian
-    else:
         print "something happened"
         if (mode == "l"):
-            hb_display.display_custom("Light " + str(device) + " isn't HUE-able")
+            try:
+                hb_display.display_max_text("Light [" + str(wholejson['name']) + "] isn't HUE-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Light [" + str(wholejson[device]['name']) + "] isn't HUE-able", centered = 1, offset = 2)
         elif (mode == "g"):
-            hb_display.display_custom("Group " + str(device) + " isn't HUE-able")
-        time.sleep(.5)
+            try:
+                hb_display.display_max_text("Group [" + str(wholejson['name']) + "] isn't HUE-able", centered = 1, offset = 2)
+            except:
+                hb_display.display_max_text("Group [" + str(wholejson[device]['name']) + "] isn't HUE-able", centered = 1, offset = 2)
+        time.sleep(2)
         return
+    print brite
+    brite = int(brite)      #make integer
+    brite = brite / 1310
+    brite = int(round(brite))      #convert the float down to int agian
     #global pos
     encoder.pos = brite
     exitvar = False
@@ -850,19 +1012,9 @@ def sat_control(device,mode):
     if brite == -1:
         time.sleep(3)
         return
-    bri_length = len(brite)
-    print bri_length
-    if (bri_length > 0):
-        brite = int(brite)      #make integer
-        brite = brite / 10
-        brite = int(round(brite))      #convert the float down to int agian
-    else:
-        if (mode == "l"):
-            hb_display.display_custom("Light " + str(device) + " isn't SAT-able")
-        elif (mode == "g"):
-            hb_display.display_custom("Group " + str(device) + " isn't SAT-able")
-        time.sleep(.5)
-        return
+    brite = int(brite)      #make integer
+    brite = brite / 10
+    brite = int(round(brite))      #convert the float down to int agian
     #global pos
     encoder.pos = brite
     exitvar = False
@@ -1041,7 +1193,7 @@ def devinfo_screen():
                     "Get hue Hub", "Info", lambda: get_hue_devinfo(),
                     "Version Number", str(__version__), lambda: bd_set_result(0),
                     "Back to", "Settings", "exit")
-    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
@@ -1089,16 +1241,24 @@ def flashlight_mode():
             break
         time.sleep(0.1)
 
-def wifi_settings():
+def wifi_settings(debug_file = None):
     hb_display.display_custom("scanning for wifi...")
     #global pos
     encoder.pos = 0 #Reset to top menu
     timeout = 0
-    os.popen("wpa_cli scan")
-    os.popen("wpa_cli scan_results | grep WPS | sort -r -k3 > /tmp/wifi")
-    ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
-    powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
-    macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
+    if debug_file == None:
+        os.popen("wpa_cli scan")
+        time.sleep(3) # to allow the scan results to populate
+        os.popen("wpa_cli scan_results > /tmp/wifi_all")
+        # Only display WPS enabled points
+        os.popen("cat /tmp/wifi_all | grep WPS | sort -r -k3 -n > /tmp/wifi")
+        ssids = os.popen("cat /tmp/wifi | awk '{print $5}'").read()
+        powers = os.popen("cat /tmp/wifi | awk '{print $3}'").read()
+        macs = os.popen("cat /tmp/wifi | awk '{print $1}'").read()
+    elif debug_file:
+        ssids = os.popen("cat " + str(debugfile) + " | awk '{print $5}'").read()
+        powers = os.popen("cat " + str(debugfile) + " | awk '{print $3}'").read()
+        macs = os.popen("cat " + str(debugfile) + " | awk '{print $1}'").read()
     ssid_array = ssids.split('\n')
     mac_array = macs.split('\n')
     p_array = powers.split('\n')
@@ -1170,48 +1330,94 @@ def wifi_settings():
             time.sleep(0.01)
 
 def settings_menu(g_scenesdir,util_mode = 0):
+    ml = ()
+    ml = ml + ("System", "[ Menu ]", lambda: system_menu())
+    ml = ml + ("Check for", "Upgrades?", lambda: user_init_upgrade_precheck())
     if util_mode == 0:
-        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                        "Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                        "Restart", "hueBerry", lambda: restart_hueberry(),
-                        "Flashlight", "Function", lambda: flashlight_mode(),
-                        "Connect to", "WiFi", lambda: wifi_settings(),
-                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
-                        "Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                        "[ Scene ]", "[ Explorer ]", lambda: scene_explorer(g_scenesdir),
-                        #"Plugin", "Manager", lambda: plugin_manager(plugins_dir),
-                        "Preferences", "[ Menu ]", lambda: preferences_menu(),
-                        "Back to", "Main Menu", "exit")
-    elif util_mode == 1:
-        menu_layout = ("Device", "Info", lambda: devinfo_screen(),
-                        #"Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub(),
-                        "Shutdown", "hueBerry", lambda: shutdown_hueberry(),
-                        "Restart", "hueBerry", lambda: restart_hueberry(),
-                        "Flashlight", "Function", lambda: flashlight_mode(),
-                        "Connect to", "WiFi", lambda: wifi_settings(),
-                        "Check for", "Upgrades?", lambda: user_init_upgrade_precheck(),
-                        #"Create a", "New Scene", lambda: create_scene_stub(g_scenesdir),
-                        #"Scene", "Explorer", lambda: scene_explorer(g_scenesdir),
-                        "Plugin", "Manager", lambda: plugin_manager(plugins_dir),
-                        #"Preferences", "[ Menu ]", lambda: preferences_menu(),
-                        "Back to", "Main Menu", "exit")
-    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+        ml = ml + ("Create a", "New Scene", lambda: create_scene_stub(g_scenesdir))
+    ml = ml + ("[ Scene ]", "[ Explorer ]", lambda: scene_explorer(g_scenesdir))
+    #ml = ml + ("Plugin", "Manager", lambda: plugin_manager(plugins_dir))
+    ml = ml + ("Preferences", "[ Menu ]", lambda: preferences_menu())
+    ml = ml + ("Back to", "Main Menu", "exit")
+    menu_layout = ml
+    settings_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     settings_menu.run_2_line_menu()
     encoder.wait_for_button_release()
     scene_refresh = 1
     return scene_refresh
 
+def system_menu():
+    ml = ()
+    ml = ml + ("Device", "Info", lambda: devinfo_screen())
+    if util_mode == 0:
+        ml = ml + ("Re-Pair", "Hue Bridge", lambda: re_pair_bridge_stub())
+    ml = ml + ("Shutdown", "hueBerry", lambda: shutdown_hueberry())
+    ml = ml + ("Restart", "hueBerry", lambda: restart_hueberry())
+    ml = ml + ("Flashlight", "Function", lambda: flashlight_mode())
+    ml = ml + ("Connect to", "WiFi", lambda: wifi_settings())
+    if spi_display == 1:
+        ml = ml + ("Exit to","Terminal", lambda: exit_dump_to_spi())
+    ml = ml + ("Back to", "Main Menu", "exit")
+    menu_layout = ml
+    system_menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
+    system_menu.run_2_line_menu()
+    encoder.wait_for_button_release()
+    return
+
+def exit_dump_to_spi():
+    os.popen("sudo modprobe fbtft_device name=adafruit13m debug=1 speed=2000000 gpios=reset:24,dc:23")
+    time.sleep(1)
+    os.popen("con2fbmap 1 1")
+    os.popen("sudo setfont tom-thumb.psf")
+    while True:
+        time.sleep(2)
+        pos,pushed = encoder.get_state()
+        if pushed == 1:
+            print("\n\nStarting hueBerry!...")
+            time.sleep(2)
+            os.popen("sudo "+str(hb_path)+"/r2hb")
+            break
+    exit()
+
 def preferences_menu():
     menu_layout = ("Toggle time", "Mode 24/12h", lambda: toggle_time_format_stub(),
                     "Change", "Quick actions", lambda: quick_action_settings(),
-                    #"Set Screen", "Saver", lambda: screensaver_settings(),
+                    "Toggle Screen", "Saver", lambda: screensaver_settings(),
                     #"Set Night Mode", "Settings", lambda: nightmode_settings(),
+                    "Toggle CT for", "Color Lights", lambda: toggle_ct4colorlights(),
+                    "Enable CT func for", "Whole Group", lambda: ct4colorlights_whole_group(),
+                    "Toggle", "DEMO MODE", lambda: toggle_demo(),
                     "Back to", "Settings", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
+
+def toggle_ct4colorlights():
+    settings.ct_for_color_lights_actions('toggle')
+    if (settings.ct_for_color_lights_actions('get')):
+        hb_display.display_2lines("CT for CL", "Enabled", 17)
+    else:
+        hb_display.display_2lines("CT for CL", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
+def ct4colorlights_whole_group():
+    settings.ct_for_color_lights_actions('whole_group')
+    hb_display.display_2lines("CT for WHOLE GROUP", "Enabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
+def toggle_demo():
+    # Put something here to toggle the demo mode...
+    settings.toggle_demo_state()
+    if (settings.get_demo_state()):
+        hb_display.display_2lines("DEMO State", "Enabled", 17)
+    else:
+        hb_display.display_2lines("DEMO State", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
 
 def user_init_upgrade_precheck():
     result = holding_button(2000,"Hold to FORCE", "Will FORCE UPDATE", 21)
@@ -1251,34 +1457,79 @@ def toggle_time_format_stub():
 
 
 #----------------------------------------------------------------------------
-
+#       Quick Actions stuff
 #----------------------------------------------------------------------------
 
 def quick_action_settings():
-    menu_layout = ("Change quick", "Press action", lambda: settings.SetQuickPressAction(set_action("Quick")),
-                    "Change long", "Press action", lambda: settings.SetLongPressAction(set_action("Long")),
+    menu_layout = ("Change quick", "Press action", lambda: settings.set_quick_press_action(set_action("Quick")),
+                    "Change long", "Press action", lambda: settings.set_long_press_action(set_action("Long")),
                     "Back to", "Pref Menu", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
 
+def screensaver_settings():
+    settings.toggle_screen_blanking()
+    if (settings.get_screen_blanking()):
+        hb_display.display_2lines("Screen Blanking", "Enabled", 17)
+    else:
+        hb_display.display_2lines("Screen Blanking", "Disabled", 17)
+    time.sleep(1)
+    encoder.wait_for_button_release()
+
 def set_action(type):
     result = 0
-    menu_layout = ("Choose " + str(type), "Action:", "BD_TYPE",
+    menu_layout = ( "Choose " + str(type), "Action:", "BD_TYPE",
                     "Set to", "Do nothing", lambda: bd_set_result(1),
                     "Set to", "Turn all on", lambda: bd_set_result(2),
                     "Set to", "Turn all off", lambda: bd_set_result(3),
                     "Set to", "Toggle all", lambda: bd_set_result(4),
-                    # "Load a", "Specific Scene", lambda:scene_pick_menu(),
-                    # "Toggle a", "Specific Light", lambda:light_pick_menu(),
-                    # "Toggle a", "Specific Group", lambda:group_pick_menu(),
-                    "Back to", "Previous Menu", lambda: bd_set_result(5))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+                    "Load a", "Specific Scene", lambda:scene_pick_menu(type = type, g_scenesdir = g_scenesdir),
+                    "Toggle a", "Specific Light", lambda:light_group_pick_menu(type = type, mode = "l"),
+                    "Toggle a", "Specific Group", lambda:light_group_pick_menu(type = type, mode = "g"),
+                    "Back to", "Previous Menu", lambda: bd_set_result(-1))
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return result - 1
 
+def light_group_pick_menu(type, mode):
+    number = light_control( mode = mode,
+                            selection_only = 1)
+    encoder.wait_for_button_release()
+    # [unimplemented] Ask if you want to set a custom brightness?
+    if type == "Quick":
+        settings.set_quick_press_action(action = "set_group_or_light",
+                                        mode = mode,
+                                        number = number)
+    if type == "Long":
+        settings.set_long_press_action( action = "set_group_or_light",
+                                        mode = mode,
+                                        number = number)
+    hb_display.display_2lines(mode+" "+number, "Set!", 17)
+    time.sleep(1)
+    return -1 #Because I already set it
+
+def scene_pick_menu(type, g_scenesdir):
+    selected_file, scene_name = scene_explorer( g_scenesdir = g_scenesdir,
+                                                selection_only = 1)
+    encoder.wait_for_button_release()
+    if type == "Quick":
+        settings.set_quick_press_action(action = "set_quick_scene",
+                                        number = scene_name,
+                                        file_name = selected_file)
+    if type == "Long":
+        settings.set_long_press_action( action = "set_quick_scene",
+                                        number = scene_name,
+                                        file_name = selected_file)
+    hb_display.display_2lines(scene_name, "Scene Set!", 17)
+    time.sleep(1)
+    return -1 #Because I already set it
+    
+#----------------------------------------------------------------------------
+#       New Scene Creator
+#----------------------------------------------------------------------------
 def new_scene_creator(g_scenesdir):
     #This function will utilize get_house_scene_by_light(selected_filendirect,ltt) somehow...
     total_scenes,total_plus_offset,scene_files = get_scene_total(g_scenesdir, offset = 0)
@@ -1289,15 +1540,18 @@ def new_scene_creator(g_scenesdir):
     result = get_house_scene_by_light(new_scene_name, ltt)
     debugmsg("ran NEW scene by individual creation with result = " + result)
     return
-
-def scene_explorer(g_scenesdir):
-    #This function will act like a browser so you can delete or rename certain scenes?
+    
+#----------------------------------------------------------------------------
+#       Scene Explorer stuff
+#----------------------------------------------------------------------------
+def scene_explorer(g_scenesdir,selection_only = 0):
+    #This function will act like a browser so you can delete or rename certain scenes
     encoder.wait_for_button_release()
     display = 0
     offset = 0 #or 1? for like... instructions so you know where you are?
     scene_refresh = 1
     encoder.pos = 0
-    post_offset = 1 # idk what this is
+    post_offset = 2 # idk what this is. probably to put menu items after the calculated stuff?
     old_display = -1
     exitvar = False
     while exitvar == False:
@@ -1306,6 +1560,8 @@ def scene_explorer(g_scenesdir):
             total_screens, total_plus_offset, scene_files = get_scene_total(g_scenesdir, offset)
             scene_refresh = 0
         menudepth = total_plus_offset + post_offset - 1
+        if selection_only == 1:
+            menudepth = menudepth - 1
         # Cycle through different displays
         if(encoder.pos > menudepth):
             encoder.pos = menudepth
@@ -1313,39 +1569,64 @@ def scene_explorer(g_scenesdir):
             encoder.pos = 0
         display = encoder.pos
         if (old_display != display):
-            if (display >= offset and display <= (total_plus_offset-1)):
-                hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
-                                            "Run | Hold-Edit",
-                                            size = 15)
-            else:
-                hb_display.display_2lines(  "Back to",
-                                            "Settings Menu",
-                                            size = 17)
+            # Normal Mode Scene Explorer Mode
+            if selection_only == 0:
+                if (display >= offset and display <= (total_plus_offset-1)):
+                    hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
+                                                "Run | Hold-Edit",
+                                                size = 15)
+                # Item located at menudepth - 1
+                elif (display <= (menudepth - 1)):
+                    hb_display.display_2lines(  "Scene Upgrader",
+                                                "Thing...",
+                                                size = 17)
+                else:
+                    hb_display.display_2lines(  "Back to",
+                                                "Settings Menu",
+                                                size = 17)
+            # Selection Mode (Re-use case)
+            elif selection_only == 1:
+                if (display >= offset and display <= (total_plus_offset-1)):
+                    hb_display.display_2lines(  "[ " + str(scene_files[display-offset]) + " ]",
+                                                "Select",
+                                                size = 15)
             old_display = display
         pos,pushed = encoder.get_state()
         if(pushed):
-            if(display >= offset and display < total_plus_offset):
-                #print display, offset
-                selected_scenenumber = display-offset+1
-                #print selected_scenenumber
-                result = holding_button(1000,
-                                        "Hold to edit: " + scene_files[display-offset],
-                                        "Will edit: " + scene_files[display-offset],21)
-                selected_file = str(g_scenesdir) + str(scene_files[display-offset])
-                if result == 0:
-                    hb_display.display_2lines(  "Turning lights:",
-                                                str(scene_files[display-offset]),
-                                                size = 15)
-                    #print "running the below thing"
-                    os.popen("\"" + str(selected_file) + "\"")
-                    #print(str(selected_file))
-                    time.sleep(1)
-                    #debugmsg("Running: " + str(scene_files[display-offset]))
-                elif result == 1:
-                    scene_manager(selected_file,str(scene_files[display-offset]))
-            else:
-                time.sleep(0.25)
-                exitvar = True
+            # Normal Mode Scene Explorer Mode
+            if selection_only == 0:
+                if(display >= offset and display < (total_plus_offset)):
+                    #print display, offset
+                    selected_scenenumber = display-offset+1
+                    #print selected_scenenumber
+                    result = holding_button(1000,
+                                            "Hold to edit: " + scene_files[display-offset],
+                                            "Will edit: " + scene_files[display-offset],21)
+                    selected_file = str(g_scenesdir) + str(scene_files[display-offset])
+                    if result == 0:
+                        hb_display.display_2lines(  "Turning lights:",
+                                                    str(scene_files[display-offset]),
+                                                    size = 15)
+                        #print "running the below thing"
+                        os.popen("\"" + str(selected_file) + "\"")
+                        #print(str(selected_file))
+                        time.sleep(1)
+                        #debugmsg("Running: " + str(scene_files[display-offset]))
+                    elif result == 1:
+                        scene_manager(selected_file,str(scene_files[display-offset]))
+                # Item located at menudepth - 1
+                elif (display <= (menudepth - 1)):
+                    #Run scene updater
+                    output = scene_upgrade_menu(g_scenesdir)
+                    #hb_display.display_custom(output)
+                    #time.sleep(3)
+                else:
+                    time.sleep(0.25)
+                    exitvar = True
+            # Selection Mode (Re-use case)
+            elif selection_only == 1:
+                return str(g_scenesdir) + str(scene_files[display-offset]), scene_files[display-offset]
+                # return selected_file, scene_name #Equivilant
             scene_refresh = 1
             old_display = -1 #to refresh
         time.sleep(0.01)
@@ -1357,17 +1638,16 @@ def scene_manager(file_location, file_name):
                     #"Rename", "Scene", lambda: rename_scene(file_location, file_name),
                     "Re-Program", "w/Current State", lambda: reprogram_scene(file_location, file_name),
                     "Back to", "Scene Explorer", "exit")
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return
 
 def delete_scene(file_location, file_name):
     print file_location
-    decision_result = binarydecision(
-                        lambda: hb_display.display_2lines("Really delete",
-                                                            str(file_name) + "?",
-                                                            size = 17),
+    decision_result = binarydecision(lambda: hb_display.display_2lines("Really delete",
+                                                                        str(file_name) + "?",
+                                                                        size = 17),
                         answer1 = "[ Yes ]",
                         answer2 = "[ No ]")
     if (decision_result == 2):
@@ -1384,6 +1664,43 @@ def reprogram_scene(file_location, file_name):
     ltt = set_scene_transition_time()
     result = get_house_scene_by_light(file_location,ltt)
     return
+    
+def scene_upgrade_menu(scenes_dir):
+    #take the scene dir and then ask what light is now what light
+    # i.e. light 6 is now going to become light 7. 
+    #recursive function???
+    """
+    menu_layout = ("Scene Upgrade", "Menu! ->", lambda: bd_set_result(0), #do nothing lol
+                    "Start Old bulb", "To New Bulb", lambda: scene_upgrade_phase1(scenes_dir),
+                    "Set Group", "To Ignore", lambda: scene_upgrade_phase1(scenes_dir),
+                    "Back to", "Scene Explorer", "exit")
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
+    result = menu.run_2_line_menu()
+    result = "startUpgrade"
+    if (result[1] == "startUpgrade"):
+        #do present a menu to select the old bulb
+        
+        encoder.wait_for_button_release()
+    """
+    hb_display.display_2lines("Feature", "Coming Soon!", 14)
+    time.sleep(3)
+    return
+    
+def scene_upgrade_phase1(scenes_dir):
+    #This needs to be a bulb explorer, not scene  eplorer
+    selected_file, scene_name = scene_explorer( g_scenesdir = g_scenesdir,
+                                                selection_only = 1)
+    encoder.wait_for_button_release()
+    # say something like "now pick the new bulb!"
+    #then bring up the bulb explorer
+    #then say like, upgrading scenes: or something
+    #then say that the scene is upgraded! 
+    hb_display.display_2lines(scene_name, "Scene Set!", 17)
+    time.sleep(1)
+    return -1
+#----------------------------------------------------------------------------
+#       END | Scene Explorer stuff | END
+#----------------------------------------------------------------------------
 
 def check_wifi_file(maindirectory):
     ADDWIFIPATH = str(maindirectory) + 'add_wifi.txt'
@@ -1501,7 +1818,7 @@ def user_upgrade_menu():
                     "View", "Changelog", lambda: user_upgrade_changelog(),
                     "Choose", "[ Upgrade Now! ]", lambda: bd_set_result(1),
                     "Choose", "[ Cancel ]", lambda: bd_set_result(2))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     bd_result = menu.run_2_line_menu()
     if bd_result == 0:
         hb_display.display_2lines(  "Returning to",
@@ -1519,15 +1836,18 @@ def user_upgrade_changelog():
     return
 
 def debugmsg(message):
-    global logfile
-    global debug_state
-    if wsl_env == 0:
-        if debug_state == 1:
-            current_time = time.strftime("%m / %d / %Y %-H:%M")
-            with open(logfile, "a") as myfile:
-                myfile.write(current_time + " " + message + "\n")
-        else:
-            return
+    try:
+        global logfile
+        global debug_state
+        if wsl_env == 0:
+            if debug_state == 1:
+                current_time = time.strftime("%m / %d / %Y %-H:%M")
+                with open(logfile, "a") as myfile:
+                    myfile.write(current_time + " " + message + "\n")
+            else:
+                return
+    except:
+        pass #Give up if not set, probably running as a module
 
 def holding_button(holding_time_ms,display_before,display_after,button_pin):
     #If this function is activated, then we're checking for the button being held
@@ -1591,14 +1911,13 @@ def binarydecision(binary_decision_question_function,answer1,answer2):
     menu_layout = (lambda: binary_decision_question_function(), None, "BD_TYPE",
                     "Choose", str(answer1), lambda: bd_set_result(1),
                     "Choose", str(answer2), lambda: bd_set_result(2))
-    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate)
+    menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     bd_result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return bd_result
 
 def bd_set_result(value):
     return value
-
 
 def get_scene_total(g_scenesdir,offset):
     #search all of the scenes in the scenes directory
@@ -1616,12 +1935,17 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 def clock_sub_menu():
-    result = holding_button(1500,settings.GetQuickPressActionString(),settings.GetLongPressActionString(),21)
+    result = holding_button(1000,settings.get_quick_press_action_string(),settings.get_long_press_action_string(),21)
     if (result == 0):
-        action = settings.GetQuickPressAction()
+        action_dict = settings.get_quick_press_action_dict()
     else:
-        action = settings.GetLongPressAction()
-
+        action_dict = settings.get_long_press_action_dict()
+    action = action_dict["action"]
+    mode = action_dict["mode"]
+    number = action_dict["number"]
+    selected_file = action_dict["file_name"]
+    #print action_dict
+    #sys.exit()
     if action == 1:
         # Turn lights on
         hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
@@ -1630,23 +1954,52 @@ def clock_sub_menu():
         hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
     elif action == 3:
         # Toggle lights
-        print "inside TOGGLE LIGHTS"
-        discard,wholejson = get_huejson_value("g",0,"bri")
-        if discard == -1:
-            hb_display.display_custom("Error: can't JSON")
-            time.sleep(1)
-            return
-        if(wholejson['state']['any_on'] == True):
-            #print("lights were on. not now")
-            hue_groups(lnum = "0",lon = "false",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+        toggle_hue_groups(0)
+    elif action == "set_group_or_light":
+        if mode == "g":
+            toggle_hue_groups(number)
+        elif mode == "l":
+            toggle_hue_lights(number)
+    elif action == "set_quick_scene":
+        print "Checking if file exists in: " + str(selected_file)
+        if os.path.exists(selected_file):
+            os.popen("\"" + str(selected_file) + "\"")
         else:
-            #print("lights were off. not now")
-            hue_groups(lnum = "0",lon = "true",lbri = "256",lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+            hb_display.display_max_text(str(number)+"     Does not exist :(",centered = 1, offset = 1)
+            time.sleep(2)
+
+
+def toggle_hue_groups(group,bri = 256):
+    discard,wholejson = get_huejson_value("g",group,"bri")
+    if discard == -1:
+        hb_display.display_custom("Error: can't JSON")
+        time.sleep(1)
+        return
+    if(wholejson['state']['any_on'] == True):
+        #print("lights were on. not now")
+        hue_groups(lnum = group,lon = "false",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+    else:
+        #print("lights were off. not now")
+        hue_groups(lnum = group,lon = "true",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+
+def toggle_hue_lights(light,bri = 256):
+    discard,wholejson = get_huejson_value("l",light,"bri")
+    if discard == -1:
+        hb_display.display_custom("Error: can't JSON")
+        time.sleep(1)
+        return
+    if(wholejson['state']['on'] == True):
+        #print("lights were on. not now")
+        hue_lights(lnum = light,lon = "false",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+    else:
+        #print("lights were off. not now")
+        hue_lights(lnum = light,lon = "true",lbri = bri,lsat = "256",lx = "-1",ly = "-1",ltt = "-1",lct = "-1")
+
 
 def mainloop_test():
     timeout = 0
     displaytemp = 0
-    prev_secs = 0
+    prev_secs = int(round(time.time())) # set to current time
     old_min = 60
     old_display = 0
     refresh = 1
@@ -1656,6 +2009,7 @@ def mainloop_test():
     debugmsg("Starting hueBerry program version " + __file__)
     offset = 5 #clock (0) + 4 presets
     post_offset = 3 #settings, light, group menu after scenes)
+    timeout_secs = 0
     while True:
         if (scene_refresh == 1):
             total_screens,total_plus_offset,scene_files = get_scene_total(g_scenesdir,offset)
@@ -1666,16 +2020,47 @@ def mainloop_test():
             encoder.pos = menudepth
         elif(encoder.pos < 0):
             encoder.pos = 0
+        """
+        if (    screen_dark == 1 and
+                encoder.pos != display and
+                settings.get_twist_wake_setting() == 1):
+            encoder.pos = 0
+            prev_secs = int(round(time.time()))
+            refresh = 1
+        else:
+            display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+        """
         display = encoder.pos # because pos is a pre/bounded variable, and encoder.pos has been forced down.
+
+        # Check to see if display has timed out
+        secs = int(round(time.time()))
+        timeout_secs = secs - prev_secs
+        if debug_argument == 1:
+            print("Screen timeout seconds = "+str(timeout_secs))
+        if(display != 0 and displaytemp != display):
+            prev_secs = secs
+            displaytemp = display
+        elif(display != 0 and timeout_secs >= menu_timeout):
+            encoder.pos = 0
+            display_temp = 0
+        elif(display == 0):
+            displaytemp = display
+
         #Display Selected Menu
         if(display == 0):
-            cur_min = int(time.strftime("%M"))
-            if(old_min != cur_min or refresh == 1):
-                hb_display.display_time(settings.GetTimeFormat())
-                old_min = cur_min
-                refresh = 0
-            timeout = 0
-            #Sleep to conserve CPU Cycles
+            if settings.get_screen_blanking() and timeout_secs >= menu_timeout:
+                if screen_dark == 0:
+                    hb_display.display_custom("")
+                    screen_dark = 1
+            else:
+                screen_dark = 0
+                cur_min = int(time.strftime("%M"))
+                if(old_min != cur_min or refresh == 1):
+                    hb_display.display_time(settings.GetTimeFormat())
+                    old_min = cur_min
+                    refresh = 0
+                timeout = 0
+                #Sleep to conserve CPU Cycles
             time.sleep(0.01)
         if (old_display != display):
             if(display == 1):
@@ -1701,19 +2086,6 @@ def mainloop_test():
             time.sleep(0.005)
             old_min = 60
 
-        secs = int(round(time.time()))
-        timeout_secs = secs - prev_secs
-        if(display != 0 and displaytemp != display):
-            prev_secs = secs
-            displaytemp = display
-        elif(display != 0 and timeout_secs >= menu_timeout):
-            encoder.pos = 0
-            display_temp = 0
-        elif(display == 0):
-            displaytemp = display
-        #if(display != 0):
-        #    print timeout_secs
-
         # Poll button press and trigger action based on current display
         pos,pushed = encoder.get_state() # after loading everything, get state#
         if (pushed):
@@ -1724,7 +2096,7 @@ def mainloop_test():
                 # Turn off all lights
                 hb_display.display_2lines("Turning all","lights OFF slowly",12)
                 #os.popen("sudo ifdown wlan0; sleep 5; sudo ifup --force wlan0")
-                debug = os.popen("curl --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
+                debug = os.popen("curl --connect-timeout 2 --silent -H \"Accept: application/json\" -X PUT --data '{\"on\":false,\"transitiontime\":100}' " + api_url + "/groups/0/action").read()
                 #print(debug)
                 time.sleep(1)
                 debugmsg("turning all lights off")
@@ -1770,7 +2142,7 @@ def mainloop_test():
                     time.sleep(5)
             elif(display == (menudepth-2)):
                 encoder.pos = 0
-                scene_refresh = settings_menu(g_scenesdir)
+                scene_refresh = settings_menu(g_scenesdir,util_mode = util_mode)
                 #InteliDraw_Test()
                 scene_refresh = 1 # lol override. this might be useful lol
             elif(display == (menudepth-1)):
@@ -1784,15 +2156,19 @@ def mainloop_test():
             time.sleep(0.01)
             #prev_millis = int(round(time.time() * 1000))
             encoder.pos = 0
+            prev_secs = int(round(time.time()))  #just performed action, reset the screensaver timer
 
 if __name__ == "__main__":
+    if not os.geteuid() == 0 and rootless == 0:
+        sys.exit('\nhueBerry must be run as root due to file access limitations\nRun with -h for more details\n')
     #------------------------------------------------------------------------------------------------------------------------------
     # Main Loop I think
     global logfile
+    hb_path = os.path.dirname(os.path.realpath(__file__))
     if wsl_env == 0:
-        logfile = "/home/pi/hueberry.log"
+        logfile = str(hb_path)+"/hueberry.log"
     else:
-        logfile = "~/hueberry.log"
+        logfile = str(hb_path)+"/hueberry.log"
 
     global debug_state
     debug_state = 1
@@ -1800,15 +2176,17 @@ if __name__ == "__main__":
     menu_timeout = 30 #seconds
     print("hueBerry Started!!! Yay!")#--------------------------------------------------------------------------
     #Create Required directories if they do not exist.
-    maindirectory = "/boot/hueBerry/"
-    #maindirectory = os.environ['HOME'] + "/"
-    if (os.path.isdir(maindirectory) == False):
-        os.popen("sudo mkdir /boot/hueBerry")
-        print "Created Directory: " + str(maindirectory)
+    if rootless == 0:
+        maindirectory = "/boot/hueBerry/"
+    elif rootless == 1: # Running without root
+        maindirectory = hb_path + "/ROOTLESS/"
 
+    if (os.path.isdir(maindirectory) == False):
+        os.popen("mkdir \"" + str(maindirectory) + "\"")
+        print "Created Directory: " + str(maindirectory)
     g_scenesdir = str(maindirectory) + "scenes/"
     if (os.path.isdir(g_scenesdir) == False):
-        os.popen("sudo mkdir /boot/hueBerry/scenes")
+        os.popen("mkdir \"" + str(g_scenesdir) + "\"")
         print "Created Directory: " + str(g_scenesdir)
     print "Main Directory is: " + str(maindirectory)
     print "Scripts Directory is: " + str(g_scenesdir)
@@ -1817,7 +2195,7 @@ if __name__ == "__main__":
     if(mirror_mode == 1):
         hb_display = hb_display.display(console = 1,mirror = mirror_mode)
     else:
-        hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate)
+        hb_display = hb_display.display(console = debug_argument,mirror = mirror_mode, rotation = rotate, spi_display = spi_display)
     # Create Encoder Object
     if (debug_argument == 0):
         encoder = hb_encoder.RotaryClass()

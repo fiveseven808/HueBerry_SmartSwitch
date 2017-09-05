@@ -1,5 +1,5 @@
 """
-Python installer for hueberry. Probably not the best thing in the world...
+Python installer for hueberry. Probably now, the best thing in the world!
 """
 import sys
 import os
@@ -113,7 +113,7 @@ for x in n2install:
         try:
             import PIL
         except ImportError:
-            myrun("sudo apt-get -y install python-PIL")
+            myrun("sudo -H pip install --upgrade pillow")
         #myrun("echo ididathing && echo doing another thing && echo doing a third thing").read()
         baremetal = baremetal + 1
 

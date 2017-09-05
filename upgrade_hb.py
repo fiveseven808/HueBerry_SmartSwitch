@@ -20,9 +20,15 @@ class Upgrader(object):
                             'hb_settings',
                             'hb_menu',
                             #'hbplugin'
+                            'hb_morse',
                             'hueberry',
                             'console_colors',
+                            'hb_sceneUpdater',
+                            'everything_else',
                             'authenticate']
+        self.everything_else = ['r2hb',
+                                'tom-thumb.psf',
+                                'splashscreen.py']
         self.debug_argument = console
         self.mirror_mode = mirror
         self.help = help
@@ -119,6 +125,12 @@ class Upgrader(object):
                 self.download_hb_module(x)
             if x == 'hb_menu':
                 self.download_hb_module(x)
+            if x == 'hb_morse':
+                self.download_hb_module(x)
+            if x == 'hb_sceneUpdater':
+                self.download_hb_module(x)
+        for x in self.everything_else:
+                self.download_everything_else(x)
         #print baremetal
 
     def download_hb_module(self,module):
@@ -129,14 +141,26 @@ class Upgrader(object):
         print("Done installing " +str(x)+"\n")
         self.hb_display.display_max_text("Done installing " +str(x)+" library\n\n")
 
+    def download_everything_else(self,individual_file):
+        x = individual_file
+        print("Installing " +str(x))
+        self.hb_display.display_max_text("Installing " +str(x))
+        self.myrun("rm "+str(x)+"; wget https://raw.githubusercontent.com/fiveseven808/HueBerry_SmartSwitch/"+str(self.branch)+"/"+str(x))
+        print("Done installing " +str(x)+"\n")
+        self.hb_display.display_max_text("Done installing " +str(x)+" file\n\n")
+
     def out_with_the_old(self):
         self.myrun("sudo mv upgrade_hb.py upgrade_hb_old.py")
         self.myrun("sudo mv new_upgrade_hb.py upgrade_hb.py")
         self.myrun("sudo chown pi upgrade_hb.py")
         self.myrun("sudo chown pi upgrade_hb_old.py")
+        self.myrun("sudo chmod +x r2hb")
         for x in self.req_modules:
             self.hb_display.display_max_text("Updating Permissions for: "+str(x))
             self.myrun("sudo chown pi "+str(x)+".py")
+        for x in self.everything_else:
+            self.hb_display.display_max_text("Updating Permissions for: "+str(x))
+            self.myrun("sudo chown pi "+str(x))
         #self.hb_display.display_2lines("Upgrade Finished!","Rebooting...",13)
 
 
@@ -146,23 +170,19 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v047-0315.57.a
-    //57
-        2017-03-12 //57
-        + Enabled Scene Explorer.
-            + Added the ability to delete scenes without a computer (FINALLY!)
-            + Added an obvious way to reprogram scenes (instead of holding down)
-        2017-03-13 //57
-        + Added a changelog viewer now! :D It's bare bones and kinda junk, but better than nothing!
-        + Fixed authentication issues... Can do initial pair at least.
-        + Cleaned up some bits of code
-        2017-03-14 //57
-        + Merged main function branch, so now a function instead of just a mess
-        + Began work on attempting to port the single value menus to a generic scheme
-        + Announcement on Reddit! Happy pi day!
-        2017-03-15 //57
-        + Attempting to create prototypes for dual bridge configuration
-        + Scene Explorer bug fix
+    \rUpgrade level: v051-0905.57.a
+        2017-09-05 //57
+        * I really want to update the master branch... So this is some simple modifications to undo the dev features
+        - Scene upgrader removed and placeholder in place right now
+        + Added WPBack's 3d printable model of the hueBerry case!!!
+        + Want to push to master! 
+        
+        2017-08-26 //57
+        + Added hb_sceneUpdater module. Not really integrated yet..
+        * DEV RELEASE ONLY. DO NOT UPDATE THIS. 
+        
+        2017-04-30 //57
+        + Fixed a bug preventing scenes from being created
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)
