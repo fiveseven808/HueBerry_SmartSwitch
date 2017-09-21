@@ -170,7 +170,7 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v051-0919.57.a
+    \rUpgrade level: v051-0920.57.a
         2017-09-20 //57
         * Completely unrelated to scene upgrading... but...
         + ADDED THE ABILITY TO SELECT A LIGHT OR GROUP BRIGHTNESS AS A QUICK ACTION! 
