@@ -1673,7 +1673,7 @@ def scene_upgrade_menu(scenes_dir):
     if (result[1] == "startUpgrade"):
         #do present a menu to select the old bulb
         
-    encoder.wait_for_button_release()
+        encoder.wait_for_button_release()
     return
     
 def scene_upgrade_phase1(scenes_dir):
