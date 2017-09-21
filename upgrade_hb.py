@@ -170,7 +170,11 @@ class Upgrader(object):
         # Then I could just cat that onto the screen, and there'd be a
         # local copy for whomever to look at later....
         finalreadme = """
-    \rUpgrade level: v051-0905.57.a
+    \rUpgrade level: v051-0919.57.a
+        2017-09-20 //57
+        * Completely unrelated to scene upgrading... but...
+        + ADDED THE ABILITY TO SELECT A LIGHT OR GROUP BRIGHTNESS AS A QUICK ACTION! 
+        
         2017-09-05 //57
         * I really want to update the master branch... So this is some simple modifications to undo the dev features
         - Scene upgrader removed and placeholder in place right now
@@ -180,9 +184,6 @@ class Upgrader(object):
         2017-08-26 //57
         + Added hb_sceneUpdater module. Not really integrated yet..
         * DEV RELEASE ONLY. DO NOT UPDATE THIS. 
-        
-        2017-04-30 //57
-        + Fixed a bug preventing scenes from being created
         """
         #self.myrun("echo "+str(finalreadme)+" > release_notes.txt; sudo chown pi release_notes.txt")
         print(finalreadme)

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
-__version__ = "v051-0905.57.a"
+__version__ = "v051-0919.57.a"
 """
+2017-09-20 //57
+* Completely unrelated to scene upgrading... but...
++ ADDED THE ABILITY TO SELECT A LIGHT OR GROUP BRIGHTNESS AS A QUICK ACTION! 
+
 2017-09-05 //57
 * I really want to update the master branch... So this is some simple modifications to undo the dev features
 - Scene upgrader removed and placeholder in place right now
@@ -1488,23 +1492,30 @@ def set_action(type):
                     "Load a", "Specific Scene", lambda:scene_pick_menu(type = type, g_scenesdir = g_scenesdir),
                     "Toggle a", "Specific Light", lambda:light_group_pick_menu(type = type, mode = "l"),
                     "Toggle a", "Specific Group", lambda:light_group_pick_menu(type = type, mode = "g"),
+                    #Not yet implemented... Need to modify hueberry settings and whatever interprets the settings...
+                    "Modify", "Specific Light", lambda:light_group_pick_menu(type = type, mode = "l", toggle = "no"),
+                    "Modify", "Specific Group", lambda:light_group_pick_menu(type = type, mode = "g", toggle = "no"),
                     "Back to", "Previous Menu", lambda: bd_set_result(-1))
     menu = hb_menu.Menu_Creator(debug = debug_argument, menu_layout = menu_layout, rotate = rotate, spi_display = spi_display)
     result = menu.run_2_line_menu()
     encoder.wait_for_button_release()
     return result - 1
 
-def light_group_pick_menu(type, mode):
+def light_group_pick_menu(type, mode, toggle = "yes"):
     number = light_control( mode = mode,
                             selection_only = 1)
     encoder.wait_for_button_release()
     # [unimplemented] Ask if you want to set a custom brightness?
+    if toggle == "yes" :
+        action = "set_group_or_light"
+    elif toggle == "no" :
+        action = "set_group_or_light_FULLCONTROL"
     if type == "Quick":
-        settings.set_quick_press_action(action = "set_group_or_light",
+        settings.set_quick_press_action(action = action,
                                         mode = mode,
                                         number = number)
     if type == "Long":
-        settings.set_long_press_action( action = "set_group_or_light",
+        settings.set_long_press_action( action = action,
                                         mode = mode,
                                         number = number)
     hb_display.display_2lines(mode+" "+number, "Set!", 17)
@@ -1960,6 +1971,11 @@ def clock_sub_menu():
             toggle_hue_groups(number)
         elif mode == "l":
             toggle_hue_lights(number)
+    elif action == "set_group_or_light_FULLCONTROL":
+        if mode == "g":
+            g_control(number)
+        elif mode == "l":
+            l_control(number)
     elif action == "set_quick_scene":
         print "Checking if file exists in: " + str(selected_file)
         if os.path.exists(selected_file):

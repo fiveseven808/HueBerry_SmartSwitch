@@ -105,6 +105,8 @@ class Settings(object):
     def __get_quick_action_string(self, press_dict):
         if press_dict["action"] == "set_group_or_light":
             return "Toggle "+str(press_dict["mode"])+" " +str(press_dict["number"])
+        if press_dict["action"] == "set_group_or_light_FULLCONTROL":
+            return "FULL CONTROL "+str(press_dict["mode"])+" " +str(press_dict["number"])
         if press_dict["action"] == "set_quick_scene":
             return "Running Scene: "+str(press_dict["number"])
         if press_dict["action"] == 0:
