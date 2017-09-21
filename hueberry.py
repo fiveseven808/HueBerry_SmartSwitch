@@ -1,6 +1,12 @@
 #!/usr/bin/env python
-__version__ = "v050-0430.57.a"
+__version__ = "v051-0905.57.a"
 """
+2017-09-05 //57
+* I really want to update the master branch... So this is some simple modifications to undo the dev features
+- Scene upgrader removed and placeholder in place right now
++ Added WPBack's 3d printable model of the hueBerry case!!!
++ Want to push to master! 
+
 2017-07-24 //57
 * Have not touched this code in 3 months it seems... I don't remember how this
     works lol. Will attempt to add scene updater tool...
@@ -1612,8 +1618,8 @@ def scene_explorer(g_scenesdir,selection_only = 0):
                 elif (display <= (menudepth - 1)):
                     #Run scene updater
                     output = scene_upgrade_menu(g_scenesdir)
-                    hb_display.display_custom(output)
-                    time.sleep(3)
+                    #hb_display.display_custom(output)
+                    #time.sleep(3)
                 else:
                     time.sleep(0.25)
                     exitvar = True
@@ -1663,6 +1669,7 @@ def scene_upgrade_menu(scenes_dir):
     #take the scene dir and then ask what light is now what light
     # i.e. light 6 is now going to become light 7. 
     #recursive function???
+    """
     menu_layout = ("Scene Upgrade", "Menu! ->", lambda: bd_set_result(0), #do nothing lol
                     "Start Old bulb", "To New Bulb", lambda: scene_upgrade_phase1(scenes_dir),
                     "Set Group", "To Ignore", lambda: scene_upgrade_phase1(scenes_dir),
@@ -1674,6 +1681,9 @@ def scene_upgrade_menu(scenes_dir):
         #do present a menu to select the old bulb
         
         encoder.wait_for_button_release()
+    """
+    hb_display.display_2lines("Feature", "Coming Soon!", 14)
+    time.sleep(3)
     return
     
 def scene_upgrade_phase1(scenes_dir):
