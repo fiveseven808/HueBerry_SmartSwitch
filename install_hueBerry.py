@@ -64,7 +64,6 @@ for x in req_modules:
         #imp.find_module(x)
         #import Adafruit_SSD1306
         new_module = __import__(x)
-        found = True
     except ImportError:
         print("    " + bcolors.YLO + str(x) + bcolors.ENDC + bcolors.RED + " module not found. Please install this before continuing!"+bcolors.ENDC)
         n2install.append(x)
