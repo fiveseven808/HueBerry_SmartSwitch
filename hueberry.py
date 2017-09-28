@@ -579,6 +579,7 @@ def l_control(light):
     bri_pre = encoder.pos * 10
     refresh = 1
     prev_mills = 0
+    prev_secs = int(round(time.time())) # set to current time
     while exitvar == False:
         if(encoder.pos > max_rot_val):
             encoder.pos = max_rot_val
@@ -587,6 +588,16 @@ def l_control(light):
         mills = int(round(time.time() * 1000))
         millsdiff = mills - prev_mills
         rot_bri = encoder.pos * 10
+        
+        # Check to see if display has timed out
+        secs = int(round(time.time()))
+        timeout_secs = secs - prev_secs
+        if debug_argument == 1:
+            print("Screen timeout seconds = "+str(timeout_secs))
+        if(rot_bri != 0 and timeout_secs >= menu_timeout):
+            encoder.pos = 0
+            exitvar = True
+            
         if(bri_pre != rot_bri or refresh == 1 ):
             hb_display.display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
             refresh = 0
@@ -1946,6 +1957,8 @@ def get_scene_total(g_scenesdir,offset):
     return total_scenes,total_plus_offset,scene_files
 
 def clock_sub_menu():
+    #This is actually the quick actions menu
+    #This is where all the quick actions take place, on the clock menu!
     result = holding_button(1000,settings.get_quick_press_action_string(),settings.get_long_press_action_string(),21)
     if (result == 0):
         action_dict = settings.get_quick_press_action_dict()
@@ -1974,8 +1987,10 @@ def clock_sub_menu():
     elif action == "set_group_or_light_FULLCONTROL":
         if mode == "g":
             g_control(number)
+            time.sleep(1)
         elif mode == "l":
             l_control(number)
+            time.sleep(1)
     elif action == "set_quick_scene":
         print "Checking if file exists in: " + str(selected_file)
         if os.path.exists(selected_file):
