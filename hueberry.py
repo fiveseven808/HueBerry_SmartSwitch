@@ -561,7 +561,7 @@ def light_control(mode,selection_only = 0):
     return
 
 
-def l_control(light):
+def l_control(light,menu_timeout = 30):
     brite,wholejson = get_huejson_value("l",light,"bri")
     if(brite == -1):
         #print "No lights avaliable"
@@ -594,9 +594,30 @@ def l_control(light):
         timeout_secs = secs - prev_secs
         if debug_argument == 1:
             print("Screen timeout seconds = "+str(timeout_secs))
-        if(rot_bri != 0 and timeout_secs >= menu_timeout):
+        if(bri_pre != rot_bri):
+            prev_secs = secs
+        if(timeout_secs >= menu_timeout):
             encoder.pos = 0
             exitvar = True
+        """
+        Gotta break the above timeout thing into it's own function. 
+        It's just a calculation function. Put in hb_menu or something...
+        like...
+        def check_timeout(  self, debug_argument, 
+                            menu_timeout, 
+                            prev_secs, 
+                            old_pos, new_pos):
+            secs = int(round(time.time()))
+            timeout_secs = secs - prev_secs
+            if debug_argument == 1:
+                print("Screen timeout seconds = "+str(timeout_secs))
+            if(old_pos != new_pos):
+                prev_secs = secs
+            if(timeout_secs >= menu_timeout):
+                encoder.pos = 0
+                exitvar = True
+            return prev_secs, exitvar
+        """
             
         if(bri_pre != rot_bri or refresh == 1 ):
             hb_display.display_2lines("Light " + str(light),"Bri: " + str(int(rot_bri/2.5)) + "%",17)
@@ -1986,10 +2007,10 @@ def clock_sub_menu():
             toggle_hue_lights(number)
     elif action == "set_group_or_light_FULLCONTROL":
         if mode == "g":
-            g_control(number)
+            g_control(number,menu_timeout = 5)
             time.sleep(1)
         elif mode == "l":
-            l_control(number)
+            l_control(number,menu_timeout = 5)
             time.sleep(1)
     elif action == "set_quick_scene":
         print "Checking if file exists in: " + str(selected_file)
