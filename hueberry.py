@@ -5,7 +5,7 @@ __version__ = "v051-0905.57.a"
 * I really want to update the master branch... So this is some simple modifications to undo the dev features
 - Scene upgrader removed and placeholder in place right now
 + Added WPBack's 3d printable model of the hueBerry case!!!
-+ Want to push to master! 
++ Want to push to master!
 
 2017-07-24 //57
 * Have not touched this code in 3 months it seems... I don't remember how this
@@ -100,13 +100,13 @@ def print_usage():
                     View IP (possibly), Connect to Wifi, Exit to terminal
 
     -h,--help       Displays this help text
-    
+
     ex: python hueberry.py -d -nb -wsl -nr
     This will allow hueberry to run in WSL without the hue system or root
     """
     print(usage)
 
-import os
+import os, logging
 #set working directory to script directory
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -1526,7 +1526,7 @@ def scene_pick_menu(type, g_scenesdir):
     hb_display.display_2lines(scene_name, "Scene Set!", 17)
     time.sleep(1)
     return -1 #Because I already set it
-    
+
 #----------------------------------------------------------------------------
 #       New Scene Creator
 #----------------------------------------------------------------------------
@@ -1540,7 +1540,7 @@ def new_scene_creator(g_scenesdir):
     result = get_house_scene_by_light(new_scene_name, ltt)
     debugmsg("ran NEW scene by individual creation with result = " + result)
     return
-    
+
 #----------------------------------------------------------------------------
 #       Scene Explorer stuff
 #----------------------------------------------------------------------------
@@ -1664,10 +1664,10 @@ def reprogram_scene(file_location, file_name):
     ltt = set_scene_transition_time()
     result = get_house_scene_by_light(file_location,ltt)
     return
-    
+
 def scene_upgrade_menu(scenes_dir):
     #take the scene dir and then ask what light is now what light
-    # i.e. light 6 is now going to become light 7. 
+    # i.e. light 6 is now going to become light 7.
     #recursive function???
     """
     menu_layout = ("Scene Upgrade", "Menu! ->", lambda: bd_set_result(0), #do nothing lol
@@ -1679,13 +1679,13 @@ def scene_upgrade_menu(scenes_dir):
     result = "startUpgrade"
     if (result[1] == "startUpgrade"):
         #do present a menu to select the old bulb
-        
+
         encoder.wait_for_button_release()
     """
     hb_display.display_2lines("Feature", "Coming Soon!", 14)
     time.sleep(3)
     return
-    
+
 def scene_upgrade_phase1(scenes_dir):
     #This needs to be a bulb explorer, not scene  eplorer
     selected_file, scene_name = scene_explorer( g_scenesdir = g_scenesdir,
@@ -1694,7 +1694,7 @@ def scene_upgrade_phase1(scenes_dir):
     # say something like "now pick the new bulb!"
     #then bring up the bulb explorer
     #then say like, upgrading scenes: or something
-    #then say that the scene is upgraded! 
+    #then say that the scene is upgraded!
     hb_display.display_2lines(scene_name, "Scene Set!", 17)
     time.sleep(1)
     return -1
@@ -1838,12 +1838,14 @@ def user_upgrade_changelog():
 def debugmsg(message):
     try:
         global logfile
+        logging.basicConfig(filename='hueBerry.log',level=logging.DEBUG)
         global debug_state
         if wsl_env == 0:
             if debug_state == 1:
                 current_time = time.strftime("%m / %d / %Y %-H:%M")
                 with open(logfile, "a") as myfile:
                     myfile.write(current_time + " " + message + "\n")
+                logging.info(current_time + " " + message + "\n")
             else:
                 return
     except:
