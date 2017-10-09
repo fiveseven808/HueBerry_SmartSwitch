@@ -1,18 +1,20 @@
-# process damon. 
-#run this from home path (~) not from this folder. have rc.local start it and run it in the background. 
+# process damon.
+#run this from home path (~) not from this folder. have rc.local start it and run it in the background.
 #
 
 oldver = "v030"
 newver = "hueberry"
 
-import os
+import os, logging
 import os.path
-import time 
-logfile = "/home/pi/pythondaemon.log"
+import time
+#logfile = "/home/pi/pythondaemon.log"
+logging.basicConfig(filename='hueBerry.log',level=logging.DEBUG)
 
 current_time = time.strftime("%m / %d / %Y %-H:%M")
-with open(logfile, "a") as myfile:
-    myfile.write(current_time + " pythondaemon is starting up. " + newver + " should be running\n")
+#with open(logfile, "a") as myfile:
+#    myfile.write(current_time + " pythondaemon is starting up. " + newver + " should be running\n")
+logging.info(current_time + " pythondaemon is starting up. " + newver + " should be running\n")
 #print "should've written by now"
 
 time.sleep(20)
@@ -29,9 +31,9 @@ while True:
         #os.popen("sudo shutdown -r now")
         os.popen("nice --10 python /home/pi/scripts/smartswitch/" + oldver + ".py &")
         current_time = time.strftime("%m / %d / %Y %-H:%M")
-        with open(logfile, "a") as myfile:
-            myfile.write(current_time + " pythondaemon saw that " + newver + " has died so is starting " + oldver + "\n")
-
+        #with open(logfile, "a") as myfile:
+        #    myfile.write(current_time + " pythondaemon saw that " + newver + " has died so is starting " + oldver + "\n")
+        logging.info(current_time + " pythondaemon saw that " + newver + " has died so is starting " + oldver + "\n")
     #else:
     #    print("num of procs is less! ")
     #print numofprocs
